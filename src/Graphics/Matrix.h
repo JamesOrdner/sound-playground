@@ -88,7 +88,7 @@ namespace Mat // Matrix
 	}
 
 	template <int size>
-	constexpr Vector<float, size> normal(const Vector<float, size>& a) {
+	Vector<float, size> normal(const Vector<float, size>& a) {
 		float norm = 0;
 		for (int i = 0; i < size; i++) norm += a.data[i] * a.data[i];
 		if (norm < FLT_EPSILON) return Vector<float, size>();
@@ -205,8 +205,9 @@ namespace Mat // Matrix
 
 	typedef Matrix<float, 4, 4> mat4;
 
+	// Transpose
 	template <typename T, int rows, int cols>
-	constexpr Matrix<T, cols, rows> transpose(const Matrix<T, rows, cols>& matrix) {
+	constexpr Matrix<T, cols, rows> t(const Matrix<T, rows, cols>& matrix) {
 		Matrix<T, cols, rows> m;
 		for (int r = 0; r < rows; r++) {
 			for (int c = 0; c < cols; c++) {
@@ -224,27 +225,27 @@ namespace Mat // Matrix
 		
 		// Inverse orientation matrix
 		mat4 orientation{
-			{ x_basis.x, y_basis.x, z_basis.x, 0 },
-			{ x_basis.y, y_basis.y, z_basis.y, 0 },
-			{ x_basis.z, y_basis.z, z_basis.z, 0 },
+			{ x_basis.x, x_basis.y, x_basis.z, 0 },
+			{ y_basis.x, y_basis.y, y_basis.z, 0 },
+			{ z_basis.x, z_basis.y, z_basis.z, 0 },
 			{         0,         0,         0, 1 }
 		};
 
 		// Inverse translation matrix
 		mat4 translation{
-			{      1,      0,      0,      0 },
-			{      0,      1,      0,      0 },
-			{      0,      0,      1,      0 },
-			{ -eye.x, -eye.y, -eye.z,      1 }
+			{      1,      0,      0, -eye.x },
+			{      0,      1,      0, -eye.y },
+			{      0,      0,      1, -eye.z },
+			{      0,      0,      0,      1 }
 		};
 
 		return orientation * translation;
 	}
 
-	mat4 ortho(float l, float r, float b, float t, float f, float n) {
+	constexpr mat4 ortho(float l, float r, float b, float t, float f, float n) {
 		return mat4{
 			{ 2 / (r - l),           0,            0, -(r + l) / (r - l) },
-			{           0, 2 / (t - b),            0, -(r + b) / (r - b) },
+			{           0, 2 / (t - b),            0, -(t + b) / (t - b) },
 			{           0,           0, -2 / (f - n), -(f + n) / (f - n) },
 			{           0,           0,            0,                  1 }
 		};

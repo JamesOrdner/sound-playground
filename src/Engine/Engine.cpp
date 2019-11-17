@@ -203,12 +203,12 @@ void Engine::render()
 
 	Mat::mat4 view = Mat::lookAt(Mat::vec3{ 1, 0, 1 }, Mat::vec3{ 0, 0, 0 }, Mat::vec3{ 0, 1, 0 });
 	
-	Mat::mat4 proj = Mat::ortho(-1, 1, -2, 2, -2, 2);
+	Mat::mat4 proj = Mat::ortho(-1, 1, -1, 1, -20, 20);
 
-	auto modelViewMatrix = proj * view * model;
+	auto modelViewMatrix = proj * view* model;
 
 	GLuint modelMatrixID = glGetUniformLocation(glProgram, "modelMatrix");
-	glUniformMatrix4fv(modelMatrixID, 1, true, *proj.data);
+	glUniformMatrix4fv(modelMatrixID, 1, true, *modelViewMatrix.data);
 
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
