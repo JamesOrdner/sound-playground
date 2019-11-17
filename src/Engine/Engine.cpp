@@ -181,6 +181,14 @@ bool Engine::initGL()
 	glAttachShader(glProgram, fs);
 	glAttachShader(glProgram, vs);
 	glLinkProgram(glProgram);
+	glUseProgram(glProgram);
+
+	GLuint modelMatrixID = glGetUniformLocation(glProgram, "modelMatrix");
+	Mat::mat4 model = Mat::mat4::Identity();
+	Mat::mat4 view = Mat::lookAt(Mat::vec3{ 1, 0, 1 }, Mat::vec3{ 0, 0, 0 }, Mat::vec3{ 0, 1, 0 });
+	Mat::mat4 proj = Mat::ortho(-1, 1, -1, 1, -20, 20);
+	Mat::mat4 pmvMatrix = proj * view * model;
+	glUniformMatrix4fv(modelMatrixID, 1, true, *pmvMatrix.data);
 
 	return true;
 }
@@ -197,26 +205,12 @@ void Engine::deinit()
 void Engine::render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glUseProgram(glProgram);
-
-	Mat::mat4 model = Mat::mat4::Identity();
-
-	Mat::mat4 view = Mat::lookAt(Mat::vec3{ 1, 0, 1 }, Mat::vec3{ 0, 0, 0 }, Mat::vec3{ 0, 1, 0 });
-	
-	Mat::mat4 proj = Mat::ortho(-1, 1, -1, 1, -20, 20);
-
-	auto modelViewMatrix = proj * view* model;
-
-	GLuint modelMatrixID = glGetUniformLocation(glProgram, "modelMatrix");
-	glUniformMatrix4fv(modelMatrixID, 1, true, *modelViewMatrix.data);
 
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
-	glUseProgram(0);
 
 	SDL_GL_SwapWindow(sdlWindow);
 }
