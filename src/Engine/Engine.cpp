@@ -1,5 +1,6 @@
 #include "Engine.h"
 #include "../Graphics/Matrix.h"
+#include "../Graphics/GMesh.h"
 #include <SDL.h>
 #include <GL/gl3w.h>
 #include <stdio.h>
@@ -88,52 +89,8 @@ bool Engine::init()
 
 bool Engine::initGL()
 {
-	GLfloat points[] = {
-		 0.5f, -0.5f,  0.f,
-		 0.5f,  0.5f,  0.f,
-		-0.5f, -0.5f,  0.f,
-		-0.5f,  0.5f,  0.f
-	};
-
-	GLfloat colors[] = {
-		0.583f,  0.771f,  0.014f,
-		0.609f,  0.115f,  0.436f,
-		0.327f,  0.483f,  0.844f,
-		0.822f,  0.569f,  0.201f
-	};
-
-	GLuint indices[] = {
-		0, 1, 3,
-		0, 2, 3
-	};
-
-	GLuint vbo[3]; // [vertex, indices]
-	glGenBuffers(3, vbo);
-
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	// Vertex buffer
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), points, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glEnableVertexAttribArray(0);
-
-	// Vertex buffer
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), colors, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glEnableVertexAttribArray(1);
-
-	// Index buffer
-	indexBuffer = vbo[2];
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[2]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), indices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	glBindVertexArray(0);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 
 	char err[512];
 	GLsizei errLen;
@@ -183,12 +140,17 @@ bool Engine::initGL()
 	glLinkProgram(glProgram);
 	glUseProgram(glProgram);
 
+	using namespace Mat;
 	GLuint modelMatrixID = glGetUniformLocation(glProgram, "modelMatrix");
-	Mat::mat4 model = Mat::mat4::Identity();
-	Mat::mat4 view = Mat::lookAt(Mat::vec3{ 1, 0, 1 }, Mat::vec3{ 0, 0, 0 }, Mat::vec3{ 0, 1, 0 });
-	Mat::mat4 proj = Mat::ortho(-1, 1, -1, 1, -20, 20);
-	Mat::mat4 pmvMatrix = proj * view * model;
+
+	mat4 model = mat4::Identity();
+	mat4 view = lookAt(vec3{ 1, 0, -3 }, vec3{ 0, 0, 0 }, vec3{ 0, 1, 0 });
+	constexpr mat4 proj = ortho(-1.5, 1.5, -1.5, 1.5, -10, 10);
+	mat4 pmvMatrix = proj * view * model;
+
 	glUniformMatrix4fv(modelMatrixID, 1, true, *pmvMatrix.data);
+
+	mesh = new GMesh("res/suzanne.glb");
 
 	return true;
 }
@@ -200,17 +162,14 @@ void Engine::deinit()
 	SDL_Quit();
 
 	sdlWindow = nullptr;
+
+	delete mesh;
+	mesh = nullptr;
 }
 
 void Engine::render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
+	mesh->draw();
 	SDL_GL_SwapWindow(sdlWindow);
 }

@@ -7,6 +7,8 @@ struct SDL_Window;
 typedef void* SDL_GLContext;
 typedef unsigned int GLuint;
 
+class GMesh;
+
 class Engine
 {
 public:
@@ -38,6 +40,8 @@ private:
 	GLuint vao;
 
 	GLuint indexBuffer;
+
+	GMesh* mesh;
 
 	// Mark:- Audio
 	AudioEngine audioEngine;
