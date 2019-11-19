@@ -39,6 +39,17 @@ namespace Mat // Matrix
 			struct { T r, g, b; };
 		};
 
+		explicit constexpr Vector() : data{} {}
+
+		explicit constexpr Vector(T fill) : data{} {
+			for (int i = 0; i < 3; i++) data[i] = fill;
+		}
+
+		explicit constexpr Vector(std::initializer_list<T> l) : data{} {
+			const T* lp = l.begin();
+			for (int i = 0; i < 3; i++) data[i] = lp[i];
+		}
+
 		constexpr T operator[](int i) const {
 			return data[i];
 		}
@@ -102,11 +113,11 @@ namespace Mat // Matrix
 	}
 
 	template <int size>
-	Vector<float, size> normal(const Vector<float, size>& a) {
+	constexpr Vector<float, size> normal(const Vector<float, size>& a) {
 		float norm = 0;
 		for (int i = 0; i < size; i++) norm += a.data[i] * a.data[i];
 		if (norm < FLT_EPSILON) return Vector<float, size>();
-		norm = sqrtf(norm);
+		norm = std::sqrtf(norm); // sqrtf() prevents constexpr
 		Vector<float, size> a_n;
 		for (int i = 0; i < size; i++) a_n.data[i] = a.data[i] / norm;
 		return a_n;
@@ -232,17 +243,17 @@ namespace Mat // Matrix
 	}
 
 	// Produces a view matrix with no translation -- camera remains at origin oriented up
-	mat4 lookAt(const vec3& eye, const vec3& target) {
-		constexpr vec3 up{ 0, 1, 0 };
+	constexpr mat4 lookAt(const vec3& eye, const vec3& target) {
+		vec3 up{ 0, 1, 0 };
 		vec3 z = normal(eye - target);
 		vec3 x = normal(cross(up, z));
 		vec3 y = cross(z, x);
 
 		return mat4{
-			{ x.x, x.y, x.z, 0 },
-			{ y.x, y.y, y.z, 0 },
-			{ z.x, z.y, z.z, 0 },
-			{   0,   0,   0, 1 }
+			{ x[0], x[1], x[2], 0 },
+			{ y[0], y[1], y[2], 0 },
+			{ z[0], z[1], z[2], 0 },
+			{    0,   0,    0,  1 }
 		};
 	}
 

@@ -146,7 +146,7 @@ bool Engine::initGL()
 
 	using namespace Mat;
 	GLuint modelMatrixID = glGetUniformLocation(glProgram, "modelMatrix");
-	mat4 model = mat4::Identity();
+	constexpr mat4 model = mat4::Identity();
 	mat4 view = lookAt(vec3{ 1, 1, 1 }, vec3());
 	constexpr mat4 proj = ortho(-1.5, 1.5, -1.5, 1.5, -10, 10);
 	mat4 mvp = proj * view * model;
