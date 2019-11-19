@@ -1,13 +1,12 @@
 #pragma once
 
 #include "../Audio/AudioEngine.h"
+#include "../Graphics/GMesh.h"
+#include <vector>
+#include <memory>
 
 // Forward declarations
 struct SDL_Window;
-typedef void* SDL_GLContext;
-typedef unsigned int GLuint;
-
-class GMesh;
 
 class Engine
 {
@@ -33,16 +32,15 @@ private:
 
 	bool bInitialized;
 
+	std::vector<std::shared_ptr<GMesh>> meshes;
+
+	/** SDL / OpenGL */
+
 	SDL_Window* sdlWindow;
-	SDL_GLContext glContext;
+	void* glContext;
+	unsigned int glProgram;
 
-	GLuint glProgram;
-	GLuint vao;
+	/** Audio */
 
-	GLuint indexBuffer;
-
-	GMesh* mesh;
-
-	// Mark:- Audio
 	AudioEngine audioEngine;
 };

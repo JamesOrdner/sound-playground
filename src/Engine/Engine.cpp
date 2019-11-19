@@ -105,10 +105,11 @@ bool Engine::initGL()
 		"layout(location = 0) out vec3 outNormal;"
 		"layout(location = 1) out vec3 outTexCoord;"
 
-		"uniform mat4 modelMatrix;"
+		"uniform mat4 model;"
+		"uniform mat4 viewProj;"
 
 		"void main() {"
-		"  gl_Position = modelMatrix * vec4(position, 1.0);"
+		"  gl_Position = viewProj * model * vec4(position, 1.0);"
 		"  outNormal = normal;"
 		"  outTexCoord = texCoord;"
 		"}";
@@ -144,15 +145,21 @@ bool Engine::initGL()
 	glLinkProgram(glProgram);
 	glUseProgram(glProgram);
 
-	using namespace Mat;
-	GLuint modelMatrixID = glGetUniformLocation(glProgram, "modelMatrix");
-	constexpr mat4 model = mat4::Identity();
-	mat4 view = lookAt(vec3{ 1, 1, 1 }, vec3());
-	constexpr mat4 proj = ortho(-1.5, 1.5, -1.5, 1.5, -10, 10);
-	mat4 mvp = proj * view * model;
-	glUniformMatrix4fv(modelMatrixID, 1, true, *mvp.data);
+	GLuint viewProjMatrixID = glGetUniformLocation(glProgram, "viewProj");
+	mat::mat4 view = lookAt(mat::vec3{ 1, 1, 1 }, mat::vec3());
+	constexpr mat::mat4 proj = mat::ortho(-1.5, 1.5, -1.5, 1.5, -10, 10);
+	mat::mat4 mvp = proj * view;
+	glUniformMatrix4fv(viewProjMatrixID, 1, true, *mvp.data);
 
-	mesh = new GMesh("res/suzanne.glb");
+	auto mesh1 = std::make_shared<GMesh>("res/suzanne.glb");
+	mesh1->setLocation(mat::vec3{ 0, 0, 1 });
+	mesh1->setScale(0.5);
+	meshes.push_back(mesh1);
+
+	auto mesh2 = std::make_shared<GMesh>("res/suzanne.glb");
+	mesh2->setLocation(mat::vec3{ 0, 1, -1 });
+	mesh2->setScale(2);
+	meshes.push_back(mesh2);
 
 	return true;
 }
@@ -160,18 +167,17 @@ bool Engine::initGL()
 void Engine::deinit()
 {
 	audioEngine.deinit();
-	SDL_DestroyWindow(sdlWindow);
-	SDL_Quit();
 
+	SDL_DestroyWindow(sdlWindow);
 	sdlWindow = nullptr;
 
-	delete mesh;
-	mesh = nullptr;
+	SDL_Quit();
 }
 
 void Engine::render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	mesh->draw();
+	unsigned int modelMatrixID = glGetUniformLocation(glProgram, "model");
+	for (const auto& mesh : meshes) mesh->draw(modelMatrixID);
 	SDL_GL_SwapWindow(sdlWindow);
 }

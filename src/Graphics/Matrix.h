@@ -4,7 +4,7 @@
 #include <cmath>
 #include <cfloat>
 
-namespace Mat // Matrix
+namespace mat // Matrix
 {
 	/** Vector */
 
@@ -257,6 +257,7 @@ namespace Mat // Matrix
 		};
 	}
 
+	// Produce an orthographic projection matrix
 	constexpr mat4 ortho(float l, float r, float b, float t, float f, float n) {
 		return mat4{
 			{ 2 / (r - l),           0,           0, -(r + l) / (r - l) },
@@ -264,5 +265,24 @@ namespace Mat // Matrix
 			{           0,           0, 2 / (f - n), -(f + n) / (f - n) },
 			{           0,           0,           0,                  1 }
 		};
+	}
+
+	// Produces a transform matrix
+	constexpr mat4 transform(const vec3& loc, const vec3& scale) {
+		mat4 s{
+			{ scale[0],        0,        0, 0 },
+			{        0, scale[1],        0, 0 },
+			{        0,        0, scale[2], 0 },
+			{        0,        0,        0, 1 }
+		};
+
+		mat4 t{
+			{ 1, 0, 0, loc[0] },
+			{ 0, 1, 0, loc[1] },
+			{ 0, 0, 1, loc[2] },
+			{ 0, 0, 0,      1 }
+		};
+
+		return t * s;
 	}
 }
