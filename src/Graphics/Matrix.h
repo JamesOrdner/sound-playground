@@ -78,6 +78,20 @@ namespace Mat // Matrix
 		return v;
 	}
 
+	template <typename T, int size>
+	constexpr Vector<T, size> operator*(const Vector<T, size>& lhs, const T& rhs) {
+		Vector<T, size> v;
+		for (int i = 0; i < size; i++) v.data[i] = lhs.data[i] * rhs;
+		return v;
+	}
+
+	template <typename T, int size>
+	constexpr Vector<T, size> operator*(const Vector<T, size>& lhs, const Vector<T, size>& rhs) {
+		Vector<T, size> v;
+		for (int i = 0; i < size; i++) v.data[i] = lhs.data[i] * rhs.data[i];
+		return v;
+	}
+
 	/** Vector Functions */
 
 	template <typename T, int size>
@@ -101,7 +115,7 @@ namespace Mat // Matrix
 	constexpr vec3 cross(const vec3& a, const vec3& b) {
 		return vec3{
 			a[1] * b[2] - a[2] * b[1],
-			a[0] * b[2] - a[2] * b[0],
+			a[2] * b[0] - a[0] * b[2],
 			a[0] * b[1] - a[1] * b[0]
 		};
 	}
@@ -217,29 +231,18 @@ namespace Mat // Matrix
 		return m;
 	}
 
+	// Produces a view matrix with no translation -- camera remains at origin
 	mat4 lookAt(const vec3& eye, const vec3& target, const vec3& up) {
-		// Orthonormal basis vectors
-		vec3 z_basis = normal(eye - target);
-		vec3 x_basis = normal(cross(up, z_basis));
-		vec3 y_basis = cross(z_basis, x_basis);
+		vec3 f = normal(eye - target);
+		vec3 r = normal(cross(up, f));
+		vec3 u = cross(f, r);
 		
-		// Inverse orientation matrix
-		mat4 orientation{
-			{ x_basis.x, x_basis.y, x_basis.z, 0 },
-			{ y_basis.x, y_basis.y, y_basis.z, 0 },
-			{ z_basis.x, z_basis.y, z_basis.z, 0 },
-			{         0,         0,         0, 1 }
+		return mat4{
+			{  r.x,  u.x,  f.x, 0 },
+			{  r.y,  u.y,  f.y, 0 },
+			{  r.z,  u.z,  f.z, 0 },
+			{    0,    0,    0, 1 }
 		};
-
-		// Inverse translation matrix
-		mat4 translation{
-			{      1,      0,      0, -eye.x },
-			{      0,      1,      0, -eye.y },
-			{      0,      0,      1, -eye.z },
-			{      0,      0,      0,      1 }
-		};
-
-		return orientation * translation;
 	}
 
 	constexpr mat4 ortho(float l, float r, float b, float t, float f, float n) {
