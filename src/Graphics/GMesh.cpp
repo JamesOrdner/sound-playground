@@ -11,9 +11,9 @@
 
 using namespace tinygltf;
 
-#define BUFFER_OFFSET(i) ((char *)NULL + (i))
-
-GLuint indexBuffer;
+inline void* bufferOffset(size_t offset) {
+	return (char*)nullptr + offset;
+}
 
 GMesh::GMesh(const std::string& file)
 {
@@ -47,7 +47,7 @@ GMesh::GMesh(const std::string& file)
 	Primitive primitive = mesh.primitives[0];
 	Accessor indexAccessor = model.accessors[primitive.indices];
 	drawMode = primitive.mode;
-	drawCount = indexAccessor.count;
+	drawCount = static_cast<int>(indexAccessor.count);
 	drawComponentType = indexAccessor.componentType;
 	drawByteOffset = indexAccessor.byteOffset;
 
@@ -68,7 +68,7 @@ GMesh::GMesh(const std::string& file)
 		glEnableVertexAttribArray(vaa);
 		glVertexAttribPointer(vaa, size, accessor.componentType,
 			accessor.normalized ? GL_TRUE : GL_FALSE,
-			byteStride, BUFFER_OFFSET(accessor.byteOffset));
+			byteStride, bufferOffset(accessor.byteOffset));
 	}
 
 	glBindVertexArray(0);
@@ -78,6 +78,6 @@ GMesh::GMesh(const std::string& file)
 void GMesh::draw()
 {
 	glBindVertexArray(vao);
-	glDrawElements(drawMode, drawCount, drawComponentType, BUFFER_OFFSET(drawByteOffset));
+	glDrawElements(drawMode, drawCount, drawComponentType, bufferOffset(drawByteOffset));
 	glBindVertexArray(0);
 }

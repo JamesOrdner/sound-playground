@@ -17,6 +17,6 @@ private:
 	int drawMode;
 	int drawCount;
 	int drawComponentType;
-	int drawByteOffset;
+	size_t drawByteOffset;
 };
 

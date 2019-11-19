@@ -231,26 +231,27 @@ namespace Mat // Matrix
 		return m;
 	}
 
-	// Produces a view matrix with no translation -- camera remains at origin
-	mat4 lookAt(const vec3& eye, const vec3& target, const vec3& up) {
-		vec3 f = normal(eye - target);
-		vec3 r = normal(cross(up, f));
-		vec3 u = cross(f, r);
-		
+	// Produces a view matrix with no translation -- camera remains at origin oriented up
+	mat4 lookAt(const vec3& eye, const vec3& target) {
+		constexpr vec3 up{ 0, 1, 0 };
+		vec3 z = normal(eye - target);
+		vec3 x = normal(cross(up, z));
+		vec3 y = cross(z, x);
+
 		return mat4{
-			{  r.x,  u.x,  f.x, 0 },
-			{  r.y,  u.y,  f.y, 0 },
-			{  r.z,  u.z,  f.z, 0 },
-			{    0,    0,    0, 1 }
+			{ x.x, x.y, x.z, 0 },
+			{ y.x, y.y, y.z, 0 },
+			{ z.x, z.y, z.z, 0 },
+			{   0,   0,   0, 1 }
 		};
 	}
 
 	constexpr mat4 ortho(float l, float r, float b, float t, float f, float n) {
 		return mat4{
-			{ 2 / (r - l),           0,            0, -(r + l) / (r - l) },
-			{           0, 2 / (t - b),            0, -(t + b) / (t - b) },
-			{           0,           0, -2 / (f - n), -(f + n) / (f - n) },
-			{           0,           0,            0,                  1 }
+			{ 2 / (r - l),           0,           0, -(r + l) / (r - l) },
+			{           0, 2 / (t - b),           0, -(t + b) / (t - b) },
+			{           0,           0, 2 / (f - n), -(f + n) / (f - n) },
+			{           0,           0,           0,                  1 }
 		};
 	}
 }

@@ -98,15 +98,19 @@ bool Engine::initGL()
 	const char* vertex_shader =
 		"#version 410\n"
 
-		"layout(location = 0) in  vec3 vertexPosition;"
-		"layout(location = 1) in  vec3 vertexColor;"
-		"layout(location = 0) out vec3 outColor;"
+		"layout(location = 0) in  vec3 position;"
+		"layout(location = 1) in  vec3 normal;"
+		"layout(location = 2) in  vec3 texCoord;"
+
+		"layout(location = 0) out vec3 outNormal;"
+		"layout(location = 1) out vec3 outTexCoord;"
 
 		"uniform mat4 modelMatrix;"
 
 		"void main() {"
-		"  gl_Position = modelMatrix * vec4(vertexPosition, 1.0);"
-		"  outColor = vertexColor;"
+		"  gl_Position = modelMatrix * vec4(position, 1.0);"
+		"  outNormal = normal;"
+		"  outTexCoord = texCoord;"
 		"}";
 
 	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
@@ -119,12 +123,12 @@ bool Engine::initGL()
 	const char* fragment_shader =
 		"#version 410\n"
 
-		"layout(location = 0) in  vec3 fragmentColor;"
+		"layout(location = 0) in  vec3 normal;"
 		"layout(location = 0) out vec4 color;"
 
 		"void main() {"
-		"  color = vec4(1.0, 1.0, 1.0, 1.0);"
-		"  color = vec4(fragmentColor, 1.0);"
+		"  float val = -normal.y * 0.5 + 0.5;"
+		"  color = vec4(val, val, val, 1.0);"
 		"}";
 
 	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
@@ -142,13 +146,11 @@ bool Engine::initGL()
 
 	using namespace Mat;
 	GLuint modelMatrixID = glGetUniformLocation(glProgram, "modelMatrix");
-
 	mat4 model = mat4::Identity();
-	mat4 view = lookAt(vec3{ 1, 0, -3 }, vec3{ 0, 0, 0 }, vec3{ 0, 1, 0 });
+	mat4 view = lookAt(vec3{ 1, 1, 1 }, vec3());
 	constexpr mat4 proj = ortho(-1.5, 1.5, -1.5, 1.5, -10, 10);
-	mat4 pmvMatrix = proj * view * model;
-
-	glUniformMatrix4fv(modelMatrixID, 1, true, *pmvMatrix.data);
+	mat4 mvp = proj * view * model;
+	glUniformMatrix4fv(modelMatrixID, 1, true, *mvp.data);
 
 	mesh = new GMesh("res/suzanne.glb");
 
