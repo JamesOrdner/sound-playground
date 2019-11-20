@@ -167,6 +167,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Engine\EModel.cpp" />
     <ClCompile Include="src\Graphics\GMesh.cpp" />
     <ClCompile Include="lib\gl3w\src\gl3w.c" />
     <ClCompile Include="src\Audio\AudioEngine.cpp" />
@@ -174,6 +175,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Engine\EModel.h" />
     <ClInclude Include="src\Graphics\GMesh.h" />
     <ClInclude Include="src\Audio\AudioEngine.h" />
     <ClInclude Include="src\engine\Engine.h" />

@@ -1,6 +1,5 @@
 #include "Engine.h"
 #include "../Graphics/Matrix.h"
-#include "../Graphics/GMesh.h"
 #include <SDL.h>
 #include <GL/gl3w.h>
 #include <stdio.h>
@@ -26,6 +25,30 @@ void Engine::run()
 		}
 
 		render();
+	}
+}
+
+void Engine::registerModel(const std::shared_ptr<EModel>& model)
+{
+	std::string filepath = model->meshFilepath();
+	for (auto it = models.cbegin(); it != models.cend(); it++) {
+		if (filepath < (*it)->meshFilepath()) {
+			models.insert(it, model);
+			return;
+		}
+	}
+	models.push_back(model);
+}
+
+std::shared_ptr<GMesh> Engine::makeMesh(const std::string& filepath)
+{
+	if (auto existing = meshes[filepath].lock()) {
+		return existing;
+	}
+	else {
+		auto newMesh = std::make_shared<GMesh>(filepath);
+		meshes[filepath] = newMesh;
+		return newMesh;
 	}
 }
 
@@ -128,7 +151,7 @@ bool Engine::initGL()
 		"layout(location = 0) out vec4 color;"
 
 		"void main() {"
-		"  float val = -normal.y * 0.5 + 0.5;"
+		"  float val = normal.y * 0.5 + 0.5;"
 		"  color = vec4(val, val, val, 1.0);"
 		"}";
 
@@ -151,16 +174,6 @@ bool Engine::initGL()
 	mat::mat4 mvp = proj * view;
 	glUniformMatrix4fv(viewProjMatrixID, 1, true, *mvp.data);
 
-	auto mesh1 = std::make_shared<GMesh>("res/suzanne.glb");
-	mesh1->setLocation(mat::vec3{ 0, 0, 1 });
-	mesh1->setScale(0.5);
-	meshes.push_back(mesh1);
-
-	auto mesh2 = std::make_shared<GMesh>("res/suzanne.glb");
-	mesh2->setLocation(mat::vec3{ 0, 1, -1 });
-	mesh2->setScale(2);
-	meshes.push_back(mesh2);
-
 	return true;
 }
 
@@ -178,6 +191,7 @@ void Engine::render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	unsigned int modelMatrixID = glGetUniformLocation(glProgram, "model");
-	for (const auto& mesh : meshes) mesh->draw(modelMatrixID);
+	for (const auto& model : models) model->draw(modelMatrixID);
+	// for (const auto& mesh : meshes) mesh.second.lock()->draw(modelMatrixID, mat::mat4::Identity());
 	SDL_GL_SwapWindow(sdlWindow);
 }

@@ -16,8 +16,10 @@ inline void* bufferOffset(size_t offset) {
 	return (char*)nullptr + offset;
 }
 
-GMesh::GMesh(const std::string& filepath) : modelMatrix(mat::mat4::Identity()), scale(1)
+GMesh::GMesh(const std::string& filepath)
 {
+	this->filepath = filepath;
+
 	TinyGLTF loader;
 	Model model;
 	std::string err;
@@ -73,41 +75,19 @@ GMesh::GMesh(const std::string& filepath) : modelMatrix(mat::mat4::Identity()), 
 
 	glBindVertexArray(0);
 
-	for (GLuint vbo : vbos) glDeleteBuffers(1, &vbo);
+	glDeleteBuffers(vbos.size(), &vbos[0]);
+	// for (GLuint vbo : vbos) glDeleteBuffers(1, &vbo);
 }
 
-void GMesh::draw(unsigned int modelMatrixID)
+std::string GMesh::meshFilepath()
+{
+	return filepath;
+}
+
+void GMesh::draw(unsigned int modelMatrixID, const mat::mat4& modelMatrix)
 {
 	glBindVertexArray(vao);
 	glUniformMatrix4fv(modelMatrixID, 1, true, *modelMatrix.data);
 	glDrawElements(GL_TRIANGLES, drawCount, drawComponentType, bufferOffset(drawByteOffset));
 	glBindVertexArray(0);
-}
-
-void GMesh::setLocation(const mat::vec3& location)
-{
-	this->location = location;
-	modelMatrix = mat::transform(location, scale);
-}
-
-const mat::vec3& GMesh::getLocation()
-{
-	return location;
-}
-
-void GMesh::setScale(float scale)
-{
-	this->scale = mat::vec3(scale);
-	modelMatrix = mat::transform(location, this->scale);
-}
-
-void GMesh::setScale(const mat::vec3& scale)
-{
-	this->scale = scale;
-	modelMatrix = mat::transform(location, scale);
-}
-
-const mat::vec3& GMesh::getScale()
-{
-	return scale;
 }

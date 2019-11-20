@@ -2,7 +2,9 @@
 
 #include "../Audio/AudioEngine.h"
 #include "../Graphics/GMesh.h"
-#include <vector>
+#include "EModel.h"
+#include <map>
+#include <list>
 #include <memory>
 
 // Forward declarations
@@ -20,6 +22,11 @@ public:
 	// Main runloop
 	void run();
 
+	void registerModel(const std::shared_ptr<EModel>& model);
+
+	// Returns a pointer to an existing mesh at the filepath, or creates a new one
+	std::shared_ptr<GMesh> makeMesh(const std::string& filepath);
+
 private:
 	Engine();
 	~Engine();
@@ -32,7 +39,11 @@ private:
 
 	bool bInitialized;
 
-	std::vector<std::shared_ptr<GMesh>> meshes;
+	// Stores all registered models, sorted alphabetically by mesh path
+	std::list<std::shared_ptr<EModel>> models;
+
+	// Stores pointers to all loaded meshes, indexed by path
+	std::map<std::string, std::weak_ptr<GMesh>> meshes;
 
 	/** SDL / OpenGL */
 
