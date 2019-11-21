@@ -2,11 +2,17 @@
 
 #include "Matrix.h"
 #include <string>
+#include <vector>
 #include <list>
 #include <memory>
 
 // Forward declarations
 class EModel;
+namespace tinygltf
+{
+	struct Model;
+	struct Node;
+}
 
 class GMesh
 {
@@ -26,8 +32,22 @@ public:
 
 private:
 
+	struct GLPrimitive {
+		unsigned int vao;
+		unsigned int drawMode;
+		int drawCount;
+		int drawComponentType;
+		void* drawByteOffset;
+	};
+
+	// Load the simplified mesh used for raycasting
+	void loadRayMesh(const tinygltf::Model& model, const tinygltf::Node& node);
+
 	// An ordered list of weak pointers to all owning models sharing this mesh
 	std::list<std::weak_ptr<EModel>> models;
+
+	// The raycasting mesh. Each three vertices forms a triangle.
+	std::vector<mat::vec3> rayMeshBuffer;
 
 	/** OpenGL */
 
@@ -37,14 +57,11 @@ private:
 	// Called each frame, only updates buffers of modified models
 	void updateInstanceBuffers();
 
+	std::list<GLPrimitive> primitives;
+
 	// Buffer storing instance positions
 	unsigned int vbo_position;
 
 	// Buffer storing instance scales
 	unsigned int vbo_scale;
-
-	unsigned int vao;
-	int drawCount;
-	int drawComponentType;
-	size_t drawByteOffset;
 };

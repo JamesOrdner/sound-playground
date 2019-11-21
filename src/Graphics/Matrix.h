@@ -41,6 +41,10 @@ namespace mat // Matrix
 
 		explicit constexpr Vector() : data{} {}
 
+		explicit Vector(float* data) : data{} {
+			for (int i = 0; i < 3; i++) this->data[i] = data[i];
+		}
+
 		explicit constexpr Vector(T fill) : data{} {
 			for (int i = 0; i < 3; i++) data[i] = fill;
 		}

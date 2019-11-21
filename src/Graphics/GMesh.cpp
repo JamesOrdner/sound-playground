@@ -18,6 +18,12 @@ inline void* bufferOffset(size_t offset) {
 	return (char*)nullptr + offset;
 }
 
+inline void makeBuffer(GLuint& vbo, GLenum target, GLsizeiptr byteLen, const void* data) {
+	glGenBuffers(1, &vbo);
+	glBindBuffer(target, vbo);
+	glBufferData(target, byteLen, data, GL_STATIC_DRAW);
+}
+
 GMesh::GMesh(const std::string& filepath)
 {
 	TinyGLTF loader;
@@ -26,37 +32,48 @@ GMesh::GMesh(const std::string& filepath)
 	std::string warn;
 	loader.LoadBinaryFromFile(&model, &err, &warn, filepath);
 
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	glGenBuffers(1, &vbo_position);
+	glGenBuffers(1, &vbo_scale);
 
-	std::vector<unsigned int> vbos;
-
-	Scene& scene = model.scenes[model.defaultScene];
 	for (const Node& node : model.nodes) {
-		// Create vertex buffers and copy data to device
-		for (const BufferView& bufferView : model.bufferViews) {
-			Buffer& buffer = model.buffers[bufferView.buffer];
-
-			GLuint vbo;
-			glGenBuffers(1, &vbo);
-			vbos.push_back(vbo);
-			glBindBuffer(bufferView.target, vbo);
-			glBufferData(bufferView.target, bufferView.byteLength,
-				&buffer.data.at(0) + bufferView.byteOffset, GL_STATIC_DRAW);
+		if (node.name == "_ray") {
+			loadRayMesh(model, node);
+			continue;
 		}
 
-		// Associate created buffers with proper indices in the vao
 		for (const Primitive& primitive : model.meshes[node.mesh].primitives) {
+			// Store render-time data for primitive
 			Accessor indexAccessor = model.accessors[primitive.indices];
-			// drawMode = primitive.mode;
-			drawCount = static_cast<int>(indexAccessor.count);
-			drawComponentType = indexAccessor.componentType;
-			drawByteOffset = indexAccessor.byteOffset;
+			GLPrimitive primitiveData;
+			glGenVertexArrays(1, &primitiveData.vao);
+			glBindVertexArray(primitiveData.vao);
+			primitiveData.drawMode = primitive.mode;
+			primitiveData.drawCount = static_cast<int>(indexAccessor.count);
+			primitiveData.drawComponentType = indexAccessor.componentType;
+			primitiveData.drawByteOffset = bufferOffset(indexAccessor.byteOffset);
+			primitives.push_back(primitiveData);
 
+			std::vector<unsigned int> vbos;
+
+			// Element array buffer
+			const BufferView& indexBufferView = model.bufferViews[indexAccessor.bufferView];
+			const Buffer& indexBuffer = model.buffers[indexBufferView.buffer];
+			GLuint vbo;
+			makeBuffer(vbo, indexBufferView.target, indexBufferView.byteLength,
+				&indexBuffer.data.at(0) + indexBufferView.byteOffset);
+			vbos.push_back(vbo);
+
+			// Associate created buffers with proper indices in the vao
 			for (auto& attrib : primitive.attributes) {
-				Accessor accessor = model.accessors[attrib.second];
+				const Accessor& accessor = model.accessors[attrib.second];
+				const BufferView& bufferView = model.bufferViews[accessor.bufferView];
+				const Buffer& buffer = model.buffers[bufferView.buffer];
+				GLuint vbo;
+				makeBuffer(vbo, bufferView.target, bufferView.byteLength,
+					&buffer.data.at(0) + bufferView.byteOffset);
+				vbos.push_back(vbo);
+
 				int byteStride = accessor.ByteStride(model.bufferViews[accessor.bufferView]);
-				glBindBuffer(GL_ARRAY_BUFFER, vbos[accessor.bufferView]);
 
 				int size = 1;
 				if (accessor.type != TINYGLTF_TYPE_SCALAR) {
@@ -72,34 +89,100 @@ GMesh::GMesh(const std::string& filepath)
 					accessor.normalized ? GL_TRUE : GL_FALSE,
 					byteStride, bufferOffset(accessor.byteOffset));
 			}
+
+			// Associate created buffers with proper indices in the vao
+			for (auto& attrib : primitive.attributes) {
+				const Accessor& accessor = model.accessors[attrib.second];
+				const BufferView& bufferView = model.bufferViews[accessor.bufferView];
+				const Buffer& buffer = model.buffers[bufferView.buffer];
+				GLuint vbo;
+				glGenBuffers(1, &vbo);
+				glBindBuffer(bufferView.target, vbo);
+				glBufferData(bufferView.target, bufferView.byteLength,
+					&buffer.data.at(0) + bufferView.byteOffset, GL_STATIC_DRAW);
+				vbos.push_back(vbo);
+
+				int size = 1;
+				if (accessor.type != TINYGLTF_TYPE_SCALAR) {
+					size = accessor.type;
+				}
+
+				int vaa = -1;
+				if (attrib.first.compare("POSITION") == 0) vaa = 0;
+				if (attrib.first.compare("NORMAL") == 0) vaa = 1;
+				if (attrib.first.compare("TEXCOORD_0") == 0) vaa = 2;
+				glEnableVertexAttribArray(vaa);
+				glVertexAttribPointer(vaa, size, accessor.componentType,
+					accessor.normalized ? GL_TRUE : GL_FALSE,
+					accessor.ByteStride(bufferView), bufferOffset(accessor.byteOffset));
+			}
+
+			// Assign instance position buffer
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
+			glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(3);
+			glVertexAttribDivisor(3, 1);
+
+			// Assign instance scale buffer
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_scale);
+			glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(4);
+			glVertexAttribDivisor(4, 1);
+
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glBindVertexArray(0);
+			glDeleteBuffers(static_cast<GLsizei>(vbos.size()), &vbos[0]);
 		}
 	}
+}
 
-	// Create instance position buffer
-	glGenBuffers(1, &vbo_position);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(3);
-	glVertexAttribDivisor(3, 1);
+void GMesh::loadRayMesh(const Model& model, const Node& node)
+{
+	// Should be only one primitive
+	const Primitive& primitive = model.meshes[node.mesh].primitives[0];
 
-	// Create instance scale buffer
-	glGenBuffers(1, &vbo_scale);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_scale);
-	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(4);
-	glVertexAttribDivisor(4, 1);
+	// Element array buffer
+	Accessor idx_accessor = model.accessors[primitive.indices];
+	const BufferView& idx_bufferView = model.bufferViews[idx_accessor.bufferView];
+	const Buffer& idx_buffer = model.buffers[idx_bufferView.buffer];
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	for (auto& attrib : primitive.attributes) {
+		if (attrib.first.compare("POSITION") != 0) continue;
 
-	// Won't need to modify these anymore, delete
-	glDeleteBuffers(static_cast<GLsizei>(vbos.size()), &vbos[0]);
+		// Vertex buffer
+		const Accessor& vert_accessor = model.accessors[attrib.second];
+		const BufferView& vert_bufferView = model.bufferViews[vert_accessor.bufferView];
+		const Buffer& vert_buffer = model.buffers[vert_bufferView.buffer];
+
+		assert(primitive.mode == GL_TRIANGLES);
+		assert(idx_accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT);
+		assert(vert_accessor.type == TINYGLTF_TYPE_VEC3);
+		assert(vert_accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
+
+		rayMeshBuffer.reserve(idx_accessor.count);
+
+		int idx_stride = idx_accessor.ByteStride(idx_bufferView);
+		int vert_stride = vert_accessor.ByteStride(vert_bufferView);
+		for (size_t i = 0; i < idx_accessor.count; i++) {
+			const unsigned char* iptr = &idx_buffer.data[0] + idx_bufferView.byteOffset + idx_stride * i;
+			unsigned short idx = *((unsigned short*)iptr);
+			for (size_t v = 0; v < vert_accessor.count; v++) {
+				const unsigned char* vptr = &vert_buffer.data[0] + vert_bufferView.byteOffset + vert_stride * v;
+				rayMeshBuffer.push_back(mat::vec3((float*)vptr));
+			}
+		}
+
+		return;
+	}
 }
 
 GMesh::~GMesh()
 {
 	glDeleteBuffers(1, &vbo_position);
 	glDeleteBuffers(1, &vbo_scale);
+	for (const auto& primitive : primitives) {
+		glDeleteVertexArrays(1, &primitive.vao);
+	}
 }
 
 void GMesh::registerModel(const std::shared_ptr<EModel>& model)
@@ -162,12 +245,14 @@ void GMesh::updateInstanceBuffers()
 void GMesh::draw()
 {
 	updateInstanceBuffers();
-	glBindVertexArray(vao);
-	glDrawElementsInstanced(
-		GL_TRIANGLES, 
-		drawCount, 
-		drawComponentType, 
-		bufferOffset(drawByteOffset), 
-		static_cast<GLsizei>(models.size()));
+	for (const auto& primitive : primitives) {
+		glBindVertexArray(primitive.vao);
+		glDrawElementsInstanced(
+			primitive.drawMode,
+			primitive.drawCount,
+			primitive.drawComponentType,
+			primitive.drawByteOffset,
+			static_cast<GLsizei>(models.size()));
+	}
 	glBindVertexArray(0);
 }
