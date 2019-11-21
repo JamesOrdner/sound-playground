@@ -82,6 +82,13 @@ GMesh::GMesh(const std::string& filepath)
 	glEnableVertexAttribArray(3);
 	glVertexAttribDivisor(3, 1);
 
+	// Create instance position buffer
+	glGenBuffers(1, &vbo_scale);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_scale);
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(4);
+	glVertexAttribDivisor(4, 1);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
@@ -92,6 +99,7 @@ GMesh::GMesh(const std::string& filepath)
 GMesh::~GMesh()
 {
 	glDeleteBuffers(1, &vbo_position);
+	glDeleteBuffers(1, &vbo_scale);
 }
 
 void GMesh::registerModel(const std::shared_ptr<EModel>& model)
@@ -113,13 +121,21 @@ void GMesh::unregisterModel(const std::shared_ptr<EModel>& model)
 
 void GMesh::reloadInstanceBuffers()
 {
-	std::vector<mat::vec3> m;
+	std::vector<mat::vec3> positions;
+	std::vector<mat::vec3> scales;
 	for (const auto& model : models) {
 		auto modelPtr = model.lock();
-		m.push_back(modelPtr->getPosition());
+		positions.push_back(modelPtr->getPosition());
+		scales.push_back(modelPtr->getScale());
+		modelPtr->transformUpdated();
 	}
+
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
-	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(mat::vec3), &m[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(mat::vec3), &positions[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_scale);
+	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(mat::vec3), &scales[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -130,9 +146,12 @@ void GMesh::updateInstanceBuffers()
 	for (const auto& model : models) {
 		auto modelPtr = model.lock();
 		if (modelPtr->needsTransformUpdate()) {
-			mat::vec3 translation = modelPtr->getPosition();
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
 			glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(mat::vec3), sizeof(mat::vec3), modelPtr->getPosition().data);
+			
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_scale);
+			glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(mat::vec3), sizeof(mat::vec3), modelPtr->getScale().data);
+
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			modelPtr->transformUpdated();
 		}
@@ -142,8 +161,8 @@ void GMesh::updateInstanceBuffers()
 
 void GMesh::draw()
 {
-	glBindVertexArray(vao);
 	updateInstanceBuffers();
+	glBindVertexArray(vao);
 	glDrawElementsInstanced(
 		GL_TRIANGLES, 
 		drawCount, 

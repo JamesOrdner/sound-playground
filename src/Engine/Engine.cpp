@@ -24,6 +24,10 @@ void Engine::run()
 			case SDL_QUIT:
 				quit = true;
 				break;
+			case SDL_MOUSEMOTION:
+				int y;
+				SDL_GetMouseState(nullptr, &y);
+				models.back()->setScale(y / 512.f);
 			}
 		}
 
@@ -139,6 +143,7 @@ bool Engine::initGL()
 		"layout(location = 1) in  vec3 normal;"
 		"layout(location = 2) in  vec3 texCoord;"
 		"layout(location = 3) in  vec3 instancePosition;"
+		"layout(location = 4) in  vec3 instanceScale;"
 
 		"layout(location = 0) out vec3 outNormal;"
 		"layout(location = 1) out vec3 outTexCoord;"
@@ -146,7 +151,7 @@ bool Engine::initGL()
 		"uniform mat4 viewProj;"
 
 		"void main() {"
-		"  gl_Position = viewProj * vec4(position + instancePosition, 1.0);"
+		"  gl_Position = viewProj * vec4(position * instanceScale + instancePosition, 1.0);"
 		"  outNormal = normal;"
 		"  outTexCoord = texCoord;"
 		"}";

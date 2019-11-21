@@ -40,6 +40,9 @@ private:
 	// Buffer storing instance positions
 	unsigned int vbo_position;
 
+	// Buffer storing instance scales
+	unsigned int vbo_scale;
+
 	unsigned int vao;
 	int drawCount;
 	int drawComponentType;
