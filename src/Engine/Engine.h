@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Audio/AudioEngine.h"
+#include "EWorld.h"
 #include <string>
 #include <map>
 #include <list>
@@ -20,14 +21,10 @@ public:
 	Engine(Engine const&) = delete;
 	void operator=(Engine const&) = delete;
 
+	EWorld& world();
+
 	// Main runloop
 	void run();
-
-	// Register a model with the engine for rendering. Does not check for double registration.
-	void registerModel(const std::shared_ptr<EModel>& model);
-
-	// Remove a model from the rendering pipeline
-	void unregisterModel(const std::shared_ptr<EModel>& model);
 
 private:
 	Engine();
@@ -41,11 +38,19 @@ private:
 
 	bool bInitialized;
 
+	// The world, containing all objects
+	std::unique_ptr<EWorld> _world;
+
+	// Register a model with the engine for rendering. Does not check for double registration.
+	void registerModel(const std::shared_ptr<EModel>& model);
+	friend void EWorld::addObject(const std::shared_ptr<EModel>& model);
+
+	// Remove a model from the rendering pipeline
+	void unregisterModel(const std::shared_ptr<EModel>& model);
+	friend void EWorld::removeObject(const std::shared_ptr<EModel>& model);
+
 	// Returns a pointer to an existing mesh at the filepath, or creates a new one
 	std::shared_ptr<GMesh> makeMesh(const std::string& filepath);
-
-	// Stores all registered models
-	std::list<std::shared_ptr<EModel>> models;
 
 	// Stores pointers to all loaded meshes, indexed by path
 	std::map<std::string, std::weak_ptr<GMesh>> meshes;

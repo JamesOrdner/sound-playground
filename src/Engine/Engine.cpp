@@ -13,6 +13,11 @@ Engine& Engine::instance()
 	return instance;
 }
 
+EWorld& Engine::world()
+{
+	return *_world;
+}
+
 void Engine::run()
 {
 	if (!bInitialized) return;
@@ -27,7 +32,7 @@ void Engine::run()
 			case SDL_MOUSEMOTION:
 				int y;
 				SDL_GetMouseState(nullptr, &y);
-				models.back()->setScale(y / 768.f);
+				// models.back()->setScale(y / 768.f);
 			}
 		}
 
@@ -41,7 +46,6 @@ void Engine::registerModel(const std::shared_ptr<EModel>& model)
 	auto mesh = makeMesh(model->getFilepath());
 	model->registerWithMesh(mesh); // transfer mesh ownership to model
 	mesh->registerModel(model); // add weak pointer to model in mesh model list
-	models.push_back(model);
 }
 
 void Engine::unregisterModel(const std::shared_ptr<EModel>& model)
@@ -55,7 +59,6 @@ void Engine::unregisterModel(const std::shared_ptr<EModel>& model)
 	if (meshRef.expired()) meshes.erase(path);
 
 	model->unregister();
-	models.remove(model);
 }
 
 std::shared_ptr<GMesh> Engine::makeMesh(const std::string& filepath)
@@ -72,7 +75,13 @@ std::shared_ptr<GMesh> Engine::makeMesh(const std::string& filepath)
 
 Engine::Engine()
 {
-	bInitialized = init();
+	if (init()) {
+		_world = std::make_unique<EWorld>();
+		bInitialized = true;
+	}
+	else {
+		bInitialized = false;
+	}
 }
 
 Engine::~Engine()
@@ -204,6 +213,8 @@ bool Engine::initGL()
 
 void Engine::deinit()
 {
+	bInitialized = false;
+
 	audioEngine.deinit();
 
 	SDL_DestroyWindow(sdlWindow);
