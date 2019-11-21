@@ -27,7 +27,7 @@ void Engine::run()
 			case SDL_MOUSEMOTION:
 				int y;
 				SDL_GetMouseState(nullptr, &y);
-				models.back()->setScale(y / 512.f);
+				models.back()->setScale(y / 768.f);
 			}
 		}
 
@@ -94,8 +94,11 @@ bool Engine::init()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glMajorVersion);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glMinorVersion);
 
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
 	// Create window
-	sdlWindow = SDL_CreateWindow("Sound Playground", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 512, 512, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+	sdlWindow = SDL_CreateWindow("Sound Playground", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 768, 768, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 	if (!sdlWindow) {
 		printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
 		return false;
@@ -130,6 +133,8 @@ bool Engine::init()
 
 bool Engine::initGL()
 {
+	glEnable(GL_MULTISAMPLE);
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
@@ -170,7 +175,8 @@ bool Engine::initGL()
 		"layout(location = 0) out vec4 color;"
 
 		"void main() {"
-		"  float val = normal.y * 0.5 + 0.5;"
+		"  vec3 light = normalize(vec3(2, 2, 1));"
+		"  float val = max(dot(light, normal), 0) + 0.1;"
 		"  color = vec4(val, val, val, 1.0);"
 		"}";
 

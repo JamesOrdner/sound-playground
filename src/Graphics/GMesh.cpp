@@ -82,7 +82,7 @@ GMesh::GMesh(const std::string& filepath)
 	glEnableVertexAttribArray(3);
 	glVertexAttribDivisor(3, 1);
 
-	// Create instance position buffer
+	// Create instance scale buffer
 	glGenBuffers(1, &vbo_scale);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_scale);
 	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, 0);
