@@ -1,24 +1,44 @@
 #pragma once
 
-#include <string>
 #include "Matrix.h"
+#include <string>
+#include <list>
+#include <memory>
+
+// Forward declarations
+class EModel;
 
 class GMesh
 {
 public:
 	GMesh(const std::string& filepath);
 
-	// Returns the path of the mesh file
-	std::string meshFilepath();
+	~GMesh();
 
-	// Called from the main render loop, accepting modelMatrixID to load model matrix
-	void draw(unsigned int modelMatrixID,  const mat::mat4& modelMatrix);
+	// Register a model with this mesh
+	void registerModel(const std::shared_ptr<EModel>& model);
+
+	// Unregisters a model from this mesh
+	void unregisterModel(const std::shared_ptr<EModel>& model);
+
+	// Called from the main render loop, draws all models using this mesh
+	void draw();
 
 private:
 
-	std::string filepath;
+	// An ordered list of weak pointers to all owning models sharing this mesh
+	std::list<std::weak_ptr<EModel>> models;
 
 	/** OpenGL */
+
+	// Perform a full reload of any instance buffers
+	void reloadInstanceBuffers();
+
+	// Called each frame, only updates buffers of modified models
+	void updateInstanceBuffers();
+
+	// Buffer storing instance positions
+	unsigned int vbo_position;
 
 	unsigned int vao;
 	int drawCount;

@@ -1,14 +1,15 @@
 #pragma once
 
 #include "../Audio/AudioEngine.h"
-#include "../Graphics/GMesh.h"
-#include "EModel.h"
+#include <string>
 #include <map>
 #include <list>
 #include <memory>
 
 // Forward declarations
 struct SDL_Window;
+class EModel;
+class GMesh;
 
 class Engine
 {
@@ -22,10 +23,11 @@ public:
 	// Main runloop
 	void run();
 
+	// Register a model with the engine for rendering. Does not check for double registration.
 	void registerModel(const std::shared_ptr<EModel>& model);
 
-	// Returns a pointer to an existing mesh at the filepath, or creates a new one
-	std::shared_ptr<GMesh> makeMesh(const std::string& filepath);
+	// Remove a model from the rendering pipeline
+	void unregisterModel(const std::shared_ptr<EModel>& model);
 
 private:
 	Engine();
@@ -39,7 +41,10 @@ private:
 
 	bool bInitialized;
 
-	// Stores all registered models, sorted alphabetically by mesh path
+	// Returns a pointer to an existing mesh at the filepath, or creates a new one
+	std::shared_ptr<GMesh> makeMesh(const std::string& filepath);
+
+	// Stores all registered models
 	std::list<std::shared_ptr<EModel>> models;
 
 	// Stores pointers to all loaded meshes, indexed by path

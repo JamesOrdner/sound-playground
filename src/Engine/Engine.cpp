@@ -1,5 +1,8 @@
 #include "Engine.h"
 #include "../Graphics/Matrix.h"
+#include "../Graphics/GMesh.h"
+#include "EModel.h"
+
 #include <SDL.h>
 #include <GL/gl3w.h>
 #include <stdio.h>
@@ -30,14 +33,25 @@ void Engine::run()
 
 void Engine::registerModel(const std::shared_ptr<EModel>& model)
 {
-	std::string filepath = model->meshFilepath();
-	for (auto it = models.cbegin(); it != models.cend(); it++) {
-		if (filepath < (*it)->meshFilepath()) {
-			models.insert(it, model);
-			return;
-		}
-	}
+	// Assign mesh to model and save model reference
+	auto mesh = makeMesh(model->getFilepath());
+	model->registerWithMesh(mesh); // transfer mesh ownership to model
+	mesh->registerModel(model); // add weak pointer to model in mesh model list
 	models.push_back(model);
+}
+
+void Engine::unregisterModel(const std::shared_ptr<EModel>& model)
+{
+	auto mesh = model->getMesh();
+	mesh->unregisterModel(model); // remove model from mesh model list
+
+	// Remove mesh from map if no more models reference this mesh
+	std::string path = model->getFilepath();
+	auto meshRef = meshes[path];
+	if (meshRef.expired()) meshes.erase(path);
+
+	model->unregister();
+	models.remove(model);
 }
 
 std::shared_ptr<GMesh> Engine::makeMesh(const std::string& filepath)
@@ -124,15 +138,15 @@ bool Engine::initGL()
 		"layout(location = 0) in  vec3 position;"
 		"layout(location = 1) in  vec3 normal;"
 		"layout(location = 2) in  vec3 texCoord;"
+		"layout(location = 3) in  vec3 instancePosition;"
 
 		"layout(location = 0) out vec3 outNormal;"
 		"layout(location = 1) out vec3 outTexCoord;"
 
-		"uniform mat4 model;"
 		"uniform mat4 viewProj;"
 
 		"void main() {"
-		"  gl_Position = viewProj * model * vec4(position, 1.0);"
+		"  gl_Position = viewProj * vec4(position + instancePosition, 1.0);"
 		"  outNormal = normal;"
 		"  outTexCoord = texCoord;"
 		"}";
@@ -170,7 +184,7 @@ bool Engine::initGL()
 
 	GLuint viewProjMatrixID = glGetUniformLocation(glProgram, "viewProj");
 	mat::mat4 view = lookAt(mat::vec3{ 1, 1, 1 }, mat::vec3());
-	constexpr mat::mat4 proj = mat::ortho(-1.5, 1.5, -1.5, 1.5, -10, 10);
+	mat::mat4 proj = mat::ortho(-1.5, 1.5, -1.5, 1.5, -10, 10);
 	mat::mat4 mvp = proj * view;
 	glUniformMatrix4fv(viewProjMatrixID, 1, true, *mvp.data);
 
@@ -190,8 +204,6 @@ void Engine::deinit()
 void Engine::render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	unsigned int modelMatrixID = glGetUniformLocation(glProgram, "model");
-	for (const auto& model : models) model->draw(modelMatrixID);
-	// for (const auto& mesh : meshes) mesh.second.lock()->draw(modelMatrixID, mat::mat4::Identity());
+	for (const auto& mesh : meshes) mesh.second.lock()->draw();
 	SDL_GL_SwapWindow(sdlWindow);
 }

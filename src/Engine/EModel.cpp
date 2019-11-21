@@ -1,37 +1,52 @@
 #include "EModel.h"
-#include "Engine.h"
+#include "../Graphics/GMesh.h"
 
-EModel::EModel(const std::string& filepath) : modelMatrix(mat::mat4::Identity()), scale(1)
+EModel::EModel(const std::string& filepath) : scale(1), bDirtyTransform(false)
 {
-	mesh = Engine::instance().makeMesh(filepath);
+	this->filepath = filepath;
 }
 
-std::string EModel::meshFilepath()
+std::string EModel::getFilepath()
 {
-	return mesh->meshFilepath();
+	return filepath;
 }
 
-void EModel::setLocation(const mat::vec3& location)
+void EModel::registerWithMesh(std::shared_ptr<GMesh> mesh)
 {
-	this->location = location;
-	modelMatrix = mat::transform(location, scale);
+	this->mesh = mesh;
 }
 
-const mat::vec3& EModel::getLocation()
+void EModel::unregister()
 {
-	return location;
+	mesh.reset();
+}
+
+std::shared_ptr<GMesh> EModel::getMesh()
+{
+	return mesh;
+}
+
+void EModel::setPosition(const mat::vec3& location)
+{
+	this->position = location;
+	bDirtyTransform = true;
+}
+
+const mat::vec3& EModel::getPosition()
+{
+	return position;
 }
 
 void EModel::setScale(float scale)
 {
 	this->scale = mat::vec3(scale);
-	modelMatrix = mat::transform(location, this->scale);
+	bDirtyTransform = true;
 }
 
 void EModel::setScale(const mat::vec3& scale)
 {
 	this->scale = scale;
-	modelMatrix = mat::transform(location, scale);
+	bDirtyTransform = true;
 }
 
 const mat::vec3& EModel::getScale()
@@ -39,7 +54,12 @@ const mat::vec3& EModel::getScale()
 	return scale;
 }
 
-void EModel::draw(unsigned int modelMatrixID)
+bool EModel::needsTransformUpdate()
 {
-	mesh->draw(modelMatrixID, modelMatrix);
+	return bDirtyTransform;
+}
+
+void EModel::transformUpdated()
+{
+	bDirtyTransform = false;
 }
