@@ -76,7 +76,7 @@ namespace mat // Matrix
 		explicit constexpr Vector() : data{} {}
 
 		explicit Vector(float* data) : data{} {
-			for (int i = 0; i < 3; i++) this->data[i] = data[i];
+			for (int i = 0; i < 4; i++) this->data[i] = data[i];
 		}
 
 		constexpr explicit Vector(const Vector<T, 3>& v) : data{} {
@@ -87,12 +87,12 @@ namespace mat // Matrix
 		}
 
 		explicit constexpr Vector(T fill) : data{} {
-			for (int i = 0; i < 3; i++) data[i] = fill;
+			for (int i = 0; i < 4; i++) data[i] = fill;
 		}
 
 		explicit constexpr Vector(std::initializer_list<T> l) : data{} {
 			const T* lp = l.begin();
-			for (int i = 0; i < 3; i++) data[i] = lp[i];
+			for (int i = 0; i < 4; i++) data[i] = lp[i];
 		}
 
 		constexpr T operator[](int i) const {
@@ -316,10 +316,10 @@ namespace mat // Matrix
 		vec3 y = cross(z, x);
 
 		return mat4{
-			{ x[0], x[1], x[2], 0 },
-			{ y[0], y[1], y[2], 0 },
-			{ z[0], z[1], z[2], 0 },
-			{    0,   0,    0,  1 }
+			{ x[0], x[1], x[2], -dot(x, eye) },
+			{ y[0], y[1], y[2], -dot(y, eye) },
+			{ z[0], z[1], z[2], -dot(z, eye) },
+			{    0,   0,    0,             1 }
 		};
 	}
 

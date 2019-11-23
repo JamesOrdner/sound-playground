@@ -46,16 +46,14 @@ void Engine::run()
 std::shared_ptr<EModel> Engine::raycastScreen(int x, int y)
 {
 	using namespace mat;
-	mat4 inverseMatrix = inverse(projectionViewMatrix);
+	vec4 screen_orig{ static_cast<float>(x - 384) / 384.f, static_cast<float>(384 - y) / 384.f, -1.f, 1.f };
+	vec3 world_orig(invProjectionViewMatrix * screen_orig);
 
-	vec4 screen_orig{ static_cast<float>(x - 384) / 384.f, static_cast<float>(y - 384) / 384.f, 1.f, 1.f };
-	vec3 world_orig(inverseMatrix * screen_orig);
-
-	vec4 screen_dir{ 0.f, 0.f, -1.f, 0.f};
-	vec3 world_dir(inverseMatrix * screen_dir);
+	vec4 screen_dir{ 0.f, 0.f, 1.f, 0.f};
+	vec3 world_dir(invProjectionViewMatrix * screen_dir);
 
 	vec3 hitLoc;
-	return _world->raycast(-world_orig, -world_dir, hitLoc);
+	return _world->raycast(world_orig, world_dir, hitLoc);
 }
 
 void Engine::registerModel(const std::shared_ptr<EModel>& model)
@@ -221,9 +219,10 @@ bool Engine::initGL()
 	glUseProgram(glProgram);
 
 	GLuint viewProjMatrixID = glGetUniformLocation(glProgram, "viewProj");
-	mat::mat4 view = lookAt(mat::vec3{ 1, 1, 1 }, mat::vec3());
-	mat::mat4 proj = mat::ortho(-1.5, 1.5, -1.5, 1.5, -10, 10);
+	mat::mat4 view = lookAt(mat::vec3{ 10, 10, 10 }, mat::vec3());
+	mat::mat4 proj = mat::ortho(-1.5, 1.5, -1.5, 1.5, -20, 0);
 	projectionViewMatrix = proj * view;
+	invProjectionViewMatrix = mat::inverse(projectionViewMatrix);
 	glUniformMatrix4fv(viewProjMatrixID, 1, true, *projectionViewMatrix.data);
 
 	return true;

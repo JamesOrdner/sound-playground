@@ -64,7 +64,11 @@ private:
 	void* glContext;
 	unsigned int glProgram;
 
+	// Transforms world space to screen space
 	mat::mat4 projectionViewMatrix;
+
+	// Transforms screen space to world space
+	mat::mat4 invProjectionViewMatrix;
 
 	/** Audio */
 
