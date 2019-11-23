@@ -81,9 +81,9 @@ GMesh::GMesh(const std::string& filepath)
 				}
 
 				int vaa = -1;
-				if (attrib.first.compare("POSITION") == 0) vaa = 0;
-				if (attrib.first.compare("NORMAL") == 0) vaa = 1;
-				if (attrib.first.compare("TEXCOORD_0") == 0) vaa = 2;
+				if (attrib.first == "POSITION") vaa = 0;
+				if (attrib.first == "NORMAL") vaa = 1;
+				if (attrib.first == "TEXCOORD_0") vaa = 2;
 				glEnableVertexAttribArray(vaa);
 				glVertexAttribPointer(vaa, size, accessor.componentType,
 					accessor.normalized ? GL_TRUE : GL_FALSE,
@@ -108,9 +108,9 @@ GMesh::GMesh(const std::string& filepath)
 				}
 
 				int vaa = -1;
-				if (attrib.first.compare("POSITION") == 0) vaa = 0;
-				if (attrib.first.compare("NORMAL") == 0) vaa = 1;
-				if (attrib.first.compare("TEXCOORD_0") == 0) vaa = 2;
+				if (attrib.first == "POSITION") vaa = 0;
+				if (attrib.first == "NORMAL") vaa = 1;
+				if (attrib.first == "TEXCOORD_0") vaa = 2;
 				glEnableVertexAttribArray(vaa);
 				glVertexAttribPointer(vaa, size, accessor.componentType,
 					accessor.normalized ? GL_TRUE : GL_FALSE,
@@ -138,16 +138,16 @@ GMesh::GMesh(const std::string& filepath)
 
 void GMesh::loadRayMesh(const Model& model, const Node& node)
 {
-	// Should be only one primitive
+	// There should be only one primitive
 	const Primitive& primitive = model.meshes[node.mesh].primitives[0];
 
-	// Element array buffer
+	// Index array buffer
 	Accessor idx_accessor = model.accessors[primitive.indices];
 	const BufferView& idx_bufferView = model.bufferViews[idx_accessor.bufferView];
 	const Buffer& idx_buffer = model.buffers[idx_bufferView.buffer];
 
 	for (auto& attrib : primitive.attributes) {
-		if (attrib.first.compare("POSITION") != 0) continue;
+		if (attrib.first != "POSITION") continue;
 
 		// Vertex buffer
 		const Accessor& vert_accessor = model.accessors[attrib.second];
@@ -165,11 +165,9 @@ void GMesh::loadRayMesh(const Model& model, const Node& node)
 		int vert_stride = vert_accessor.ByteStride(vert_bufferView);
 		for (size_t i = 0; i < idx_accessor.count; i++) {
 			const unsigned char* iptr = &idx_buffer.data[0] + idx_bufferView.byteOffset + idx_stride * i;
-			unsigned short idx = *((unsigned short*)iptr);
-			for (size_t v = 0; v < vert_accessor.count; v++) {
-				const unsigned char* vptr = &vert_buffer.data[0] + vert_bufferView.byteOffset + vert_stride * v;
-				rayMeshBuffer.push_back(mat::vec3((float*)vptr));
-			}
+			int v_idx = static_cast<int>(*((unsigned short*)iptr));
+			const unsigned char* vptr = &vert_buffer.data[0] + vert_bufferView.byteOffset + vert_stride * v_idx;
+			rayMeshBuffer.push_back(mat::vec3((float*)vptr));
 		}
 
 		return;
@@ -255,4 +253,9 @@ void GMesh::draw()
 			static_cast<GLsizei>(models.size()));
 	}
 	glBindVertexArray(0);
+}
+
+const std::vector<mat::vec3>& GMesh::getRayMesh()
+{
+	return rayMeshBuffer;
 }

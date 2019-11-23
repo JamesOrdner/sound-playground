@@ -29,10 +29,12 @@ void Engine::run()
 			case SDL_QUIT:
 				quit = true;
 				break;
-			case SDL_MOUSEMOTION:
-				int y;
-				SDL_GetMouseState(nullptr, &y);
-				// models.back()->setScale(y / 768.f);
+			case SDL_MOUSEBUTTONDOWN:
+				mat::vec3 hitLoc;
+				std::shared_ptr<EModel> hitObject;
+				if (_world->raycast(mat::vec3{ 0.f, 1.f, 0.f }, mat::vec3{ 0.f, -1.f, 0.f }, hitLoc, hitObject)) {
+					printf("%f %f %f\n", hitLoc.x, hitLoc.y, hitLoc.z);
+				}
 			}
 		}
 

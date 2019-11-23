@@ -45,6 +45,47 @@ namespace mat // Matrix
 			for (int i = 0; i < 3; i++) this->data[i] = data[i];
 		}
 
+		constexpr explicit Vector(const Vector<T, 4>& v) : data{} {
+			data[0] = v.data[0];
+			data[1] = v.data[1];
+			data[2] = v.data[2];
+		}
+
+		explicit constexpr Vector(T fill) : data{} {
+			for (int i = 0; i < 3; i++) data[i] = fill;
+		}
+
+		explicit constexpr Vector(std::initializer_list<T> l) : data{} {
+			const T* lp = l.begin();
+			for (int i = 0; i < 3; i++) data[i] = lp[i];
+		}
+
+		constexpr T operator[](int i) const {
+			return data[i];
+		}
+	};
+
+	template<typename T>
+	struct Vector<T, 4> {
+		union {
+			float data[4];
+			struct { T x, y, z, w; };
+			struct { T r, g, b, a; };
+		};
+
+		explicit constexpr Vector() : data{} {}
+
+		explicit Vector(float* data) : data{} {
+			for (int i = 0; i < 3; i++) this->data[i] = data[i];
+		}
+
+		constexpr explicit Vector(const Vector<T, 3>& v) : data{} {
+			data[0] = v.data[0];
+			data[1] = v.data[1];
+			data[2] = v.data[2];
+			data[3] = static_cast<T>(1);
+		}
+
 		explicit constexpr Vector(T fill) : data{} {
 			for (int i = 0; i < 3; i++) data[i] = fill;
 		}
@@ -62,6 +103,7 @@ namespace mat // Matrix
 	/** Vector Typedefs */
 
 	typedef Vector<float, 3> vec3;
+	typedef Vector<float, 4> vec4;
 
 	/** Vector Operators */
 
@@ -233,6 +275,19 @@ namespace mat // Matrix
 	};
 
 	typedef Matrix<float, 4, 4> mat4;
+
+	/** Matrix Functions */
+
+	template <typename T, int rows, int cols>
+	constexpr Vector<T, cols> operator*(const Matrix<T, rows, cols>& lhs, const Vector<T, cols>& rhs) {
+		Vector<T, rows> v;
+		for (int r = 0; r < rows; r++) {
+			for (int c = 0; c < cols; c++) {
+				v.data[r] += lhs.data[r][c] * rhs[c];
+			}
+		}
+		return v;
+	}
 
 	// Transpose
 	template <typename T, int rows, int cols>

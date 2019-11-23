@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 // Forward declarations
 class GMesh;
@@ -28,6 +29,9 @@ public:
 	// Returns the mesh associated with this model
 	std::shared_ptr<GMesh> getMesh();
 
+	// Perform a raycast against this model. Returns the length of the hit ray (negative if no hit).
+	float raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc);
+
 	/** Location setters and getters */
 
 	void setPosition(const mat::vec3& location);
@@ -38,6 +42,9 @@ public:
 	void setScale(float scale);
 	void setScale(const mat::vec3& scale);
 	const mat::vec3& getScale();
+
+	// Returns the world transform matrix for this model
+	mat::mat4 transformMatrix();
 
 	// Returns true if transform has been modified and needs render update
 	bool needsTransformUpdate();

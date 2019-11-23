@@ -30,6 +30,9 @@ public:
 	// Called from the main render loop, draws all models using this mesh
 	void draw();
 
+	// Returns the ray mesh buffer.
+	const std::vector<mat::vec3>& getRayMesh();
+
 private:
 
 	struct GLPrimitive {
