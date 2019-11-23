@@ -26,6 +26,9 @@ public:
 	// Main runloop
 	void run();
 
+	// Return the object at screen coordinates
+	std::shared_ptr<EModel> raycastScreen(int x, int y);
+
 private:
 	Engine();
 	~Engine();
@@ -38,9 +41,6 @@ private:
 
 	bool bInitialized;
 
-	// The world, containing all objects
-	std::unique_ptr<EWorld> _world;
-
 	// Register a model with the engine for rendering. Does not check for double registration.
 	void registerModel(const std::shared_ptr<EModel>& model);
 	friend void EWorld::addObject(const std::shared_ptr<EModel>& model);
@@ -52,6 +52,9 @@ private:
 	// Returns a pointer to an existing mesh at the filepath, or creates a new one
 	std::shared_ptr<GMesh> makeMesh(const std::string& filepath);
 
+	// The world, containing all objects
+	std::unique_ptr<EWorld> _world;
+
 	// Stores pointers to all loaded meshes, indexed by path
 	std::map<std::string, std::weak_ptr<GMesh>> meshes;
 
@@ -60,6 +63,8 @@ private:
 	SDL_Window* sdlWindow;
 	void* glContext;
 	unsigned int glProgram;
+
+	mat::mat4 projectionViewMatrix;
 
 	/** Audio */
 

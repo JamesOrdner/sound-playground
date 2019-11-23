@@ -17,7 +17,7 @@ public:
 	void removeObject(const std::shared_ptr<EModel>& model);
 
 	// Perform a raycast. Returns success.
-	bool raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc, std::shared_ptr<EModel> hitObject);
+	std::shared_ptr<EModel> raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc);
 
 private:
 	// All objects in this world

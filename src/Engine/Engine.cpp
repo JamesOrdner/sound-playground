@@ -30,16 +30,32 @@ void Engine::run()
 				quit = true;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				mat::vec3 hitLoc;
-				std::shared_ptr<EModel> hitObject;
-				if (_world->raycast(mat::vec3{ 0.f, 1.f, 0.f }, mat::vec3{ 0.f, -1.f, 0.f }, hitLoc, hitObject)) {
-					printf("%f %f %f\n", hitLoc.x, hitLoc.y, hitLoc.z);
+				int x, y;
+				SDL_GetMouseState(&x, &y);
+				if (auto hitObject = raycastScreen(x, y)) {
+					const mat::vec3& loc = hitObject->getPosition();
+					printf("%f %f\n", loc.x, loc.z);
 				}
 			}
 		}
 
 		render();
 	}
+}
+
+std::shared_ptr<EModel> Engine::raycastScreen(int x, int y)
+{
+	using namespace mat;
+	mat4 inverseMatrix = inverse(projectionViewMatrix);
+
+	vec4 screen_orig{ static_cast<float>(x - 384) / 384.f, static_cast<float>(y - 384) / 384.f, 1.f, 1.f };
+	vec3 world_orig(inverseMatrix * screen_orig);
+
+	vec4 screen_dir{ 0.f, 0.f, -1.f, 0.f};
+	vec3 world_dir(inverseMatrix * screen_dir);
+
+	vec3 hitLoc;
+	return _world->raycast(-world_orig, -world_dir, hitLoc);
 }
 
 void Engine::registerModel(const std::shared_ptr<EModel>& model)
@@ -207,8 +223,8 @@ bool Engine::initGL()
 	GLuint viewProjMatrixID = glGetUniformLocation(glProgram, "viewProj");
 	mat::mat4 view = lookAt(mat::vec3{ 1, 1, 1 }, mat::vec3());
 	mat::mat4 proj = mat::ortho(-1.5, 1.5, -1.5, 1.5, -10, 10);
-	mat::mat4 mvp = proj * view;
-	glUniformMatrix4fv(viewProjMatrixID, 1, true, *mvp.data);
+	projectionViewMatrix = proj * view;
+	glUniformMatrix4fv(viewProjMatrixID, 1, true, *projectionViewMatrix.data);
 
 	return true;
 }

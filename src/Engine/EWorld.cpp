@@ -14,18 +14,19 @@ void EWorld::removeObject(const std::shared_ptr<EModel>& model)
 	Engine::instance().unregisterModel(model);
 }
 
-bool EWorld::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc, std::shared_ptr<EModel> hitObject)
+std::shared_ptr<EModel> EWorld::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc)
 {
-	float shortest = -1;
+	float shortest = FLT_MAX;
+	std::shared_ptr<EModel> hitObject;
 	for (const auto& object : objects) {
 		mat::vec3 hit;
 		if (float l = object->raycast(origin, direction, hit) > 0) {
-			if (shortest < 0 || l < shortest) {
+			if (!hitObject || l < shortest) {
 				shortest = l;
 				hitLoc = hit;
 				hitObject = object;
 			}
 		}
 	}
-	return shortest > 0;
+	return hitObject;
 }
