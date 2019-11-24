@@ -46,7 +46,12 @@ void Engine::run()
 std::shared_ptr<EModel> Engine::raycastScreen(int x, int y)
 {
 	using namespace mat;
-	vec4 screen_orig{ static_cast<float>(x - 384) / 384.f, static_cast<float>(384 - y) / 384.f, -1.f, 1.f };
+	vec4 screen_orig{
+		static_cast<float>(x - screenWidth / 2) / (screenWidth / 2),
+		static_cast<float>(screenHeight / 2 - y) / (screenHeight / 2),
+		-1.f, 
+		1.f 
+	};
 	vec3 world_orig(invProjectionViewMatrix * screen_orig);
 
 	vec4 screen_dir{ 0.f, 0.f, 1.f, 0.f};
@@ -107,6 +112,9 @@ Engine::~Engine()
 
 bool Engine::init()
 {
+	screenWidth = 1280;
+	screenHeight = 720;
+
 	int glMajorVersion = 4;
 	int glMinorVersion = 6;
 
@@ -123,7 +131,8 @@ bool Engine::init()
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 	// Create window
-	sdlWindow = SDL_CreateWindow("Sound Playground", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 768, 768, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+	sdlWindow = SDL_CreateWindow("Sound Playground", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+		screenWidth, screenHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 	if (!sdlWindow) {
 		printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
 		return false;
@@ -218,9 +227,10 @@ bool Engine::initGL()
 	glLinkProgram(glProgram);
 	glUseProgram(glProgram);
 
+	float aspectRatio = static_cast<float>(screenHeight) / static_cast<float>(screenWidth);
 	GLuint viewProjMatrixID = glGetUniformLocation(glProgram, "viewProj");
-	mat::mat4 view = lookAt(mat::vec3{ 10, 10, 10 }, mat::vec3());
-	mat::mat4 proj = mat::ortho(-1.5, 1.5, -1.5, 1.5, -20, 0);
+	mat::mat4 view = lookAt(mat::vec3{ 8, 5.5, 10 }, mat::vec3{ 0, 0.5, 0 });
+	mat::mat4 proj = mat::ortho(-3.5, 3.5, -3.5 * aspectRatio, 3.5 * aspectRatio, -50, 0);
 	projectionViewMatrix = proj * view;
 	invProjectionViewMatrix = mat::inverse(projectionViewMatrix);
 	glUniformMatrix4fv(viewProjMatrixID, 1, true, *projectionViewMatrix.data);

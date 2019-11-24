@@ -64,6 +64,8 @@ private:
 	void* glContext;
 	unsigned int glProgram;
 
+	int screenWidth, screenHeight;
+
 	// Transforms world space to screen space
 	mat::mat4 projectionViewMatrix;
 
