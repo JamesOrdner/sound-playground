@@ -194,7 +194,7 @@ void GMesh::unregisterModel(const std::shared_ptr<EModel>& model)
 	for (auto it = models.cbegin(); it != models.cend(); it++) {
 		if (it->lock() == model) {
 			models.erase(it);
-			reloadInstanceBuffers();
+			if (!models.empty()) reloadInstanceBuffers();
 			return;
 		}
 	}

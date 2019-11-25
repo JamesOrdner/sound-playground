@@ -15,6 +15,9 @@ public:
 	// Name used to identify this mesh
 	std::string name;
 
+	// This is only true when the object is registered with a world
+	bool bExistsInWorld;
+
 	// Sets the world space position of the object
 	virtual void setPosition(const mat::vec3& location);
 
@@ -30,6 +33,15 @@ public:
 	// Returns the object's scale
 	const mat::vec3& getScale();
 
+	// Returns the object's audio component, if present
+	std::shared_ptr<AudioComponent> audioComponent();
+
+	// Registers an audio component with this object, replacing any existing component
+	void addAudioComponent(const std::shared_ptr<AudioComponent>& component);
+
+	// Removes the audio component from this object
+	void removeAudioComponent();
+
 protected:
 
 	// World space location
@@ -40,7 +52,7 @@ protected:
 
 private:
 
-	// Owned pointer to the object's audio component, if present
-	std::shared_ptr<AudioComponent> audioComponent;
+	// Pointer to the object's audio component, if present
+	std::shared_ptr<AudioComponent> _audioComponent;
 };
 

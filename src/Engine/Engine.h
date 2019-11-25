@@ -21,7 +21,11 @@ public:
 	Engine(Engine const&) = delete;
 	void operator=(Engine const&) = delete;
 
+	// Returns the world object
 	EWorld& world();
+
+	// Returns the audio engine object
+	AudioEngine& audio();
 
 	// Main runloop
 	void run();
@@ -43,11 +47,11 @@ private:
 
 	// Register a model with the engine for rendering. Does not check for double registration.
 	void registerModel(const std::shared_ptr<EModel>& model);
-	friend void EWorld::addObject(const std::shared_ptr<EModel>& model);
+	friend void EWorld::addObject(const std::shared_ptr<EObject>& object);
 
 	// Remove a model from the rendering pipeline
 	void unregisterModel(const std::shared_ptr<EModel>& model);
-	friend void EWorld::removeObject(const std::shared_ptr<EModel>& model);
+	friend void EWorld::removeObject(const std::shared_ptr<EObject>& object);
 
 	// Returns a pointer to an existing mesh at the filepath, or creates a new one
 	std::shared_ptr<GMesh> makeMesh(const std::string& filepath);

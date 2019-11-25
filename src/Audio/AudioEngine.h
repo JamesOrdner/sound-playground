@@ -5,12 +5,12 @@
 
 // Forward declarations
 typedef unsigned __int32 SDL_AudioDeviceID;
-
 class AudioComponent;
 
 class AudioEngine
 {
 public:
+
 	AudioEngine();
 
 	// Set up AudioEngine and open the audio device. Returns success.
@@ -28,7 +28,15 @@ public:
 	// Internal callback called by the unscoped SDL callback
 	void process_float(float* buffer, int length);
 
+	// Registers an audio component with the engine for processing
+	void registerComponent(const std::shared_ptr<AudioComponent>& component);
+
+	// Removes an audio component from the engine
+	void unregisterComponent(const std::shared_ptr<AudioComponent>& component);
+
 private:
+
+	// An integer representing the current audio device
 	SDL_AudioDeviceID deviceID;
 	
 	// Current audio device sample rate
@@ -40,8 +48,9 @@ private:
 	// Length in frames of audio device buffer
 	int bufferLength;
 
-	// List contains all audio components, sorted from least dependent to most dependent.
-	// Dependencies are determined by the input buffers. Components with no input buffers
-	// are considered the least dependent, while shorter input buffers are more dependent.
+	// This list contains all audio components, sorted from least dependent to most dependent.
+	// Dependency is determined from the input buffers. Components with longer input buffers
+	// are considered less dependent, while components with shorter length input buffers
+	// are more dependent. Components with no input buffers are the least dependent.
 	std::list<std::shared_ptr<AudioComponent>> components;
 };

@@ -1,5 +1,6 @@
 #include "Engine/Engine.h"
 #include "Engine/EModel.h"
+#include "Audio/Components/AMicrophone.h"
 
 int main(int argc, char* args[])
 {
@@ -13,6 +14,12 @@ int main(int argc, char* args[])
 			world.addObject(model);
 		}
 	}
+
+	auto model = std::make_shared<EModel>("res/suzanne.glb");
+	model->setPosition(mat::vec3{ 0, 1, 0 });
+	model->addAudioComponent(std::make_shared<AMicrophone>());
+	world.addObject(model);
+	world.removeObject(model);
 
 	engine.run();
 	return 0;

@@ -18,6 +18,11 @@ EWorld& Engine::world()
 	return *_world;
 }
 
+AudioEngine& Engine::audio()
+{
+	return audioEngine;
+}
+
 void Engine::run()
 {
 	if (!bInitialized) return;
@@ -71,15 +76,13 @@ void Engine::registerModel(const std::shared_ptr<EModel>& model)
 
 void Engine::unregisterModel(const std::shared_ptr<EModel>& model)
 {
-	auto mesh = model->getMesh();
-	mesh->unregisterModel(model); // remove model from mesh model list
+	model->getMesh()->unregisterModel(model);
+	model->unregister();
 
 	// Remove mesh from map if no more models reference this mesh
 	std::string path = model->getFilepath();
 	auto meshRef = meshes[path];
 	if (meshRef.expired()) meshes.erase(path);
-
-	model->unregister();
 }
 
 std::shared_ptr<GMesh> Engine::makeMesh(const std::string& filepath)
@@ -98,6 +101,7 @@ Engine::Engine()
 {
 	if (init()) {
 		_world = std::make_unique<EWorld>();
+		audioEngine.start();
 		bInitialized = true;
 	}
 	else {

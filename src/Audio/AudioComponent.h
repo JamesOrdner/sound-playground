@@ -1,40 +1,41 @@
 #pragma once
 
+#include "../Graphics/Matrix.h"
 #include <vector>
 #include <list>
 #include <memory>
 
 // Forward declarations
 class EObject;
-
-namespace mat
-{
-	struct vec3;
-}
+struct ADelayLine;
 
 class AudioComponent
 {
 public:
-	
-	AudioComponent(size_t bufferSize);
+
+	// Initialize internal variables for current audio session
+	virtual void init(size_t bufferSize, size_t channels);
 
 	// Returns the world space position of the owning object
 	const mat::vec3& getPosition();
 
-	// Fill all output delay lines and the irInputBuffer with n samples
-	void processOutputs(size_t n);
-
-	// Process room IR filter and add stereo result to interleaved buffer
-	void processIndirect(std::vector<float>& buffer, size_t n);
+	// Pull from the input delay lines and fill the omniOutputBuffer
+	// and all output delay lines with n samples
+	virtual void process(size_t n) = 0;
 
 protected:
 
-	// This mono buffer is filled during processOutputs and fed to the room IR filter
-	std::vector<float> omniOutputBuffer;
+	// Inputs from other AudioComponents
+	std::list<std::shared_ptr<ADelayLine>> inputs;
+
+	// Outputs to other AudioComponents
+	std::list<std::shared_ptr<ADelayLine>> outputs;
+
+	// This mono buffer is filled during process() and fed to the room IR filter
+	std::vector<float> indirectInputBuffer;
 
 private:
 
 	// Weak pointer to the owning EObject
 	std::weak_ptr<EObject> owner;
 };
-

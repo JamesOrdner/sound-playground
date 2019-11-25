@@ -1,4 +1,6 @@
 #include "AudioEngine.h"
+#include "AudioComponent.h"
+#include "AudioOutputComponent.h"
 #include <SDL_audio.h>
 #include <stdio.h>
 
@@ -20,7 +22,7 @@ bool AudioEngine::init()
 	SDL_AudioSpec desiredSpec, obtainedSpec;
 	desiredSpec.channels = 2;
 	desiredSpec.format = AUDIO_F32;
-	desiredSpec.samples = 1024 * desiredSpec.channels;
+	desiredSpec.samples = 1024;
 	desiredSpec.freq = 44100;
 	desiredSpec.callback = sdl_process_float;
 	desiredSpec.userdata = this;
@@ -33,8 +35,10 @@ bool AudioEngine::init()
 	else {
 		sampleRate = obtainedSpec.freq;
 		channels = obtainedSpec.channels;
-		bufferLength = obtainedSpec.samples / obtainedSpec.channels;
-		SDL_PauseAudioDevice(deviceID, 0);
+		bufferLength = obtainedSpec.samples;
+		for (const auto& component : components) {
+			component->init(bufferLength, channels);
+		}
 		return true;
 	}
 }
@@ -59,8 +63,29 @@ void AudioEngine::stop()
 
 void AudioEngine::process_float(float* buffer, int length)
 {
-	for (int i = 0; i < length; i++) {
-		// silence
-		buffer[i] = 0.f;
+	// SDL buffer is not pre-filled
+	for (int i = 0; i < length; i++) buffer[i] = 0.f;
+
+	size_t n = length / channels;
+	for (const auto& component : components) {
+		component->process(n);
+
+		// if this component is an output component, collect output and add to buffer
+		if (const auto& outputComp = std::dynamic_pointer_cast<AudioOutputComponent>(component)) {
+			const auto& b = outputComp->collectOutput();
+			for (int i = 0; i < length; i++) buffer[i] += b[i];
+		}
 	}
+}
+
+void AudioEngine::registerComponent(const std::shared_ptr<AudioComponent>& component)
+{
+	// TODO: Sort by dependency for performance
+	components.push_back(component);
+	if (deviceID >= 2) component->init(bufferLength, channels);
+}
+
+void AudioEngine::unregisterComponent(const std::shared_ptr<AudioComponent>& component)
+{
+	components.remove(component);
 }
