@@ -1,7 +1,7 @@
 #include "EModel.h"
 #include "../Graphics/GMesh.h"
 
-EModel::EModel(const std::string& filepath) : scale(1), bDirtyTransform(false)
+EModel::EModel(const std::string& filepath) : bDirtyTransform(false)
 {
 	this->filepath = filepath;
 }
@@ -70,30 +70,20 @@ float EModel::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::
 
 void EModel::setPosition(const mat::vec3& location)
 {
-	this->position = location;
+	EObject::setPosition(location);
 	bDirtyTransform = true;
-}
-
-const mat::vec3& EModel::getPosition()
-{
-	return position;
 }
 
 void EModel::setScale(float scale)
 {
-	this->scale = mat::vec3(scale);
+	EObject::setScale(scale);
 	bDirtyTransform = true;
 }
 
 void EModel::setScale(const mat::vec3& scale)
 {
-	this->scale = scale;
+	EObject::setScale(scale);
 	bDirtyTransform = true;
-}
-
-const mat::vec3& EModel::getScale()
-{
-	return scale;
 }
 
 mat::mat4 EModel::transformMatrix()

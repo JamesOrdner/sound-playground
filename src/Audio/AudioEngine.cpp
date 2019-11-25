@@ -7,7 +7,11 @@ void sdl_process_float(void* data, Uint8* stream, int length) {
 	((AudioEngine*) data)->process_float((float*) stream, length);
 }
 
-AudioEngine::AudioEngine() : deviceID(0), sampleRate(0)
+AudioEngine::AudioEngine() :
+	deviceID(0), 
+	sampleRate(0), 
+	channels(0), 
+	bufferLength(0)
 {
 }
 
@@ -28,6 +32,8 @@ bool AudioEngine::init()
 	}
 	else {
 		sampleRate = obtainedSpec.freq;
+		channels = obtainedSpec.channels;
+		bufferLength = obtainedSpec.samples / obtainedSpec.channels;
 		SDL_PauseAudioDevice(deviceID, 0);
 		return true;
 	}
@@ -35,8 +41,20 @@ bool AudioEngine::init()
 
 void AudioEngine::deinit()
 {
-	if (deviceID < 2) return; // Not initialized
+	if (deviceID < 2) return;
 	SDL_CloseAudioDevice(deviceID);
+}
+
+bool AudioEngine::start()
+{
+	if (deviceID < 2) return false;
+	SDL_PauseAudioDevice(deviceID, 0);
+	return true;
+}
+
+void AudioEngine::stop()
+{
+
 }
 
 void AudioEngine::process_float(float* buffer, int length)
