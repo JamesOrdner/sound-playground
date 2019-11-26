@@ -6,6 +6,10 @@
 
 namespace mat // Matrix
 {
+	/** Constants */
+
+	const float pi = 3.14159265f;
+
 	/** Vector */
 
 	template <typename T, int size>
