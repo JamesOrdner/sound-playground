@@ -1,11 +1,21 @@
 #include "AMicrophone.h"
 #include "../ADelayLine.h"
 
-AMicrophone::AMicrophone() :
-	outputPtr(0)
+AMicrophone::AMicrophone()
 {
 	bAcceptsInput = true;
 	bAcceptsOutput = false;
+}
+
+void AMicrophone::init(size_t bufferSize, size_t channels)
+{
+	AudioOutputComponent::init(bufferSize, channels);
+	inputBuffer = new float[bufferSize];
+}
+
+void AMicrophone::deinit()
+{
+	delete[] inputBuffer;
 }
 
 void AMicrophone::preprocess()
@@ -19,12 +29,11 @@ size_t AMicrophone::process(size_t n)
 
 	size_t p = pullCount();
 	if (p < n) n = p;
-	std::vector<float> inBuffer(n);
 	for (const auto& input : inputs) {
-		input->buffer.read(&inBuffer[0], n);
+		input->buffer.read(inputBuffer, n);
 		for (size_t i = 0; i < n; i++) {
 			for (size_t ch = 0; ch < channels; ch++) {
-				outputBuffer[outputPtr++] = inBuffer[i];
+				outputBuffer[outputPtr++] = inputBuffer[i];
 			}
 		}
 	}

@@ -18,6 +18,9 @@ public:
 
 	// Initialize internal variables for current audio session
 	virtual void init(size_t bufferSize, size_t channels);
+
+	// Clean up internals and delete any memory allocated in init()
+	virtual void deinit() {};
 	
 	// Size in samples of the shortest input buffer
 	size_t shortestInput();

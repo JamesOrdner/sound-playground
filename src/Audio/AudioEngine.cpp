@@ -51,6 +51,7 @@ void AudioEngine::deinit()
 {
 	if (deviceID < 2) return;
 	SDL_CloseAudioDevice(deviceID);
+	for (const auto& c : components) c->deinit();
 }
 
 bool AudioEngine::start()
@@ -128,6 +129,7 @@ void AudioEngine::registerComponent(const std::shared_ptr<AudioComponent>& compo
 
 void AudioEngine::unregisterComponent(const std::shared_ptr<AudioComponent>& component)
 {
+	component->deinit();
 	components.remove(component);
 
 	// Remove delay lines
