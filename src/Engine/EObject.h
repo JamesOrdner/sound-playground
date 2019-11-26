@@ -24,6 +24,12 @@ public:
 	// Returns the world space position of the object
 	const mat::vec3& getPosition();
 
+	// Sets the world space rotation of the object
+	virtual void setRotation(const mat::vec3& rotation);
+
+	// Returns the world space rotation of the object
+	const mat::vec3& getRotation();
+
 	// Sets the uniform scale of the object
 	virtual void setScale(float scale);
 
@@ -48,6 +54,9 @@ protected:
 
 	// World space location
 	mat::vec3 position;
+
+	// World space Euler rotation
+	mat::vec3 rotation;
 
 	// World space scale
 	mat::vec3 scale;

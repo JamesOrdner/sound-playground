@@ -43,6 +43,9 @@ public:
 	// Sets the world space position of the model
 	void setPosition(const mat::vec3& location) override;
 
+	// Sets the world space rotation of the object
+	void setRotation(const mat::vec3& rotation) override;
+
 	// Sets the uniform scale of the model
 	void setScale(float scale) override;
 

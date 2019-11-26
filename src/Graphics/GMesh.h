@@ -62,9 +62,6 @@ private:
 
 	std::list<GLPrimitive> primitives;
 
-	// Buffer storing instance positions
-	unsigned int vbo_position;
-
-	// Buffer storing instance scales
-	unsigned int vbo_scale;
+	// Buffers storing rows of instance transformations
+	unsigned int vbo_instanceTransforms;
 };

@@ -185,8 +185,7 @@ bool Engine::initGL()
 		"layout(location = 0) in  vec3 position;"
 		"layout(location = 1) in  vec3 normal;"
 		"layout(location = 2) in  vec3 texCoord;"
-		"layout(location = 3) in  vec3 instancePosition;"
-		"layout(location = 4) in  vec3 instanceScale;"
+		"layout(location = 3) in  mat4 instanceTransform;"
 
 		"layout(location = 0) out vec3 outNormal;"
 		"layout(location = 1) out vec3 outTexCoord;"
@@ -194,7 +193,7 @@ bool Engine::initGL()
 		"uniform mat4 viewProj;"
 
 		"void main() {"
-		"  gl_Position = viewProj * vec4(position * instanceScale + instancePosition, 1.0);"
+		"  gl_Position = viewProj * instanceTransform * vec4(position, 1.0);"
 		"  outNormal = normal;"
 		"  outTexCoord = texCoord;"
 		"}";
@@ -233,7 +232,7 @@ bool Engine::initGL()
 
 	float aspectRatio = static_cast<float>(screenHeight) / static_cast<float>(screenWidth);
 	GLuint viewProjMatrixID = glGetUniformLocation(glProgram, "viewProj");
-	mat::mat4 view = lookAt(mat::vec3{ 8.f, 5.5f, 10.f }, mat::vec3{ 0.f, 0.5f, 0.f });
+	mat::mat4 view = lookAt(mat::vec3{ 0.f, 10.f, 4.f }, mat::vec3{ 0.f, 0.f, 0.f });
 	mat::mat4 proj = mat::ortho(-3.5f, 3.5f, -3.5f * aspectRatio, 3.5f * aspectRatio, -50.f, 0.f);
 	projectionViewMatrix = proj * view;
 	invProjectionViewMatrix = mat::inverse(projectionViewMatrix);

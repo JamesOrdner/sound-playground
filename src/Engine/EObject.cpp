@@ -18,6 +18,16 @@ const mat::vec3& EObject::getPosition()
 	return position;
 }
 
+void EObject::setRotation(const mat::vec3& rotation)
+{
+	this->rotation = rotation;
+}
+
+const mat::vec3& EObject::getRotation()
+{
+	return rotation;
+}
+
 void EObject::setScale(float scale)
 {
 	this->scale = mat::vec3(scale);

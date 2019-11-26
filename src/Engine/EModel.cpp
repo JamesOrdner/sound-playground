@@ -74,6 +74,12 @@ void EModel::setPosition(const mat::vec3& location)
 	bDirtyTransform = true;
 }
 
+void EModel::setRotation(const mat::vec3& rotation)
+{
+	EObject::setRotation(rotation);
+	bDirtyTransform = true;
+}
+
 void EModel::setScale(float scale)
 {
 	EObject::setScale(scale);
@@ -88,12 +94,7 @@ void EModel::setScale(const mat::vec3& scale)
 
 mat::mat4 EModel::transformMatrix()
 {
-	return mat::mat4{
-		{ scale.x,       0,       0, position.x * scale.x },
-		{       0, scale.y,       0, position.y * scale.y },
-		{       0,       0, scale.z, position.z * scale.z },
-		{       0,       0,       0,                    1 }
-	};
+	return mat::transform(position, rotation, scale);
 }
 
 bool EModel::needsTransformUpdate()

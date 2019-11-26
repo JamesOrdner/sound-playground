@@ -179,6 +179,7 @@
     <ClCompile Include="lib\gl3w\src\gl3w.c" />
     <ClCompile Include="src\Audio\AudioEngine.cpp" />
     <ClCompile Include="src\engine\Engine.cpp" />
+    <ClCompile Include="src\Graphics\matrix.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -22,11 +22,13 @@ int main(int argc, char* args[])
 
 	auto speaker = std::make_shared<EModel>("res/speaker_small.glb");
 	speaker->setPosition(mat::vec3{ -2, 0, 0 });
+	speaker->setRotation(mat::vec3{ 0, mat::pi * 0.5f, 0});
 	speaker->addAudioComponent(std::make_shared<ASpeaker>(), speaker);
 	world.addObject(speaker);
 
 	auto speaker2 = std::make_shared<EModel>("res/speaker_small.glb");
 	speaker2->setPosition(mat::vec3{ 2, 0, 0 });
+	speaker2->setRotation(mat::vec3{ 0, mat::pi * 0.25f, 0 });
 	speaker2->addAudioComponent(std::make_shared<ASpeaker>(), speaker2);
 	world.addObject(speaker2);
 

@@ -32,8 +32,7 @@ GMesh::GMesh(const std::string& filepath)
 	std::string warn;
 	loader.LoadBinaryFromFile(&model, &err, &warn, filepath);
 
-	glGenBuffers(1, &vbo_position);
-	glGenBuffers(1, &vbo_scale);
+	glGenBuffers(1, &vbo_instanceTransforms);
 
 	for (const Node& node : model.nodes) {
 		if (node.name == "_ray") {
@@ -117,17 +116,19 @@ GMesh::GMesh(const std::string& filepath)
 					accessor.ByteStride(bufferView), bufferOffset(accessor.byteOffset));
 			}
 
-			// Assign instance position buffer
-			glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
-			glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, 0);
-			glEnableVertexAttribArray(3);
-			glVertexAttribDivisor(3, 1);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_instanceTransforms);
+			for (int i = 0; i < 4; i++) {
+				glEnableVertexAttribArray(3 + i);
+				glVertexAttribPointer(
+					3 + i,
+					4,
+					GL_FLOAT,
+					GL_FALSE,
+					sizeof(mat::mat4),
+					(void*)(sizeof(float) * 4 * i));
+				glVertexAttribDivisor(3 + i, 1);
+			}
 
-			// Assign instance scale buffer
-			glBindBuffer(GL_ARRAY_BUFFER, vbo_scale);
-			glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, 0);
-			glEnableVertexAttribArray(4);
-			glVertexAttribDivisor(4, 1);
 
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindVertexArray(0);
@@ -176,8 +177,7 @@ void GMesh::loadRayMesh(const Model& model, const Node& node)
 
 GMesh::~GMesh()
 {
-	glDeleteBuffers(1, &vbo_position);
-	glDeleteBuffers(1, &vbo_scale);
+	glDeleteBuffers(1, &vbo_instanceTransforms);
 	for (const auto& primitive : primitives) {
 		glDeleteVertexArrays(1, &primitive.vao);
 	}
@@ -202,21 +202,14 @@ void GMesh::unregisterModel(const std::shared_ptr<EModel>& model)
 
 void GMesh::reloadInstanceBuffers()
 {
-	std::vector<mat::vec3> positions;
-	std::vector<mat::vec3> scales;
+	std::vector<mat::mat4> transforms;
 	for (const auto& model : models) {
 		auto modelPtr = model.lock();
-		positions.push_back(modelPtr->getPosition());
-		scales.push_back(modelPtr->getScale());
+		transforms.push_back(t(modelPtr->transformMatrix()));
 		modelPtr->transformUpdated();
 	}
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
-	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(mat::vec3), &positions[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_scale);
-	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(mat::vec3), &scales[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_instanceTransforms);
+	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(mat::mat4), &transforms[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -227,14 +220,12 @@ void GMesh::updateInstanceBuffers()
 	for (const auto& model : models) {
 		auto modelPtr = model.lock();
 		if (modelPtr->needsTransformUpdate()) {
-			glBindBuffer(GL_ARRAY_BUFFER, vbo_position);
-			glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(mat::vec3), sizeof(mat::vec3), modelPtr->getPosition().data);
-			
-			glBindBuffer(GL_ARRAY_BUFFER, vbo_scale);
-			glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(mat::vec3), sizeof(mat::vec3), modelPtr->getScale().data);
-
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			mat::mat4 transform = t(modelPtr->transformMatrix());
 			modelPtr->transformUpdated();
+
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_instanceTransforms);
+			glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(mat::mat4), sizeof(mat::mat4), modelPtr->getScale().data);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 		i++;
 	}
