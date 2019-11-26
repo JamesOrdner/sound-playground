@@ -11,7 +11,7 @@ void EWorld::addObject(const std::shared_ptr<EObject>& object)
 	Engine& engine = Engine::instance();
 	if (const auto& audioComponent = object->audioComponent()) {
 		// Existing audio component will not be registered before adding to the world
-		engine.audio().registerComponent(audioComponent);
+		engine.audio().registerComponent(audioComponent, object);
 	}
 
 	if (const auto& model = std::dynamic_pointer_cast<EModel>(object)) {

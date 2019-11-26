@@ -53,11 +53,10 @@ void EObject::addAudioComponent(
 	const std::shared_ptr<EObject>& owner)
 {
 	_audioComponent = component;
-	_audioComponent->owner = owner;
 	if (bExistsInWorld) {
 		// Component should only be registered with audio engine if the object exists in a world
 		auto& engine = Engine::instance();
-		engine.audio().registerComponent(component);
+		engine.audio().registerComponent(component, owner);
 	}
 }
 

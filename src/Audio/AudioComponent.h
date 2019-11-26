@@ -12,7 +12,6 @@ struct ADelayLine;
 class AudioComponent
 {
 	friend class AudioEngine;
-	friend class EObject;
 
 public:
 
@@ -40,6 +39,9 @@ public:
 
 protected:
 
+	// Weak pointer to the owning EObject
+	std::weak_ptr<EObject> owner;
+
 	// Should this component accept input from other components?
 	bool bAcceptsInput;
 
@@ -60,9 +62,4 @@ protected:
 
 	// This mono buffer is filled during process() and fed to the room IR filter
 	std::vector<float> indirectInputBuffer;
-
-private:
-
-	// Weak pointer to the owning EObject
-	std::weak_ptr<EObject> owner;
 };

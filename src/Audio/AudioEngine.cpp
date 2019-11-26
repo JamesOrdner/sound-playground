@@ -97,8 +97,11 @@ void AudioEngine::process_float(float* buffer, int length)
 	}
 }
 
-void AudioEngine::registerComponent(const std::shared_ptr<AudioComponent>& component)
+void AudioEngine::registerComponent(
+	const std::shared_ptr<AudioComponent>& component,
+	const std::shared_ptr<EObject>& owner)
 {
+	component->owner = owner;
 	if (deviceID >= 2) component->init(bufferLength, channels);
 
 	// Setup delay lines
