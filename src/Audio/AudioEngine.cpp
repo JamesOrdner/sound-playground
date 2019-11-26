@@ -70,7 +70,7 @@ void AudioEngine::process_float(float* buffer, int length)
 	size_t n = length / channels;
 
 	// preprocess
-	for (const auto& c : components) c->preprocess(n);
+	for (const auto& c : components) c->preprocess();
 
 	// process
 	// naive just-get-it-working ordering

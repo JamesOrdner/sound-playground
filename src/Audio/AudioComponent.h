@@ -26,9 +26,8 @@ public:
 	const mat::vec3& getPosition();
 
 	// This optional function is called just before processing a full callback.
-	// It can be used to prep output buffers or other internals. Provides the
-	// full size of the incoming processing.
-	virtual void preprocess(size_t n) {};
+	// It can be used to prep output buffers or other internals.
+	virtual void preprocess() {};
 
 	// Pull from the input delay lines and attempt to fill the omniOutputBuffer
 	// and all output delay lines with n samples. Returns the number of outputted

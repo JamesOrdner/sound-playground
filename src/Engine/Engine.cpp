@@ -233,8 +233,8 @@ bool Engine::initGL()
 
 	float aspectRatio = static_cast<float>(screenHeight) / static_cast<float>(screenWidth);
 	GLuint viewProjMatrixID = glGetUniformLocation(glProgram, "viewProj");
-	mat::mat4 view = lookAt(mat::vec3{ 8, 5.5, 10 }, mat::vec3{ 0, 0.5, 0 });
-	mat::mat4 proj = mat::ortho(-3.5, 3.5, -3.5 * aspectRatio, 3.5 * aspectRatio, -50, 0);
+	mat::mat4 view = lookAt(mat::vec3{ 8.f, 5.5f, 10.f }, mat::vec3{ 0.f, 0.5f, 0.f });
+	mat::mat4 proj = mat::ortho(-3.5f, 3.5f, -3.5f * aspectRatio, 3.5f * aspectRatio, -50.f, 0.f);
 	projectionViewMatrix = proj * view;
 	invProjectionViewMatrix = mat::inverse(projectionViewMatrix);
 	glUniformMatrix4fv(viewProjMatrixID, 1, true, *projectionViewMatrix.data);

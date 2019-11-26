@@ -12,6 +12,6 @@ public:
 	size_t outputPtr;
 
 	// AudioComponent interface
-	void preprocess(size_t n) override;
+	void preprocess() override;
 	size_t process(size_t n) override;
 };

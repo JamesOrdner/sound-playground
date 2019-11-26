@@ -8,7 +8,7 @@ AMicrophone::AMicrophone() :
 	bAcceptsOutput = false;
 }
 
-void AMicrophone::preprocess(size_t n)
+void AMicrophone::preprocess()
 {
 	outputPtr = 0;
 }
