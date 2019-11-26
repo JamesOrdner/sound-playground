@@ -111,6 +111,8 @@ void AudioEngine::registerComponent(const std::shared_ptr<AudioComponent>& compo
 		// outputs
 		if (component->bAcceptsOutput && compOther->bAcceptsInput) {
 			auto output = std::make_shared<ADelayLine>(sampleDelay);
+			output->source = component;
+			output->dest = compOther;
 			component->outputs.push_back(output);
 			compOther->inputs.push_back(output);
 		}
@@ -118,6 +120,8 @@ void AudioEngine::registerComponent(const std::shared_ptr<AudioComponent>& compo
 		// inputs
 		if (component->bAcceptsInput && compOther->bAcceptsOutput) {
 			auto input = std::make_shared<ADelayLine>(sampleDelay);
+			input->source = compOther;
+			input->dest = component;
 			compOther->outputs.push_back(input);
 			component->inputs.push_back(input);
 		}
