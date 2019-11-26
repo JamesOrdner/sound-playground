@@ -1,6 +1,7 @@
 #include "Engine/Engine.h"
 #include "Engine/EModel.h"
 #include "Audio/Components/AMicrophone.h"
+#include "Audio/Components/ASpeaker.h"
 
 int main(int argc, char* args[])
 {
@@ -15,11 +16,14 @@ int main(int argc, char* args[])
 		}
 	}
 
-	auto model = std::make_shared<EModel>("res/suzanne.glb");
-	model->setPosition(mat::vec3{ 0, 1, 0 });
-	model->addAudioComponent(std::make_shared<AMicrophone>());
-	world.addObject(model);
-	world.removeObject(model);
+	auto speaker = std::make_shared<EModel>("res/speaker_small.glb");
+	speaker->setPosition(mat::vec3{ -2, 0, 0 });
+	speaker->addAudioComponent(std::make_shared<ASpeaker>(), speaker);
+	world.addObject(speaker);
+
+	auto mic = std::make_shared<EObject>();
+	mic->addAudioComponent(std::make_shared<AMicrophone>(), mic);
+	world.addObject(mic);
 
 	engine.run();
 	return 0;

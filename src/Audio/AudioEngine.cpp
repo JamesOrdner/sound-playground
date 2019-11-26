@@ -1,8 +1,12 @@
 #include "AudioEngine.h"
+#include "ADelayLine.h"
 #include "AudioComponent.h"
 #include "AudioOutputComponent.h"
 #include <SDL_audio.h>
 #include <stdio.h>
+
+// Speed of sound in air (seconds per meter)
+constexpr float soundSpeed = 0.0029154518950437f;
 
 void sdl_process_float(void* data, Uint8* stream, int length) {
 	length /= sizeof(float) / sizeof(Uint8);
@@ -63,29 +67,75 @@ void AudioEngine::stop()
 
 void AudioEngine::process_float(float* buffer, int length)
 {
-	// SDL buffer is not pre-filled
-	for (int i = 0; i < length; i++) buffer[i] = 0.f;
-
 	size_t n = length / channels;
-	for (const auto& component : components) {
-		component->process(n);
 
-		// if this component is an output component, collect output and add to buffer
-		if (const auto& outputComp = std::dynamic_pointer_cast<AudioOutputComponent>(component)) {
-			const auto& b = outputComp->collectOutput();
-			for (int i = 0; i < length; i++) buffer[i] += b[i];
+	// preprocess
+	for (const auto& c : components) c->preprocess(n);
+
+	// process
+	// naive just-get-it-working ordering
+	std::vector<size_t> remaining(components.size(), n);
+	bool done = false;
+	while (!done) {
+		size_t i = 0;
+		done = true;
+		for (const auto& c : components) {
+			remaining[i] -= c->process(remaining[i]);
+			if (remaining[i++]) done = false;
+			i %= remaining.size();
+		}
+	}
+
+	// output
+	for (int i = 0; i < length; i++) buffer[i] = 0.f;
+	for (const auto& c : components) {
+		if (const auto& outputComponent = std::dynamic_pointer_cast<AudioOutputComponent>(c)) {
+			const auto& cOut = outputComponent->collectOutput();
+			for (int i = 0; i < length; i++) buffer[i] += cOut[i];
 		}
 	}
 }
 
 void AudioEngine::registerComponent(const std::shared_ptr<AudioComponent>& component)
 {
+	if (deviceID >= 2) component->init(bufferLength, channels);
+
+	// Setup delay lines
+	const mat::vec3& thisPos = component->getPosition();
+	for (const auto& compOther : components) {
+		float d = mat::dist(thisPos, compOther->getPosition());
+		float t = d * soundSpeed;
+		size_t sampleDelay = static_cast<size_t>(t * sampleRate);
+
+		// outputs
+		if (component->bAcceptsOutput && compOther->bAcceptsInput) {
+			auto output = std::make_shared<ADelayLine>(sampleDelay);
+			component->outputs.push_back(output);
+			compOther->inputs.push_back(output);
+		}
+
+		// inputs
+		if (component->bAcceptsInput && compOther->bAcceptsOutput) {
+			auto input = std::make_shared<ADelayLine>(sampleDelay);
+			compOther->outputs.push_back(input);
+			component->inputs.push_back(input);
+		}
+	}
+
 	// TODO: Sort by dependency for performance
 	components.push_back(component);
-	if (deviceID >= 2) component->init(bufferLength, channels);
 }
 
 void AudioEngine::unregisterComponent(const std::shared_ptr<AudioComponent>& component)
 {
 	components.remove(component);
+
+	// Remove delay lines
+	for (const auto& input : component->inputs) {
+		input->source.lock()->outputs.remove(input);
+	}
+
+	for (const auto& output : component->outputs) {
+		output->dest.lock()->inputs.remove(output);
+	}
 }

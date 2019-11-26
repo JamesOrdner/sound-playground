@@ -171,6 +171,7 @@
     <ClCompile Include="src\Audio\AudioComponent.cpp" />
     <ClCompile Include="src\Audio\AudioOutputComponent.cpp" />
     <ClCompile Include="src\Audio\Components\AMicrophone.cpp" />
+    <ClCompile Include="src\Audio\Components\ASpeaker.cpp" />
     <ClCompile Include="src\Engine\EModel.cpp" />
     <ClCompile Include="src\Engine\EObject.cpp" />
     <ClCompile Include="src\Engine\EWorld.cpp" />
@@ -185,6 +186,7 @@
     <ClInclude Include="src\Audio\AudioComponent.h" />
     <ClInclude Include="src\Audio\AudioOutputComponent.h" />
     <ClInclude Include="src\Audio\Components\AMicrophone.h" />
+    <ClInclude Include="src\Audio\Components\ASpeaker.h" />
     <ClInclude Include="src\Engine\EModel.h" />
     <ClInclude Include="src\Engine\EObject.h" />
     <ClInclude Include="src\Engine\EWorld.h" />

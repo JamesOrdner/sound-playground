@@ -1,5 +1,6 @@
-#include "Engine.h"
 #include "EObject.h"
+#include "Engine.h"
+#include "../Audio/AudioComponent.h"
 
 EObject::EObject() :
 	bExistsInWorld(false),
@@ -37,9 +38,12 @@ std::shared_ptr<AudioComponent> EObject::audioComponent()
 	return _audioComponent;
 }
 
-void EObject::addAudioComponent(const std::shared_ptr<AudioComponent>& component)
+void EObject::addAudioComponent(
+	const std::shared_ptr<AudioComponent>& component,
+	const std::shared_ptr<EObject>& owner)
 {
 	_audioComponent = component;
+	_audioComponent->owner = owner;
 	if (bExistsInWorld) {
 		// Component should only be registered with audio engine if the object exists in a world
 		auto& engine = Engine::instance();

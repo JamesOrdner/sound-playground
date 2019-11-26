@@ -165,6 +165,13 @@ namespace mat // Matrix
 		return d;
 	}
 
+	template <typename T, int size>
+	T dist(const Vector<T, size>& a, const Vector<T, size>& b) {
+		T d = 0;
+		for (int i = 0; i < size; i++) d += std::powf(a.data[i] - b.data[i], 2.f);
+		return std::sqrtf(d);
+	}
+
 	template <int size>
 	constexpr Vector<float, size> normal(const Vector<float, size>& a) {
 		float norm = 0;

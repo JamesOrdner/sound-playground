@@ -37,7 +37,9 @@ public:
 	std::shared_ptr<AudioComponent> audioComponent();
 
 	// Registers an audio component with this object, replacing any existing component
-	void addAudioComponent(const std::shared_ptr<AudioComponent>& component);
+	void addAudioComponent(
+		const std::shared_ptr<AudioComponent>& component,
+		const std::shared_ptr<EObject>& owner);
 
 	// Removes the audio component from this object
 	void removeAudioComponent();

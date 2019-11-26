@@ -1,71 +1,82 @@
 #include "ADelayLine.h"
 #include <algorithm>
 
-ReadWriteBuffer::ReadWriteBuffer(size_t size) :
-	buffer(size),
+ReadWriteBuffer::ReadWriteBuffer(size_t samples) :
+	buffer(samples),
 	readPtr(0), 
-	writePtr(0)
+	writePtr(0),
+	available(samples)
 {
+}
+
+void ReadWriteBuffer::init(size_t samples)
+{
+	buffer.resize(samples);
+	readPtr = 0;
+	writePtr = 0;
+	available = samples;
+}
+
+size_t ReadWriteBuffer::push(float sample)
+{
+	if (available == buffer.size()) return 0;
+	buffer[writePtr++] = sample;
+	if (writePtr == buffer.size()) writePtr = 0;
+	available++;
+	return 1;
 }
 
 size_t ReadWriteBuffer::push(float* samples, size_t n)
 {
-	size_t bufferLen = buffer.size();
-
-	size_t f; // free space
-	if (readPtr > writePtr) {
-		f = readPtr - writePtr;
-	}
-	else {
-		f = bufferLen - writePtr + readPtr;
-	}
-
+	size_t f = buffer.size() - available; // free space
 	if (n > f) n = f;
-
-	if (writePtr + n > bufferLen) {
-		size_t nEnd = bufferLen - writePtr;
+	if (writePtr + n > buffer.size()) {
+		size_t nEnd = buffer.size() - writePtr;
 		size_t nFront = n - nEnd;
 		std::copy_n(samples, nEnd, &buffer[writePtr]);
 		std::copy_n(samples + nEnd, nFront, &buffer[0]);
-		writePtr = nFront;
 	}
 	else {
 		std::copy_n(samples, n, &buffer[writePtr]);
-		writePtr += n;
 	}
-
+	writePtr = (writePtr + n) % buffer.size();
+	available += n;
 	return n;
 }
 
 size_t ReadWriteBuffer::read(float* samples, size_t n)
 {
-	size_t bufferLen = buffer.size();
-
-	size_t av; // samples available
-	if (writePtr > readPtr) {
-		av = writePtr - readPtr;
-	}
-	else {
-		av = bufferLen - readPtr + writePtr;
-	}
-
-	if (n > av) n = av;
-
-	if (readPtr + n > bufferLen) {
-		size_t nEnd = bufferLen - readPtr;
+	if (n > available) n = available;
+	if (readPtr + n > buffer.size()) {
+		size_t nEnd = buffer.size() - readPtr;
 		size_t nFront = n - nEnd;
 		std::copy_n(&buffer[readPtr], nEnd, samples);
 		std::copy_n(&buffer[0], nFront, samples + nEnd);
-		readPtr = nFront;
 	}
 	else {
 		std::copy_n(&buffer[readPtr], n, samples);
-		readPtr += n;
 	}
-
+	readPtr = (readPtr + n) % buffer.size();
+	available -= n;
 	return n;
 }
 
-ADelayLine::ADelayLine(size_t samples) : buffer(samples)
+size_t ReadWriteBuffer::size()
+{
+	return buffer.size();
+}
+
+size_t ReadWriteBuffer::pushCount()
+{
+	return buffer.size() - available;
+}
+
+size_t ReadWriteBuffer::pullCount()
+{
+	return available;
+}
+
+ADelayLine::ADelayLine(size_t samples) :
+	buffer(samples)
 {
 }
