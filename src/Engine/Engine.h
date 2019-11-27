@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Audio/AudioEngine.h"
+#include "../Graphics/Render.h"
 #include "EWorld.h"
 #include <string>
 #include <map>
@@ -38,11 +39,9 @@ private:
 	~Engine();
 
 	bool init();
-	bool initGL();
 	void deinit();
 
-	void render();
-
+	// True only after a successful call to init()
 	bool bInitialized;
 
 	// Register a model with the engine for rendering. Does not check for double registration.
@@ -62,19 +61,13 @@ private:
 	// Stores pointers to all loaded meshes, indexed by path
 	std::map<std::string, std::weak_ptr<GMesh>> meshes;
 
-	/** SDL / OpenGL */
+	/** SDL */
 
-	SDL_Window* sdlWindow;
-	void* glContext;
-	unsigned int glProgram;
+	SDL_Window* window;
 
-	int screenWidth, screenHeight;
+	/** Graphics */
 
-	// Transforms world space to screen space
-	mat::mat4 projectionViewMatrix;
-
-	// Transforms screen space to world space
-	mat::mat4 invProjectionViewMatrix;
+	Render renderer;
 
 	/** Audio */
 
