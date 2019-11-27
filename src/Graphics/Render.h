@@ -32,11 +32,23 @@ public:
 
 private:
 
+	// Create and register any gl buffers. Returns success
+	bool initBuffers();
+
+	// Read the contents of a text file at the specified path into a string
+	std::string loadTextFile(std::string filepath);
+
 	// Pointer to the OpenGL context
 	void* glContext;
 
 	// Global shader program
 	unsigned int glProgram;
+
+	// Shadow shader
+	unsigned int glShadowProgram;
+
+	unsigned int shadowBuffer;
+	unsigned int shadowTexture;
 
 	// Transforms screen space to world space
 	mat::mat4 invProjectionViewMatrix;

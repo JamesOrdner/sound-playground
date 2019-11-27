@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <GL/gl3w.h>
 #include <stdio.h>
+#include<fstream>
 
 constexpr int glMajorVersion = 4;
 constexpr int glMinorVersion = 6;
@@ -42,54 +43,26 @@ bool Render::init(SDL_Window* window)
 	}
 
 	glEnable(GL_MULTISAMPLE);
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
 	char err[512];
 	GLsizei errLen;
 
-	const char* vertex_shader =
-		"#version 410\n"
-
-		"layout(location = 0) in  vec3 position;"
-		"layout(location = 1) in  vec3 normal;"
-		"layout(location = 2) in  vec3 texCoord;"
-		"layout(location = 3) in  mat4 instanceTransform;"
-
-		"layout(location = 0) out vec3 outNormal;"
-		"layout(location = 1) out vec3 outTexCoord;"
-
-		"uniform mat4 viewProj;"
-
-		"void main() {"
-		"  gl_Position = viewProj * instanceTransform * vec4(position, 1.0);"
-		"  outNormal = normal;"
-		"  outTexCoord = texCoord;"
-		"}";
-
 	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vs, 1, &vertex_shader, NULL);
+	std::string vertShader = loadTextFile("res/shaders/main.vert");
+	const char* vertShaderC = vertShader.c_str();
+	glShaderSource(vs, 1, &vertShaderC, 0);
 	glCompileShader(vs);
-
 	glGetShaderInfoLog(vs, 512, &errLen, err);
 	if (*err) printf("%s\n", err);
 
-	const char* fragment_shader =
-		"#version 410\n"
-
-		"layout(location = 0) in  vec3 normal;"
-		"layout(location = 0) out vec4 color;"
-
-		"void main() {"
-		"  vec3 light = normalize(vec3(2, 3, -0.5));"
-		"  float val = max(dot(light, normal), 0) + 0.1;"
-		"  color = vec4(val, val, val, 1.0);"
-		"}";
-
 	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fs, 1, &fragment_shader, NULL);
+	std::string fragShader = loadTextFile("res/shaders/main.frag");
+	const char* fragShaderC = fragShader.c_str();
+	glShaderSource(fs, 1, &fragShaderC, 0);
 	glCompileShader(fs);
-
 	glGetShaderInfoLog(fs, 512, &errLen, err);
 	if (*err) printf("%s\n", err);
 
@@ -97,8 +70,6 @@ bool Render::init(SDL_Window* window)
 	glAttachShader(glProgram, fs);
 	glAttachShader(glProgram, vs);
 	glLinkProgram(glProgram);
-	glUseProgram(glProgram);
-
 	glDeleteShader(fs);
 	glDeleteShader(vs);
 
@@ -110,7 +81,9 @@ bool Render::init(SDL_Window* window)
 	mat::mat4 proj = mat::ortho(-3.5f, 3.5f, -3.5f * aspectRatio, 3.5f * aspectRatio, -50.f, 0.f);
 	mat::mat4 projectionViewMatrix = proj * view;
 	invProjectionViewMatrix = mat::inverse(projectionViewMatrix);
-	glUniformMatrix4fv(viewProjMatrixID, 1, true, *projectionViewMatrix.data);
+	glProgramUniformMatrix4fv(glProgram, viewProjMatrixID, 1, true, *projectionViewMatrix.data);
+
+	if (!initBuffers()) return false;
 
 	return true;
 }
@@ -118,13 +91,29 @@ bool Render::init(SDL_Window* window)
 void Render::deinit()
 {
 	glDeleteProgram(glProgram);
+	glDeleteProgram(glShadowProgram);
+	glDeleteTextures(1, &shadowTexture);
 	glProgram = 0;
+	glShadowProgram = 0;
+	shadowTexture = 0;
+
 	SDL_GL_DeleteContext(glContext);
 	glContext = nullptr;
 }
 
 void Render::draw(SDL_Window* window, const std::map<std::string, std::weak_ptr<GMesh>>& meshes)
 {
+	glEnable(GL_POLYGON_OFFSET_FILL);
+	glUseProgram(glShadowProgram);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, 1024, 1024);
+	for (const auto& mesh : meshes) mesh.second.lock()->draw();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+ 	glDisable(GL_POLYGON_OFFSET_FILL);
+
+	glUseProgram(glProgram);
+	glViewport(0, 0, 1280, 720);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	for (const auto& mesh : meshes) mesh.second.lock()->draw();
 	SDL_GL_SwapWindow(window);
@@ -133,4 +122,78 @@ void Render::draw(SDL_Window* window, const std::map<std::string, std::weak_ptr<
 const mat::mat4& Render::screenToWorldMatrix()
 {
 	return invProjectionViewMatrix;
+}
+
+bool Render::initBuffers()
+{
+	glGenFramebuffers(1, &shadowBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer);
+
+	glGenTextures(1, &shadowTexture);
+	glBindTexture(GL_TEXTURE_2D, shadowTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32, 1024, 1024);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowTexture, 0);
+	glBindTextureUnit(0, shadowTexture);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) return false;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	char err[512];
+	GLsizei errLen;
+
+	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+	std::string vertShader = loadTextFile("res/shaders/shadow.vert");
+	const char* vertShaderC = vertShader.c_str();
+	glShaderSource(vs, 1, &vertShaderC, 0);
+	glCompileShader(vs);
+	glGetShaderInfoLog(vs, 512, &errLen, err);
+	if (*err) printf("%s\n", err);
+
+	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+	std::string fragShader = loadTextFile("res/shaders/shadow.frag");
+	const char* fragShaderC = fragShader.c_str();
+	glShaderSource(fs, 1, &fragShaderC, 0);
+	glCompileShader(fs);
+	glGetShaderInfoLog(fs, 512, &errLen, err);
+	if (*err) printf("%s\n", err);
+
+	glShadowProgram = glCreateProgram();
+	glAttachShader(glShadowProgram, fs);
+	glAttachShader(glShadowProgram, vs);
+	glLinkProgram(glShadowProgram);
+	glDeleteShader(fs);
+	glDeleteShader(vs);
+
+	GLuint viewProjMatrixID = glGetUniformLocation(glShadowProgram, "mvp");
+	mat::mat4 view = lookAt(mat::vec3{ 2.f, 3.f, -0.5f }, mat::vec3{ 0.f, 0.f, 0.f });
+	mat::mat4 proj = mat::ortho(-3.f, 3.f, -3.f, 3.f, -10.f, 10.f);
+	mat::mat4 projectionViewMatrix = proj * view;
+	glProgramUniformMatrix4fv(glShadowProgram, viewProjMatrixID, 1, true, *projectionViewMatrix.data);
+
+	GLuint shadowMatrixID = glGetUniformLocation(glProgram, "shadowMVP");
+	mat::mat4 biasMatrix{
+		{ 0.5, 0.0, 0.0, 0.5 },
+		{ 0.0, 0.5, 0.0, 0.5 },
+		{ 0.0, 0.0, 0.5, 0.5 },
+		{ 0.0, 0.0, 0.0, 1.0 }
+	};
+	mat::mat4 depthBiasMVP = biasMatrix * projectionViewMatrix;
+	glProgramUniformMatrix4fv(glProgram, shadowMatrixID, 1, true, *depthBiasMVP.data);
+
+	glPolygonOffset(2.f, 2.f);
+}
+
+std::string Render::loadTextFile(std::string filepath)
+{
+	std::string out, line;
+	std::ifstream file(filepath);
+	if (!file.is_open()) return out;
+	while (getline(file, line)) out.append(line + '\n');
+	file.close();
+	return out;
 }
