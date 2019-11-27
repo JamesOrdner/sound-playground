@@ -106,9 +106,9 @@ void AudioEngine::registerComponent(
 	if (deviceID >= 2) component->init(bufferLength, channels);
 
 	// Setup delay lines
-	const mat::vec3& thisPos = component->getPosition();
+	const mat::vec3& thisPos = component->position();
 	for (const auto& compOther : components) {
-		float d = mat::dist(thisPos, compOther->getPosition());
+		float d = mat::dist(thisPos, compOther->position());
 		float t = d * soundSpeed;
 		size_t sampleDelay = static_cast<size_t>(t * sampleRate);
 

@@ -25,7 +25,7 @@ public:
 	size_t shortestInput();
 
 	// Returns the world space position of the owning object
-	const mat::vec3& getPosition();
+	const mat::vec3& position();
 
 	// This optional function is called just before processing a full callback.
 	// It can be used to prep output buffers or other internals.

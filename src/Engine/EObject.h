@@ -20,16 +20,16 @@ public:
 	bool bExistsInWorld;
 
 	// Sets the world space position of the object
-	virtual void setPosition(const mat::vec3& location);
+	virtual void setPosition(const mat::vec3& position);
 
 	// Returns the world space position of the object
-	const mat::vec3& getPosition();
+	const mat::vec3& position();
 
 	// Sets the world space rotation of the object
 	virtual void setRotation(const mat::vec3& rotation);
 
 	// Returns the world space rotation of the object
-	const mat::vec3& getRotation();
+	const mat::vec3& rotation();
 
 	// Sets the uniform scale of the object
 	virtual void setScale(float scale);
@@ -38,7 +38,7 @@ public:
 	virtual void setScale(const mat::vec3& scale);
 
 	// Returns the object's scale
-	const mat::vec3& getScale();
+	const mat::vec3& scale();
 
 	// Returns a normalized vector in the direction the object is facing
 	mat::vec3 forward();
@@ -57,16 +57,16 @@ public:
 protected:
 
 	// World space location
-	mat::vec3 position;
+	mat::vec3 m_position;
 
 	// World space Euler rotation
-	mat::vec3 rotation;
+	mat::vec3 m_rotation;
 
 	// World space scale
-	mat::vec3 scale;
+	mat::vec3 m_scale;
 
 private:
 
 	// Pointer to the object's audio component, if present
-	std::shared_ptr<AudioComponent> _audioComponent;
+	std::shared_ptr<AudioComponent> m_audioComponent;
 };

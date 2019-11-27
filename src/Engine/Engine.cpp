@@ -35,7 +35,7 @@ void Engine::run()
 				int x, y;
 				SDL_GetMouseState(&x, &y);
 				if (auto hitObject = raycastScreen(x, y)) {
-					const mat::vec3& loc = hitObject->getPosition();
+					const mat::vec3& loc = hitObject->position();
 					printf("%f %f\n", loc.x, loc.z);
 				}
 			}
@@ -151,8 +151,8 @@ bool Engine::init()
 void Engine::deinit()
 {
 	bInitialized = false;
-	renderer.deinit();
 	audioEngine.deinit();
+	renderer.deinit();
 	SDL_DestroyWindow(window);
 	window = nullptr;
 	SDL_Quit();

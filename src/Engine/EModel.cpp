@@ -94,7 +94,7 @@ void EModel::setScale(const mat::vec3& scale)
 
 mat::mat4 EModel::transformMatrix()
 {
-	return mat::transform(position, rotation, scale);
+	return mat::transform(m_position, m_rotation, m_scale);
 }
 
 bool EModel::needsTransformUpdate()

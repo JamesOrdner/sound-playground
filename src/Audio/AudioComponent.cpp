@@ -19,9 +19,9 @@ size_t AudioComponent::shortestInput()
 	return shortest;
 }
 
-const mat::vec3& AudioComponent::getPosition()
+const mat::vec3& AudioComponent::position()
 {
-	return owner.lock()->getPosition();
+	return owner.lock()->position();
 }
 
 size_t AudioComponent::pullCount()

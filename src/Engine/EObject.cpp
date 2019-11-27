@@ -4,60 +4,60 @@
 
 EObject::EObject() :
 	bExistsInWorld(false),
-	scale(1)
+	m_scale(1)
 {
 }
 
-void EObject::setPosition(const mat::vec3& location)
+void EObject::setPosition(const mat::vec3& position)
 {
-	this->position = location;
+	m_position = position;
 }
 
-const mat::vec3& EObject::getPosition()
+const mat::vec3& EObject::position()
 {
-	return position;
+	return m_position;
 }
 
 void EObject::setRotation(const mat::vec3& rotation)
 {
-	this->rotation = rotation;
+	m_rotation = rotation;
 }
 
-const mat::vec3& EObject::getRotation()
+const mat::vec3& EObject::rotation()
 {
-	return rotation;
+	return m_rotation;
 }
 
 void EObject::setScale(float scale)
 {
-	this->scale = mat::vec3(scale);
+	this->m_scale = mat::vec3(scale);
 }
 
 void EObject::setScale(const mat::vec3& scale)
 {
-	this->scale = scale;
+	m_scale = scale;
 }
 
-const mat::vec3& EObject::getScale()
+const mat::vec3& EObject::scale()
 {
-	return scale;
+	return m_scale;
 }
 
 mat::vec3 EObject::forward()
 {
-	return mat::rotate(mat::vec3{ 0.f, 0.f, 1.f }, rotation);
+	return mat::rotate(mat::vec3{ 0.f, 0.f, 1.f }, m_rotation);
 }
 
 std::shared_ptr<AudioComponent> EObject::audioComponent()
 {
-	return _audioComponent;
+	return m_audioComponent;
 }
 
 void EObject::addAudioComponent(
 	const std::shared_ptr<AudioComponent>& component,
 	const std::shared_ptr<EObject>& owner)
 {
-	_audioComponent = component;
+	m_audioComponent = component;
 	if (bExistsInWorld) {
 		// Component should only be registered with audio engine if the object exists in a world
 		auto& engine = Engine::instance();
@@ -68,6 +68,6 @@ void EObject::addAudioComponent(
 void EObject::removeAudioComponent()
 {
 	auto& engine = Engine::instance();
-	engine.audio().unregisterComponent(_audioComponent);
-	_audioComponent.reset();
+	engine.audio().unregisterComponent(m_audioComponent);
+	m_audioComponent.reset();
 }
