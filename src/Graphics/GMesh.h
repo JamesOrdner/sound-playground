@@ -27,6 +27,10 @@ public:
 	// Unregisters a model from this mesh
 	void unregisterModel(const std::shared_ptr<EModel>& model);
 
+	// Updates any instance transforms that are out of date. Should be called
+	// at the beginning of each frame, before any draw() calls.
+	void updateInstanceTransforms();
+
 	// Called from the main render loop, draws all models using this mesh
 	void draw();
 
@@ -56,9 +60,6 @@ private:
 
 	// Perform a full reload of any instance buffers
 	void reloadInstanceBuffers();
-
-	// Called each frame, only updates buffers of modified models
-	void updateInstanceBuffers();
 
 	std::list<GLPrimitive> primitives;
 

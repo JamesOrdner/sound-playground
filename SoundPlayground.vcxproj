@@ -179,6 +179,7 @@
     <ClCompile Include="lib\gl3w\src\gl3w.c" />
     <ClCompile Include="src\Audio\AudioEngine.cpp" />
     <ClCompile Include="src\engine\Engine.cpp" />
+    <ClCompile Include="src\Graphics\GProgram.cpp" />
     <ClCompile Include="src\Graphics\matrix.cpp" />
     <ClCompile Include="src\Graphics\Render.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -195,6 +196,7 @@
     <ClInclude Include="src\Graphics\GMesh.h" />
     <ClInclude Include="src\Audio\AudioEngine.h" />
     <ClInclude Include="src\engine\Engine.h" />
+    <ClInclude Include="src\Graphics\GProgram.h" />
     <ClInclude Include="src\Graphics\Matrix.h" />
     <ClInclude Include="src\Graphics\Render.h" />
   </ItemGroup>

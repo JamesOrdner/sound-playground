@@ -213,7 +213,7 @@ void GMesh::reloadInstanceBuffers()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void GMesh::updateInstanceBuffers()
+void GMesh::updateInstanceTransforms()
 {
 	// Check for modified model transforms
 	size_t i = 0;
@@ -233,7 +233,6 @@ void GMesh::updateInstanceBuffers()
 
 void GMesh::draw()
 {
-	updateInstanceBuffers();
 	for (const auto& primitive : primitives) {
 		glBindVertexArray(primitive.vao);
 		glDrawElementsInstanced(

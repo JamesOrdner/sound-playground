@@ -2,11 +2,13 @@
 
 #include "Matrix.h"
 #include <string>
+#include <list>
 #include <map>
 #include <memory>
 
 // Forward declarations
 struct SDL_Window;
+class GProgram;
 class GMesh;
 
 class Render
@@ -32,22 +34,22 @@ public:
 
 private:
 
-	// Create and register any gl buffers. Returns success
-	bool initBuffers();
+	// Calculate the projection view matrix
+	mat::mat4 projectionViewMatrix(SDL_Window* window);
 
-	// Read the contents of a text file at the specified path into a string
-	std::string loadTextFile(std::string filepath);
+	// Setup shadow program and buffers. Returns success
+	bool initShadow();
 
 	// Pointer to the OpenGL context
 	void* glContext;
 
-	// Global shader program
-	unsigned int glProgram;
+	// Pointer to the main shader program
+	std::shared_ptr<GProgram> program_main;
 
-	// Shadow shader
-	unsigned int glShadowProgram;
+	// Pointer to the shadow shader program
+	std::shared_ptr<GProgram> program_shadow;
 
-	unsigned int shadowBuffer;
+	unsigned int shadowFBO;
 	unsigned int shadowTexture;
 
 	// Transforms screen space to world space
