@@ -195,6 +195,9 @@ namespace mat // Matrix
 		};
 	}
 
+	// Rotate a vector by a given rotation
+	vec3 rotate(const vec3& vector, const vec3& rotation);
+
 
 
 	/** Matrix */

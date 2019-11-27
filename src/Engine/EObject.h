@@ -10,6 +10,7 @@ class AudioComponent;
 class EObject
 {
 public:
+
 	EObject();
 
 	// Name used to identify this mesh
@@ -39,6 +40,9 @@ public:
 	// Returns the object's scale
 	const mat::vec3& getScale();
 
+	// Returns a normalized vector in the direction the object is facing
+	mat::vec3 forward();
+
 	// Returns the object's audio component, if present
 	std::shared_ptr<AudioComponent> audioComponent();
 
@@ -66,4 +70,3 @@ private:
 	// Pointer to the object's audio component, if present
 	std::shared_ptr<AudioComponent> _audioComponent;
 };
-

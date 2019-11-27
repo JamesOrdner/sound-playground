@@ -43,6 +43,11 @@ const mat::vec3& EObject::getScale()
 	return scale;
 }
 
+mat::vec3 EObject::forward()
+{
+	return mat::rotate(mat::vec3{ 0.f, 0.f, 1.f }, rotation);
+}
+
 std::shared_ptr<AudioComponent> EObject::audioComponent()
 {
 	return _audioComponent;

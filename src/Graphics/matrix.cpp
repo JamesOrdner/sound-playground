@@ -2,6 +2,32 @@
 
 using namespace mat;
 
+vec3 mat::rotate(const vec3& vector, const vec3& rotation)
+{
+	mat4 rx{
+		{ 1,                 0,                  0, 0 },
+		{ 0, cosf(rotation[0]), -sinf(rotation[0]), 0 },
+		{ 0, sinf(rotation[0]),  cosf(rotation[0]), 0 },
+		{ 0,                 0,                  0, 1 }
+	};
+
+	mat4 ry{
+		{  cosf(rotation[1]), 0, sinf(rotation[1]), 0 },
+		{                  0, 1,                 0, 0 },
+		{ -sinf(rotation[1]), 0, cosf(rotation[1]), 0 },
+		{                  0, 0,                 0, 1 }
+	};
+
+	mat4 rz{
+		{ cosf(rotation[2]), -sinf(rotation[2]), 0, 0 },
+		{ sinf(rotation[2]),  cosf(rotation[2]), 0, 0 },
+		{                 0,                  0, 1, 0 },
+		{                 0,                  0, 0, 1 }
+	};
+
+	return vec3(rz * ry * rx * vec4(vector));
+}
+
 mat4 mat::transform(const vec3& loc, const vec3& rot, const vec3& scale) {
 	mat4 s{
 		{ scale[0],        0,        0, 0 },
