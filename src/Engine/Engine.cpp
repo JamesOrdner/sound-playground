@@ -33,8 +33,6 @@ void Engine::run()
 				quit = true;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				activeModel->setScale(2);
-				// activeModel->setPosition(mat::vec3{ 2, 0, 0 });
 				SDL_GetMouseState(&x, &y);
 				if (auto hitObject = raycastScreen(x, y)) {
 					const mat::vec3& loc = hitObject->position();
@@ -45,7 +43,7 @@ void Engine::run()
 				SDL_GetMouseState(&x, &y);
 				mat::vec3 hitLoc;
 				if (auto hitObject = raycastScreen(x, y, hitLoc)) {
-					// activeModel->setPosition(hitLoc);
+					activeModel->setPosition(hitLoc);
 				}
 			}
 		}
