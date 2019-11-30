@@ -27,16 +27,25 @@ void Engine::run()
 	while (!quit) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
+			int x, y;
 			switch (event.type) {
 			case SDL_QUIT:
 				quit = true;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				int x, y;
+				activeModel->setScale(2);
+				// activeModel->setPosition(mat::vec3{ 2, 0, 0 });
 				SDL_GetMouseState(&x, &y);
 				if (auto hitObject = raycastScreen(x, y)) {
 					const mat::vec3& loc = hitObject->position();
 					printf("%f %f\n", loc.x, loc.z);
+				}
+				break;
+			case SDL_MOUSEMOTION:
+				SDL_GetMouseState(&x, &y);
+				mat::vec3 hitLoc;
+				if (auto hitObject = raycastScreen(x, y, hitLoc)) {
+					// activeModel->setPosition(hitLoc);
 				}
 			}
 		}
@@ -45,7 +54,12 @@ void Engine::run()
 	}
 }
 
-std::shared_ptr<EModel> Engine::raycastScreen(int x, int y)
+std::shared_ptr<EModel> Engine::raycastScreen(int x, int y) {
+	mat::vec3 hitLoc;
+	return raycastScreen(x, y, hitLoc);
+}
+
+std::shared_ptr<EModel> Engine::raycastScreen(int x, int y, mat::vec3& hitLoc)
 {
 	using namespace mat;
 
@@ -63,7 +77,6 @@ std::shared_ptr<EModel> Engine::raycastScreen(int x, int y)
 	vec4 screen_dir{ 0.f, 0.f, 1.f, 0.f };
 	vec3 world_dir(renderer.screenToWorldMatrix() * screen_dir);
 
-	vec3 hitLoc;
 	return _world->raycast(world_orig, world_dir, hitLoc);
 }
 
@@ -73,6 +86,8 @@ void Engine::registerModel(const std::shared_ptr<EModel>& model)
 	auto mesh = makeMesh(model->getFilepath());
 	model->registerWithMesh(mesh); // transfer mesh ownership to model
 	mesh->registerModel(model); // add weak pointer to model in mesh model list
+
+	activeModel = model;
 }
 
 void Engine::unregisterModel(const std::shared_ptr<EModel>& model)

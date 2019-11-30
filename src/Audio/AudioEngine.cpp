@@ -89,7 +89,6 @@ void AudioEngine::process_float(float* buffer, int length)
 
 	// output
 	for (int i = 0; i < length; i++) buffer[i] = 0.f;
-	return; // TMP mute output
 	for (const auto& c : components) {
 		if (const auto& outputComponent = std::dynamic_pointer_cast<AudioOutputComponent>(c)) {
 			const auto& cOut = outputComponent->collectOutput();

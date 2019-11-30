@@ -224,7 +224,7 @@ void GMesh::updateInstanceTransforms()
 			modelPtr->transformUpdated();
 
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_instanceTransforms);
-			glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(mat::mat4), sizeof(mat::mat4), modelPtr->scale().data);
+			glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(mat::mat4), sizeof(mat::mat4), transform.data);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 		i++;

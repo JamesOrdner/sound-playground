@@ -33,6 +33,9 @@ public:
 
 	// Return the object at screen coordinates
 	std::shared_ptr<EModel> raycastScreen(int x, int y);
+	
+	// Return the object at screen coordinates, as well as the hit location
+	std::shared_ptr<EModel> raycastScreen(int x, int y, mat::vec3& hitLoc);
 
 private:
 	Engine();
@@ -72,4 +75,7 @@ private:
 	/** Audio */
 
 	AudioEngine audioEngine;
+
+	////// TEMPORARY DEBUG
+	std::shared_ptr<EModel> activeModel;
 };
