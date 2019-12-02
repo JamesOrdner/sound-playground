@@ -2,6 +2,13 @@
 #include "../Engine/EObject.h"
 #include "ADelayLine.h"
 
+AudioComponent::AudioComponent() :
+	bAcceptsInput(false),
+	bAcceptsOutput(false),
+	bDirtyTransform(false)
+{
+}
+
 void AudioComponent::init(size_t bufferSize, size_t channels)
 {
 	indirectInputBuffer.resize(bufferSize);
@@ -21,7 +28,17 @@ size_t AudioComponent::shortestInput()
 
 const mat::vec3& AudioComponent::position()
 {
-	return owner.lock()->position();
+	return m_position;
+}
+
+const mat::vec3& AudioComponent::forward()
+{
+	return m_forward;
+}
+
+void AudioComponent::transformUpdated()
+{
+	bDirtyTransform = true;
 }
 
 size_t AudioComponent::pullCount()

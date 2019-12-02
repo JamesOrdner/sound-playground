@@ -2,6 +2,7 @@
 #include "ADelayLine.h"
 #include "AudioComponent.h"
 #include "AudioOutputComponent.h"
+#include "../Engine/EObject.h"
 #include <SDL_audio.h>
 #include <stdio.h>
 
@@ -81,6 +82,15 @@ void AudioEngine::process_float(float* buffer, int length)
 		size_t i = 0;
 		done = true;
 		for (const auto& c : components) {
+			// update transforms
+			if (c->bDirtyTransform) {
+				auto ptr = c->m_owner.lock();
+				c->m_position = ptr->position();
+				c->m_forward = ptr->forward();
+				c->bDirtyTransform = false;
+			}
+
+			// process
 			remaining[i] -= c->process(remaining[i]);
 			if (remaining[i++]) done = false;
 			i %= remaining.size();
@@ -101,7 +111,10 @@ void AudioEngine::registerComponent(
 	const std::shared_ptr<AudioComponent>& component,
 	const std::shared_ptr<EObject>& owner)
 {
-	component->owner = owner;
+	component->m_owner = owner;
+	component->m_position = owner->position();
+	component->m_forward = owner->forward();
+
 	if (deviceID >= 2) component->init(bufferLength, channels);
 
 	// Setup delay lines

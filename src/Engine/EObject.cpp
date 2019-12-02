@@ -11,6 +11,7 @@ EObject::EObject() :
 void EObject::setPosition(const mat::vec3& position)
 {
 	m_position = position;
+	m_audioComponent->transformUpdated();
 }
 
 const mat::vec3& EObject::position()
@@ -21,6 +22,7 @@ const mat::vec3& EObject::position()
 void EObject::setRotation(const mat::vec3& rotation)
 {
 	m_rotation = rotation;
+	m_audioComponent->transformUpdated();
 }
 
 const mat::vec3& EObject::rotation()
@@ -31,11 +33,13 @@ const mat::vec3& EObject::rotation()
 void EObject::setScale(float scale)
 {
 	this->m_scale = mat::vec3(scale);
+	m_audioComponent->transformUpdated();
 }
 
 void EObject::setScale(const mat::vec3& scale)
 {
 	m_scale = scale;
+	m_audioComponent->transformUpdated();
 }
 
 const mat::vec3& EObject::scale()

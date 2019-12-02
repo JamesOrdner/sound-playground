@@ -31,7 +31,7 @@ size_t AMicrophone::process(size_t n)
 	for (const auto& input : inputs) {
 		// This is all hardcoded for stereo, needs to be changed eventually
 		float gL, gR;
-		calcStereoGain(input->source, gL, gR);
+		calcStereoGain(input->source.lock(), gL, gR);
 		input->buffer.read(inputBuffer, n);
 		for (size_t i = 0; i < n; i++) {
 			outputBuffer[outputPtr + i * 2] += inputBuffer[i] * gL;
@@ -42,9 +42,9 @@ size_t AMicrophone::process(size_t n)
 	return n;
 }
 
-void AMicrophone::calcStereoGain(const std::weak_ptr<AudioComponent>& source, float& gainL, float& gainR)
+void AMicrophone::calcStereoGain(const std::shared_ptr<AudioComponent>& source, float& gainL, float& gainR)
 {
-	mat::vec3 dir = source.lock()->position() - position();
+	mat::vec3 dir = source->position() - position();
 	float angle = atanf(dir.x / fabsf(dir.z)) * 0.5f + 0.25f * mat::pi;
 	gainL = cosf(angle);
 	gainR = sinf(angle);

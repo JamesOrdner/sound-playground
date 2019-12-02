@@ -149,6 +149,5 @@ float ASpeaker::calcGain(const mat::vec3& dest)
 {
 	using namespace mat;
 	vec3 dir = normal(dest - position());
-	const vec3& forward = owner.lock()->forward();
-	return dot(dir, forward) * 0.5f + 0.5f;
+	return dot(dir, forward()) * 0.5f + 0.5f;
 }

@@ -9,10 +9,10 @@ public:
 
 	// If sampleDelay is known during construction, pass it here and init()
 	// may be skipped. Otherwise pass 0 and call init() later.
-	ReadWriteBuffer(size_t samples);
+	ReadWriteBuffer(size_t sampleDelay);
 
 	// Resize buffer to sampleDelay
-	void init(size_t samples);
+	void init(size_t sampleDelay);
 
 	// Push a single sample to the buffer. Returns 1 if
 	//  successful, or 0 if the buffer is full.
@@ -25,6 +25,9 @@ public:
 	// Returns the number of samples read. May be less than `n`
 	size_t read(float* samples, size_t n);
 
+	// Resize the buffer to new sampleDelay, interpolating the last N samples to fit.
+	void resize(size_t sampleDelay, size_t interpLastN);
+
 	// Returns the sample length of the buffer
 	size_t size();
 
@@ -35,6 +38,7 @@ public:
 	size_t pullCount();
 
 private:
+
 	std::vector<float> buffer;
 
 	// An index which points to the current read position
@@ -45,6 +49,35 @@ private:
 
 	// Number of samples available for reading
 	size_t available;
+
+	// Resample audio in-place, beginning at rangeStartIdx, from oldLength samples to newLength samples
+	void resample(size_t rangeStartIdx, size_t oldLength, size_t newLength);
+
+	void resample_forward(size_t rangeStartIdx, size_t newLength, double ratio);
+	void resample_back(size_t rangeStartIdx, size_t newLength, double ratio);
+
+	// Cubic interpolation 
+	float cubic(float buffer[], double index);
+
+	// Ring mod addition
+	template<typename T>
+	inline T radd(T lhs, T rhs) {
+		T max = static_cast<T>(buffer.size());
+		T sum = lhs + rhs;
+		return sum >= max ? sum - max : sum;
+	}
+
+	// Ring mod subtraction
+	template<typename T>
+	inline T rsub(T lhs, T rhs) {
+		T size = static_cast<T>(buffer.size());
+		return lhs >= rhs ? lhs - rhs : size - (rhs - lhs);
+	}
+
+	// Ring mod difference
+	inline size_t rdiff(size_t lhs, size_t rhs) {
+		return lhs >= rhs ? lhs - rhs : rhs - lhs;
+	}
 };
 
 // Forward declarations

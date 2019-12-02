@@ -17,7 +17,7 @@ public:
 private:
 
 	// Calculate the stereo gain of a given source (hardcoded X+ to the right)
-	void calcStereoGain(const std::weak_ptr<AudioComponent>& source, float& gainL, float& gainR);
+	void calcStereoGain(const std::shared_ptr<AudioComponent>& source, float& gainL, float& gainR);
 
 	// Points to the current location in the outputBuffer, reset each preprocess()
 	size_t outputPtr;
