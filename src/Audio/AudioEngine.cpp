@@ -6,9 +6,6 @@
 #include <SDL_audio.h>
 #include <stdio.h>
 
-// Speed of sound in air (seconds per meter)
-constexpr float soundSpeed = 0.0029154518950437f;
-
 void sdl_process_float(void* data, Uint8* stream, int length) {
 	length /= sizeof(float) / sizeof(Uint8);
 	((AudioEngine*) data)->process_float((float*) stream, length);
@@ -16,7 +13,7 @@ void sdl_process_float(void* data, Uint8* stream, int length) {
 
 AudioEngine::AudioEngine() :
 	deviceID(0), 
-	sampleRate(0), 
+	sampleRate(0.f), 
 	channels(0), 
 	bufferLength(0)
 {
@@ -38,11 +35,11 @@ bool AudioEngine::init()
 		return false;
 	}
 	else {
-		sampleRate = obtainedSpec.freq;
+		sampleRate = static_cast<float>(obtainedSpec.freq);
 		channels = obtainedSpec.channels;
 		bufferLength = obtainedSpec.samples;
 		for (const auto& component : components) {
-			component->init(bufferLength, channels);
+			component->init(sampleRate, bufferLength, channels);
 		}
 		return true;
 	}
@@ -88,11 +85,13 @@ void AudioEngine::process_float(float* buffer, int length)
 				c->m_position = ptr->position();
 				c->m_forward = ptr->forward();
 				c->bDirtyTransform = false;
+				for (auto& op : c->outputs) op->updateDelay(sampleRate, 250);
+				for (auto& ip : c->inputs)  ip->updateDelay(sampleRate, 250);
 			}
 
 			// process
 			remaining[i] -= c->process(remaining[i]);
-			if (remaining[i++]) done = false;
+			if (remaining[i++] && std::dynamic_pointer_cast<AudioOutputComponent>(c)) done = false;
 			i %= remaining.size();
 		}
 	}
@@ -115,29 +114,23 @@ void AudioEngine::registerComponent(
 	component->m_position = owner->position();
 	component->m_forward = owner->forward();
 
-	if (deviceID >= 2) component->init(bufferLength, channels);
+	if (deviceID >= 2) component->init(sampleRate, channels, bufferLength);
 
 	// Setup delay lines
 	const mat::vec3& thisPos = component->position();
 	for (const auto& compOther : components) {
-		float d = mat::dist(thisPos, compOther->position());
-		float t = d * soundSpeed;
-		size_t sampleDelay = static_cast<size_t>(t * sampleRate);
-
 		// outputs
 		if (component->bAcceptsOutput && compOther->bAcceptsInput) {
-			auto output = std::make_shared<ADelayLine>(sampleDelay);
-			output->source = component;
-			output->dest = compOther;
+			auto output = std::make_shared<ADelayLine>(component, compOther);
+			output->init(sampleRate);
 			component->outputs.push_back(output);
 			compOther->inputs.push_back(output);
 		}
 
 		// inputs
 		if (component->bAcceptsInput && compOther->bAcceptsOutput) {
-			auto input = std::make_shared<ADelayLine>(sampleDelay);
-			input->source = compOther;
-			input->dest = component;
+			auto input = std::make_shared<ADelayLine>(compOther, component);
+			input->init(sampleRate);
 			compOther->outputs.push_back(input);
 			component->inputs.push_back(input);
 		}

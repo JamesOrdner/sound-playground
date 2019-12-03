@@ -9,18 +9,19 @@ AudioComponent::AudioComponent() :
 {
 }
 
-void AudioComponent::init(size_t bufferSize, size_t channels)
+void AudioComponent::init(float sampleRate, size_t channels, size_t bufferSize)
 {
+	this->channels = channels;
 	indirectInputBuffer.resize(bufferSize);
-	for (const auto& input : inputs) input->buffer.init(bufferSize);
-	for (const auto& output : outputs) output->buffer.init(bufferSize);
+	for (const auto& input : inputs) input->init(sampleRate);
+	for (const auto& output : outputs) output->init(sampleRate);
 }
 
 size_t AudioComponent::shortestInput()
 {
 	size_t shortest = SIZE_MAX;
 	for (const auto& input : inputs) {
-		size_t size = input->buffer.size();
+		size_t size = input->buffer.capacity();
 		if (size < shortest) shortest = size;
 	}
 	return shortest;

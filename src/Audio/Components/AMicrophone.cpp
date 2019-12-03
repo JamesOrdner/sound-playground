@@ -1,15 +1,17 @@
 #include "AMicrophone.h"
 #include "../ADelayLine.h"
 
-AMicrophone::AMicrophone()
+AMicrophone::AMicrophone() :
+	outputPtr(0),
+	inputBuffer(nullptr)
 {
 	bAcceptsInput = true;
 	bAcceptsOutput = false;
 }
 
-void AMicrophone::init(size_t bufferSize, size_t channels)
+void AMicrophone::init(float sampleRate, size_t channels, size_t bufferSize)
 {
-	AudioOutputComponent::init(bufferSize, channels);
+	AudioOutputComponent::init(sampleRate, channels, bufferSize);
 	inputBuffer = new float[bufferSize];
 }
 

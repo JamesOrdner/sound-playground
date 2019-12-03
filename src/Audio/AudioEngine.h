@@ -43,7 +43,7 @@ private:
 	SDL_AudioDeviceID deviceID;
 	
 	// Current audio device sample rate
-	int sampleRate;
+	float sampleRate;
 
 	// Current number of channels
 	int channels;

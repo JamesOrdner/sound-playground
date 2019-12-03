@@ -1,10 +1,9 @@
 #include "AudioOutputComponent.h"
 
-void AudioOutputComponent::init(size_t bufferSize, size_t channels)
+void AudioOutputComponent::init(float sampleRate, size_t channels, size_t bufferSize)
 {
-	AudioComponent::init(bufferSize, channels);
+	AudioComponent::init(sampleRate, channels, bufferSize);
 	outputBuffer.resize(bufferSize * channels);
-	this->channels = channels;
 }
 
 const std::vector<float>& AudioOutputComponent::collectOutput()

@@ -18,12 +18,12 @@ public:
 	AudioComponent();
 
 	// Initialize internal variables for current audio session
-	virtual void init(size_t bufferSize, size_t channels);
+	virtual void init(float sampleRate, size_t channels, size_t bufferSize);
 
 	// Clean up internals and delete any memory allocated in init()
 	virtual void deinit() {};
 	
-	// Size in samples of the shortest input buffer
+	// Sample capacity of the shortest input buffer
 	size_t shortestInput();
 
 	// Returns the world space position of the owning object
@@ -52,6 +52,9 @@ protected:
 
 	// Should this component output to other components?
 	bool bAcceptsOutput;
+
+	// Number of output channels
+	size_t channels;
 
 	// Inputs from other AudioComponents
 	std::list<std::shared_ptr<ADelayLine>> inputs;

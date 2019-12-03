@@ -9,7 +9,7 @@ public:
 	AMicrophone();
 
 	// AudioComponent interface
-	void init(size_t bufferSize, size_t channels) override;
+	void init(float sampleRate, size_t channels, size_t bufferSize) override;
 	void deinit() override;
 	void preprocess() override;
 	size_t process(size_t n) override;

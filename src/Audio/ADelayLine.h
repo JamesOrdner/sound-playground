@@ -7,12 +7,10 @@ class ReadWriteBuffer
 {
 public:
 
-	// If sampleDelay is known during construction, pass it here and init()
-	// may be skipped. Otherwise pass 0 and call init() later.
-	ReadWriteBuffer(size_t sampleDelay);
+	ReadWriteBuffer();
 
-	// Resize buffer to sampleDelay
-	void init(size_t sampleDelay);
+	// Resize buffer to sampleDelay and allocate enough memory to expand to maxSampleDelay
+	void init(size_t sampleDelay, size_t maxSampleDelay);
 
 	// Push a single sample to the buffer. Returns 1 if
 	//  successful, or 0 if the buffer is full.
@@ -25,11 +23,11 @@ public:
 	// Returns the number of samples read. May be less than `n`
 	size_t read(float* samples, size_t n);
 
-	// Resize the buffer to new sampleDelay, interpolating the last N samples to fit.
-	void resize(size_t sampleDelay, size_t interpLastN);
+	// Resize the buffer to newLength, interpolating the last N samples to fit.
+	void resize(size_t newLength, size_t interpLastN);
 
-	// Returns the sample length of the buffer
-	size_t size();
+	// Return the active buffer size
+	size_t capacity();
 
 	// Return the number of samples that can be pushed
 	size_t pushCount();
@@ -48,13 +46,24 @@ private:
 	size_t writePtr;
 
 	// Number of samples available for reading
-	size_t available;
+	size_t m_size;
 
-	// Resample audio in-place, beginning at rangeStartIdx, from oldLength samples to newLength samples
-	void resample(size_t rangeStartIdx, size_t oldLength, size_t newLength);
+	// Current active capcity of buffer. Will be less than buffer.size()
+	size_t m_capacity;
 
-	void resample_forward(size_t rangeStartIdx, size_t newLength, double ratio);
-	void resample_back(size_t rangeStartIdx, size_t newLength, double ratio);
+	// Resample a contiguous block of memory
+	void resample_forward(
+		size_t startIdx,
+		size_t writeLength,
+		double ratio);
+
+	// Resample a block of memory starting at the end index
+	void resample_back(
+		size_t readStartIdx, 
+		size_t writeStartIdx, 
+		size_t writeLength,
+		size_t ringSize, 
+		double ratio);
 
 	// Cubic interpolation 
 	float cubic(float buffer[], double index);
@@ -62,7 +71,15 @@ private:
 	// Ring mod addition
 	template<typename T>
 	inline T radd(T lhs, T rhs) {
-		T max = static_cast<T>(buffer.size());
+		T max = static_cast<T>(m_capacity);
+		T sum = lhs + rhs;
+		return sum >= max ? sum - max : sum;
+	}
+
+	// Ring mod addition with custom size
+	template<typename T>
+	inline T radd(T lhs, T rhs, size_t size) {
+		T max = static_cast<T>(size);
 		T sum = lhs + rhs;
 		return sum >= max ? sum - max : sum;
 	}
@@ -70,8 +87,15 @@ private:
 	// Ring mod subtraction
 	template<typename T>
 	inline T rsub(T lhs, T rhs) {
-		T size = static_cast<T>(buffer.size());
-		return lhs >= rhs ? lhs - rhs : size - (rhs - lhs);
+		T max = static_cast<T>(m_capacity);
+		return lhs >= rhs ? lhs - rhs : max - (rhs - lhs);
+	}
+
+	// Ring mod subtraction with custom size
+	template<typename T>
+	inline T rsub(T lhs, T rhs, size_t size) {
+		T max = static_cast<T>(size);
+		return lhs >= rhs ? lhs - rhs : max - (rhs - lhs);
 	}
 
 	// Ring mod difference
@@ -86,11 +110,17 @@ class AudioComponent;
 // ADelayLine is used to connect two different, unobstructed AudioComponent objects
 struct ADelayLine
 {
-	// ADelayLine constructed with a delay length of `samples`
-	ADelayLine(size_t samples);
+	ADelayLine(const std::weak_ptr<AudioComponent>& source, const std::weak_ptr<AudioComponent>& dest);
+
+	// Init must be called with the session sample rate before use. source and dest
+	// pointers must be set before use!
+	void init(float sampleRate);
+
+	// Called after a change in position of either the source or destination. interpSamples
+	// is the number of previous samples to stretch to fit the new size, resulting in doppler shifting
+	void updateDelay(float sampleRate, size_t interpSamples);
 
 	ReadWriteBuffer buffer;
-
 	std::weak_ptr<AudioComponent> source;
 	std::weak_ptr<AudioComponent> dest;
 };
