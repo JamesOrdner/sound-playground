@@ -27,7 +27,7 @@ public:
 	void stop();
 
 	// Internal callback called by the unscoped SDL callback
-	void process_float(float* buffer, int length);
+	void process_float(float* buffer, unsigned long frames);
 
 	// Registers an audio component with the engine for processing
 	void registerComponent(
@@ -39,8 +39,8 @@ public:
 
 private:
 
-	// An integer representing the current audio device
-	SDL_AudioDeviceID deviceID;
+	// Pointer to the active stream (may be null)
+	void* stream;
 	
 	// Current audio device sample rate
 	float sampleRate;

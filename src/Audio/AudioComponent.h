@@ -53,6 +53,9 @@ protected:
 	// Should this component output to other components?
 	bool bAcceptsOutput;
 
+	// Sample rate of the current session
+	float sampleRate;
+
 	// Number of output channels
 	size_t channels;
 

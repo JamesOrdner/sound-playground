@@ -98,6 +98,8 @@ ASpeaker::~ASpeaker()
 	for (fftwf_complex* c : freqDelayLine) fftwf_free(c);
 }
 
+size_t t = 0;
+
 size_t ASpeaker::process(size_t n)
 {
 	size_t p = pushCount();
@@ -108,38 +110,40 @@ size_t ASpeaker::process(size_t n)
 		for (size_t i = 0; i < n; i++) {
 			float out = outputBuffer[inputPtr] / N;
 			float s = static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f;
-			inputBuffer[inputPtr++] = s;
+			//inputBuffer[inputPtr++] = s;
 
-			if (inputPtr == N) {
-				inputPtr = blockSize;
-				if (fftPlan) {
-					// perform fft of input
-					fftwf_execute(fftPlan);
-					fftwf_complex* arr = freqDelayLine[fdlPtr++];
-					std::copy_n(&fftOutput[0][0], 2 * (blockSize + 1), &arr[0][0]);
-					if (fdlPtr == freqDelayLine.size()) fdlPtr = 0;
+			//if (inputPtr == N) {
+			//	inputPtr = blockSize;
+			//	if (fftPlan) {
+			//		// perform fft of input
+			//		fftwf_execute(fftPlan);
+			//		fftwf_complex* arr = freqDelayLine[fdlPtr++];
+			//		std::copy_n(&fftOutput[0][0], 2 * (blockSize + 1), &arr[0][0]);
+			//		if (fdlPtr == freqDelayLine.size()) fdlPtr = 0;
 
-					// perform pointwise multiply and add of all FDL blocks
-					std::fill_n((float*)ifftInput[0], 2 * (blockSize + 1), 0.f);
-					for (size_t partition = 0; partition < partitions; partition++) {
-						size_t p = (fdlPtr + partition) % partitions; // start at oldest FDL block
-						for (size_t n = 0; n <= blockSize; n++) {
-							for (size_t k = 0; k < 2; k++) {
-								size_t irIdx = partitions - partition - 1; // last to first
-								ifftInput[n][k] += freqDelayLine[p][n][k] * ir[irIdx][n][k];
-							}
-						}
-					}
-					fftwf_execute(ifftPlan);
+			//		// perform pointwise multiply and add of all FDL blocks
+			//		std::fill_n((float*)ifftInput[0], 2 * (blockSize + 1), 0.f);
+			//		for (size_t partition = 0; partition < partitions; partition++) {
+			//			size_t p = (fdlPtr + partition) % partitions; // start at oldest FDL block
+			//			for (size_t n = 0; n <= blockSize; n++) {
+			//				for (size_t k = 0; k < 2; k++) {
+			//					size_t irIdx = partitions - partition - 1; // last to first
+			//					ifftInput[n][k] += freqDelayLine[p][n][k] * ir[irIdx][n][k];
+			//				}
+			//			}
+			//		}
+			//		fftwf_execute(ifftPlan);
 
-					// shift samples one block to the left
-					std::copy_n(inputBuffer + blockSize, blockSize, inputBuffer);
-				}
-			}
+			//		// shift samples one block to the left
+			//		std::copy_n(inputBuffer + blockSize, blockSize, inputBuffer);
+			//	}
+			//}
 
-			float filtered = (out + prev * (1.f - gain)) / (2.f / (1.f + gain)) * (gain * 0.5f + 0.5f);
-			output->buffer.push(filtered);
-			prev = out;
+			//float filtered = (out + prev * (1.f - gain)) / (2.f / (1.f + gain)) * (gain * 0.5f + 0.5f);
+			//output->buffer.push(filtered);
+			//prev = out;
+			
+			output->buffer.push(sinf(t++ * 2.f * mat::pi * 1000.f / sampleRate));
 		}
 	}
 	return n;

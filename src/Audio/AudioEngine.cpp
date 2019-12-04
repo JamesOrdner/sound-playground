@@ -4,76 +4,127 @@
 #include "AudioOutputComponent.h"
 #include "../Engine/EObject.h"
 #include <SDL_audio.h>
+
+#include <portaudio.h>
+#include <pa_win_wasapi.h>
+
 #include <stdio.h>
 
-void sdl_process_float(void* data, Uint8* stream, int length) {
-	length /= sizeof(float) / sizeof(Uint8);
-	((AudioEngine*) data)->process_float((float*) stream, length);
+int pa_callback(
+	const void* input,
+	void* output,
+	unsigned long frameCount,
+	const PaStreamCallbackTimeInfo* timeInfo,
+	PaStreamCallbackFlags statusFlags,
+	void* userData)
+{
+	float* out = (float*)output;
+	((AudioEngine*)userData)->process_float((float*)output, frameCount);
+	return paContinue;
 }
 
 AudioEngine::AudioEngine() :
-	deviceID(0), 
-	sampleRate(0.f), 
-	channels(0), 
-	bufferLength(0)
+	stream(nullptr),
+	sampleRate(44100.f),
+	channels(2),
+	bufferLength(256)
 {
 }
 
 bool AudioEngine::init()
 {
-	SDL_AudioSpec desiredSpec, obtainedSpec;
-	desiredSpec.channels = 2;
-	desiredSpec.format = AUDIO_F32;
-	desiredSpec.samples = 1024;
-	desiredSpec.freq = 44100;
-	desiredSpec.callback = sdl_process_float;
-	desiredSpec.userdata = this;
-
-	deviceID = SDL_OpenAudioDevice(nullptr, false, &desiredSpec, &obtainedSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
-	if (deviceID < 2) {
-		printf("Audio initialization error: %s\n", SDL_GetError());
+	PaError err;
+	err = Pa_Initialize();
+	if (err != paNoError) {
+		printf("PortAudio error: %s\n", Pa_GetErrorText(err));
 		return false;
 	}
-	else {
-		sampleRate = static_cast<float>(obtainedSpec.freq);
-		channels = obtainedSpec.channels;
-		bufferLength = obtainedSpec.samples;
-		for (const auto& component : components) {
-			component->init(sampleRate, bufferLength, channels);
+
+	PaDeviceIndex deviceCount = Pa_GetDeviceCount();
+	for (PaDeviceIndex i = 0; i < deviceCount; i++) {
+		const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
+		if (Pa_GetHostApiInfo(deviceInfo->hostApi)->type == paWASAPI) {
+			PaWasapiStreamInfo wasapiInfo;
+			wasapiInfo.size = sizeof(PaWasapiStreamInfo);
+			wasapiInfo.hostApiType = paWASAPI;
+			wasapiInfo.version = 1;
+			wasapiInfo.flags = paWinWasapiExclusive;
+			wasapiInfo.channelMask = NULL;
+			wasapiInfo.hostProcessorOutput = NULL;
+			wasapiInfo.hostProcessorInput = NULL;
+			wasapiInfo.threadPriority = eThreadPriorityProAudio;
+
+			PaStreamParameters outputParams;
+			outputParams.device = i;
+			outputParams.channelCount = channels;
+			outputParams.sampleFormat = paFloat32;
+			outputParams.suggestedLatency = Pa_GetDeviceInfo(i)->defaultLowOutputLatency;
+			outputParams.hostApiSpecificStreamInfo = &wasapiInfo;
+			err = Pa_OpenStream(
+				&stream,
+				nullptr,
+				&outputParams,
+				sampleRate,
+				bufferLength,
+				paNoFlag,
+				pa_callback,
+				this);
+
+			if (err != paNoError) {
+				printf("PortAudio error: %s\n", Pa_GetErrorText(err));
+				return false;
+			}
+			break;
 		}
-		return true;
 	}
+
+	for (const auto& component : components) {
+		component->init(sampleRate, bufferLength, channels);
+	}
+
+	return true;
 }
 
 void AudioEngine::deinit()
 {
-	if (deviceID < 2) return;
-	SDL_CloseAudioDevice(deviceID);
+	if (stream) {
+		Pa_CloseStream(stream);
+		stream = nullptr;
+	}
+	Pa_Terminate();
 	for (const auto& c : components) c->deinit();
 }
 
 bool AudioEngine::start()
 {
-	if (deviceID < 2) return false;
-	SDL_PauseAudioDevice(deviceID, 0);
-	return true;
+	if (!stream) return false;
+	PaError err = Pa_StartStream(stream);
+	if (err != paNoError) {
+		printf("PortAudio error: %s\n", Pa_GetErrorText(err));
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 
 void AudioEngine::stop()
 {
-
+	if (!stream) return;
+	PaError err = Pa_StopStream(stream);
+	if (err != paNoError) {
+		printf("PortAudio error: %s\n", Pa_GetErrorText(err));
+	}
 }
 
-void AudioEngine::process_float(float* buffer, int length)
+void AudioEngine::process_float(float* buffer, unsigned long frames)
 {
-	size_t n = length / channels;
-
 	// preprocess
 	for (const auto& c : components) c->preprocess();
 
 	// process
 	// naive just-get-it-working ordering
-	std::vector<size_t> remaining(components.size(), n);
+	std::vector<size_t> remaining(components.size(), frames);
 	bool done = false;
 	while (!done) {
 		size_t i = 0;
@@ -97,11 +148,12 @@ void AudioEngine::process_float(float* buffer, int length)
 	}
 
 	// output
-	for (int i = 0; i < length; i++) buffer[i] = 0.f;
+	unsigned long len = frames * channels;
+	for (int i = 0; i < len; i++) buffer[i] = 0.f;
 	for (const auto& c : components) {
 		if (const auto& outputComponent = std::dynamic_pointer_cast<AudioOutputComponent>(c)) {
 			const auto& cOut = outputComponent->collectOutput();
-			for (int i = 0; i < length; i++) buffer[i] += cOut[i];
+			for (int i = 0; i < len; i++) buffer[i] += cOut[i];
 		}
 	}
 }
@@ -114,7 +166,7 @@ void AudioEngine::registerComponent(
 	component->m_position = owner->position();
 	component->m_forward = owner->forward();
 
-	if (deviceID >= 2) component->init(sampleRate, channels, bufferLength);
+	if (stream) component->init(sampleRate, channels, bufferLength);
 
 	// Setup delay lines
 	const mat::vec3& thisPos = component->position();
