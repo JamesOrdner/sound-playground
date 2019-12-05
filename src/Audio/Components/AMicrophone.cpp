@@ -33,8 +33,7 @@ void AMicrophone::transformUpdated()
 void AMicrophone::otherTransformUpdated(const ADelayLine& connection, bool bInput)
 {
 	float gL, gR;
-	auto other = bInput ? connection.source.lock() : connection.dest.lock();
-	calcStereoGain(*other, gL, gR);
+	calcStereoGain(*connection.source.lock(), gL, gR);
 	gainL.target = gL;
 }
 
@@ -46,19 +45,20 @@ void AMicrophone::preprocess()
 
 size_t AMicrophone::process(size_t n)
 {
-	size_t p = pullCount();
-	if (p < n) n = p;
+	if (outputPtr + n * channels >= outputBuffer.size()) {
+		n = (outputBuffer.size() - outputPtr) / channels;
+	}
+
 	for (const auto& input : inputs) {
-		// This is all hardcoded for stereo, needs to be changed eventually
-		input->buffer.read(inputBuffer, n);
+		n = input->buffer.read(inputBuffer, n);
 		for (size_t i = 0; i < n; i++) {
+			// This is all hardcoded for stereo, needs to be changed eventually
 			float gL = gainL.update();
 			float gR = 1.f - gL;
-			outputBuffer[outputPtr + i * 2] += inputBuffer[i] * gL;
-			outputBuffer[outputPtr + i * 2 + 1] += inputBuffer[i] * gR;
+			outputBuffer[outputPtr++] += inputBuffer[i] * 0.5f;
+			outputBuffer[outputPtr++] += inputBuffer[i] * 0.5f;
 		}
 	}
-	outputPtr += n * channels;
 	return n;
 }
 

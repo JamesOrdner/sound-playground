@@ -3,12 +3,11 @@
 #include "AudioComponent.h"
 #include "AudioOutputComponent.h"
 #include "../Engine/EObject.h"
-#include <SDL_audio.h>
-
 #include <portaudio.h>
 #include <pa_win_wasapi.h>
-
 #include <stdio.h>
+
+#include "Components/ASpeaker.h"
 
 int pa_callback(
 	const void* input,
@@ -130,18 +129,21 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 		size_t i = 0;
 		done = true;
 		for (const auto& c : components) {
-			// update transforms
-			if (c->bDirtyTransform) {
-				auto ptr = c->m_owner.lock();
-				c->m_position = ptr->position();
-				c->m_forward = ptr->forward();
-				c->bDirtyTransform = false;
-				for (auto& op : c->outputs) op->updateDelay(sampleRate, 250);
-				for (auto& ip : c->inputs)  ip->updateDelay(sampleRate, 250);
+			// process
+			remaining[i] -= c->process(remaining[0]);
+
+			if (std::dynamic_pointer_cast<ASpeaker>(c)) {
+				// update transforms
+				if (c->bDirtyTransform) {
+					auto ptr = c->m_owner.lock();
+					c->m_position = ptr->position();
+					c->m_forward = ptr->forward();
+					c->bDirtyTransform = false;
+					for (auto& op : c->outputs) op->updateDelayLength(sampleRate);
+					for (auto& ip : c->inputs)  ip->updateDelayLength(sampleRate);
+				}
 			}
 
-			// process
-			remaining[i] -= c->process(remaining[i]);
 			if (remaining[i++] && std::dynamic_pointer_cast<AudioOutputComponent>(c)) done = false;
 			i %= remaining.size();
 		}
@@ -149,11 +151,11 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 
 	// output
 	unsigned long len = frames * channels;
-	for (int i = 0; i < len; i++) buffer[i] = 0.f;
+	for (unsigned long i = 0; i < len; i++) buffer[i] = 0.f;
 	for (const auto& c : components) {
 		if (const auto& outputComponent = std::dynamic_pointer_cast<AudioOutputComponent>(c)) {
 			const auto& cOut = outputComponent->collectOutput();
-			for (int i = 0; i < len; i++) buffer[i] += cOut[i];
+			for (unsigned long i = 0; i < len; i++) buffer[i] += cOut[i];
 		}
 	}
 }

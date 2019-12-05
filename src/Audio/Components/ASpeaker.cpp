@@ -143,7 +143,7 @@ size_t ASpeaker::process(size_t n)
 			//output->buffer.push(filtered);
 			//prev = out;
 			
-			output->buffer.push(sinf(t++ * 2.f * mat::pi * 1000.f / sampleRate));
+			output->buffer.push(sinf(t++ * 2.f * mat::pi * 100.f / sampleRate));
 		}
 	}
 	return n;

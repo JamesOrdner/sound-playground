@@ -23,8 +23,8 @@ public:
 	// Returns the number of samples read. May be less than `n`
 	size_t read(float* samples, size_t n);
 
-	// Resize the buffer to newLength, interpolating the last N samples to fit.
-	void resize(size_t newLength, size_t interpLastN);
+	// Resize the buffer to newLength, interpolating the entire buffer to fit.
+	void resize(size_t newLength);
 
 	// Return the active buffer size
 	size_t capacity();
@@ -51,54 +51,27 @@ private:
 	// Current active capcity of buffer. Will be less than buffer.size()
 	size_t m_capacity;
 
-	// Resample a contiguous block of memory
-	void resample_forward(
-		size_t startIdx,
-		size_t writeLength,
-		double ratio);
+	// Resample a contiguous block of memory. Returns the last index written to
+	void resample_forward(size_t readStartIdx, size_t writeEndIdx, double ratio);
 
-	// Resample a block of memory starting at the end index
-	void resample_back(
-		size_t readStartIdx, 
-		size_t writeStartIdx, 
-		size_t writeLength,
-		size_t ringSize, 
-		double ratio);
+	// Resample a block of memory starting at the end index. Returns the last index written to
+	void resample_back(size_t readStartIdx, size_t writeEndIdx, double ratio);
 
 	// Cubic interpolation 
 	float cubic(float buffer[], double index);
 
 	// Ring mod addition
-	template<typename T>
-	inline T radd(T lhs, T rhs) {
-		T max = static_cast<T>(m_capacity);
-		T sum = lhs + rhs;
-		return sum >= max ? sum - max : sum;
-	}
-
-	// Ring mod addition with custom size
-	template<typename T>
-	inline T radd(T lhs, T rhs, size_t size) {
-		T max = static_cast<T>(size);
-		T sum = lhs + rhs;
-		return sum >= max ? sum - max : sum;
+	inline size_t radd(size_t lhs, size_t rhs) {
+		size_t sum = lhs + rhs;
+		return sum >= m_capacity ? sum % m_capacity : sum;
 	}
 
 	// Ring mod subtraction
-	template<typename T>
-	inline T rsub(T lhs, T rhs) {
-		T max = static_cast<T>(m_capacity);
-		return lhs >= rhs ? lhs - rhs : max - (rhs - lhs);
+	inline size_t rsub(size_t lhs, size_t rhs) {
+		return lhs >= rhs ? lhs - rhs : m_capacity - (rhs - lhs);
 	}
 
-	// Ring mod subtraction with custom size
-	template<typename T>
-	inline T rsub(T lhs, T rhs, size_t size) {
-		T max = static_cast<T>(size);
-		return lhs >= rhs ? lhs - rhs : max - (rhs - lhs);
-	}
-
-	// Ring mod difference
+	// Absolute value difference
 	inline size_t rdiff(size_t lhs, size_t rhs) {
 		return lhs >= rhs ? lhs - rhs : rhs - lhs;
 	}
@@ -116,9 +89,9 @@ struct ADelayLine
 	// pointers must be set before use!
 	void init(float sampleRate);
 
-	// Called after a change in position of either the source or destination. interpSamples
-	// is the number of previous samples to stretch to fit the new size, resulting in doppler shifting
-	void updateDelay(float sampleRate, size_t interpSamples);
+	// Update the delay length of the delay line. Called after a
+	// change in position of either the source or destination.
+	void updateDelayLength(float sampleRate);
 
 	ReadWriteBuffer buffer;
 	std::weak_ptr<AudioComponent> source;

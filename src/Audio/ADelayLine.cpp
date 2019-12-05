@@ -8,6 +8,8 @@ constexpr float soundSpeed = 0.0029154518950437f;
 // Maximum distance between two objects (meters)
 constexpr float maximumDistance = 10.f;
 
+constexpr size_t minBufferSize = 16;
+
 ReadWriteBuffer::ReadWriteBuffer() :
 	readPtr(0), 
 	writePtr(0),
@@ -18,6 +20,7 @@ ReadWriteBuffer::ReadWriteBuffer() :
 
 void ReadWriteBuffer::init(size_t sampleDelay, size_t maxSampleDelay)
 {
+	if (sampleDelay < minBufferSize) sampleDelay = minBufferSize;
 	buffer.resize(maxSampleDelay);
 	readPtr = 0;
 	writePtr = 0;
@@ -47,7 +50,7 @@ size_t ReadWriteBuffer::push(float* samples, size_t n)
 	else {
 		std::copy_n(samples, n, &buffer[writePtr]);
 	}
-	writePtr = (writePtr + n) % m_capacity;
+	writePtr = radd(writePtr, n);
 	m_size += n;
 	return n;
 }
@@ -64,7 +67,7 @@ size_t ReadWriteBuffer::read(float* samples, size_t n)
 	else {
 		std::copy_n(&buffer[readPtr], n, samples);
 	}
-	readPtr = (readPtr + n) % m_capacity;
+	readPtr = radd(readPtr, n);
 	m_size -= n;
 	return n;
 }
@@ -84,95 +87,57 @@ size_t ReadWriteBuffer::pullCount()
 	return m_size;
 }
 
-void ReadWriteBuffer::resize(size_t newLength, size_t interpLastN)
+void ReadWriteBuffer::resize(size_t newLength)
 {
+	if (newLength < minBufferSize) newLength = minBufferSize;
 	if (newLength == m_capacity) return;
-	
-	if (m_size == 0) {
-		// buffer empty, reset and return
+	if (m_size == 0) { // buffer empty, reset and return
 		readPtr = 0;
 		writePtr = 0;
 		m_capacity = newLength;
 		return;
 	}
 
-	size_t capacityDiff = rdiff(newLength, m_capacity);
-	double ratio = static_cast<double>(m_capacity) / static_cast<double>(newLength);
+	float ro = buffer[readPtr];
+	float wo = buffer[writePtr];
 
-	// determine interp indices
-	if (interpLastN > m_capacity) interpLastN = m_capacity;
-	size_t interpStartIdx = rsub(writePtr, interpLastN);
-	size_t interpEndIdx = rsub(writePtr, size_t(1));
+	double ratio = static_cast<double>(newLength) / static_cast<double>(m_capacity);
 
-	// length of both interpolation sections (first index is 0 if full interp range is contiguous).
-	// interpWriteLengths[0] begins at physical buffer location 0 and runs to interpEndIdx.
-	// interpWriteLengths[1] begins at interpStartIndex and runs to the end of the buffer.
-	size_t interpWriteLengths[2];
-	if (newLength < m_capacity) {
-		size_t resizedInterpRange = interpLastN - capacityDiff;
-		if (interpEndIdx < interpStartIdx) {
-			interpWriteLengths[0] = interpEndIdx * resizedInterpRange / interpLastN;
-			interpWriteLengths[1] = resizedInterpRange - interpWriteLengths[0];
-		}
-		else {
-			interpWriteLengths[0] = 0;
-			interpWriteLengths[1] = resizedInterpRange;
-		}
+	size_t newWritePtr = writePtr * ratio;
+	if (ratio < 1.0) { // shrink
+		resample_forward(0, newWritePtr ? newWritePtr - 1 : newLength - 1, ratio);
+		if (writePtr) resample_forward(writePtr, newLength - 1, ratio);
 	}
-	else {
-
+	else { // expand
+		resample_back(m_capacity - 1, newWritePtr, ratio);
+		if (writePtr) resample_back(writePtr - 1, 0, ratio);
 	}
 
-	if (newLength < m_capacity) { // shrink buffer, forward resample
-		resample_forward(0, interpWriteLengths[0], ratio);
-		resample_forward(interpStartIdx, interpWriteLengths[1], ratio);
-		if (writePtr != 0) {
-			std::copy(
-				buffer.begin() + writePtr,
-				buffer.begin() + m_capacity,
-				buffer.begin() + (interpWriteLengths[0] ? interpWriteLengths[0] : writePtr - capacityDiff)
-			);
-		}
-
-		m_capacity = newLength;
-		writePtr = interpWriteLengths[0] ? interpEndIdx : rsub(writePtr, capacityDiff);
-		if (interpStartIdx <= readPtr && readPtr <= interpEndIdx ||
-			interpWriteLengths[0] && (readPtr <= interpStartIdx || interpEndIdx <= readPtr)) {
-			// offset from beginning of interp region
-			size_t readPtrOffset = readPtr > interpStartIdx ? readPtr - interpStartIdx : readPtr;
-			size_t newReadPtrOffset = static_cast<size_t>(readPtrOffset * (1 / ratio));
-			size_t reduction = readPtrOffset - newReadPtrOffset;
-			readPtr = rsub(readPtr, reduction);
-			m_size = reduction < m_size ? m_size - reduction : 0;
-		}
-		else if (interpEndIdx < readPtr) {
-			// readPtr in non-interp region but needs to be moved back
-			size_t reduction = interpWriteLengths[0] ? interpEndIdx - interpWriteLengths[0] : capacityDiff;
-			readPtr = rsub(readPtr, reduction);
-			m_size = reduction < m_size ? m_size - reduction : 0;
-		}
-	}
-	else { // expand buffer, backwards resample
-
+	readPtr = readPtr * ratio;
+	writePtr = newWritePtr;
+	m_capacity = newLength;
+	if (m_size > 0) {
+		m_size = writePtr > readPtr ? writePtr - readPtr : m_capacity - readPtr + writePtr;
 	}
 }
 
-void ReadWriteBuffer::resample_forward(
-	size_t startIdx,
-	size_t writeLength,
-	double ratio)
+void ReadWriteBuffer::resample_forward(size_t readStartIdx, size_t writeEndIdx, double ratio)
 {
+	// End interpolation region at writePtr if true, or at end of buffer if false
+	bool bEndAtWritePtr = readStartIdx < writePtr;
+	
 	float b[4] = { // read ahead buffer, necessary when in-place resampling overlaps
-		buffer[rsub(startIdx, size_t(1))],
-		buffer[startIdx],
-		buffer[radd(startIdx, size_t(1))],
-		buffer[radd(startIdx, size_t(2))]
+		buffer[readStartIdx == writePtr ? readStartIdx : rsub(readStartIdx, 1)],
+		buffer[readStartIdx],
+		buffer[radd(readStartIdx, 1)],
+		buffer[radd(readStartIdx, 2)]
 	};
 
-	double dStartIdx = static_cast<double>(startIdx);
-	size_t lastIdx = startIdx; // move read-ahead buffer when lastIdx differs from iIdx
-	for (size_t i = 0; i < writeLength; i++) {
-		double fIdx = radd(dStartIdx, i * ratio);
+	double dStartIdx = static_cast<double>(readStartIdx);
+	size_t lastIdx = readStartIdx; // move read-ahead buffer when lastIdx differs from iIdx
+	size_t writeStartIdx = readStartIdx * ratio;
+	for (size_t i = writeStartIdx; i <= writeEndIdx; i++) {
+		double fIdx = i / ratio;
 		size_t iIdx = static_cast<size_t>(fIdx);
 
 		while (lastIdx < iIdx) {
@@ -180,72 +145,49 @@ void ReadWriteBuffer::resample_forward(
 			b[0] = b[1];
 			b[1] = b[2];
 			b[2] = b[3];
-			b[3] = buffer[radd(lastIdx, size_t(2))];
+			size_t indexAhead = radd(lastIdx, 2);
+			if ((!bEndAtWritePtr && lastIdx < indexAhead) || (indexAhead < writePtr)) {
+				b[3] = buffer[indexAhead];
+			}
 		}
 
-		buffer[startIdx + i] = cubic(b, fIdx - static_cast<double>(iIdx));
+		buffer[i] = cubic(b, fIdx - static_cast<double>(iIdx));
 	}
 }
 
-//void ReadWriteBuffer::resample_forward(
-//	size_t startIdx,
-//	size_t writeLength,
-//	size_t ringSize,
-//	double ratio)
-//{
-//	float b[4] = { // read ahead buffer, necessary when in-place resampling overlaps
-//		buffer[rsub(startIdx, size_t(1), ringSize)],
-//		buffer[startIdx],
-//		buffer[radd(startIdx, size_t(1), ringSize)],
-//		buffer[radd(startIdx, size_t(2), ringSize)]
-//	};
-//
-//	double dStartIdx = static_cast<double>(startIdx);
-//	size_t lastIdx = startIdx; // move read-ahead buffer when lastIdx differs from iIdx
-//	for (size_t i = 0; i < writeLength; i++) {
-//		double fIdx = radd(dStartIdx, i * ratio, ringSize);
-//		size_t iIdx = static_cast<size_t>(fIdx);
-//
-//		while (lastIdx < iIdx) {
-//			lastIdx++;
-//			b[0] = b[1];
-//			b[1] = b[2];
-//			b[2] = b[3];
-//			b[3] = buffer[radd(lastIdx, size_t(2), ringSize)];
-//		}
-//
-//		buffer[startIdx + i] = cubic(b, fIdx - static_cast<double>(iIdx));
-//	}
-//}
-
-void ReadWriteBuffer::resample_back(
-	size_t readStartIdx,
-	size_t writeStartIdx, 
-	size_t writeLength, 
-	size_t ringSize, 
-	double ratio)
+void ReadWriteBuffer::resample_back(size_t readStartIdx, size_t writeEndIdx, double ratio)
 {
+	// End interpolation region at writePtr if true, or at beginning of buffer if false
+	bool bEndAtWritePtr = writePtr < readStartIdx;
+
 	float b[4] = { // read ahead buffer, necessary when in-place resampling overlaps
-		buffer[radd(readStartIdx, size_t(1), ringSize)],
+		buffer[rsub(readStartIdx, 2)],
+		buffer[rsub(readStartIdx, 1)],
 		buffer[readStartIdx],
-		buffer[rsub(readStartIdx, size_t(1), ringSize)],
-		buffer[rsub(readStartIdx, size_t(2), ringSize)]
+		buffer[radd(readStartIdx, 1) == writePtr ? readStartIdx : radd(readStartIdx, 1)]
 	};
 
 	double dStartIdx = static_cast<double>(readStartIdx);
 	size_t lastIdx = readStartIdx; // move read-ahead buffer when lastIdx differs from iIdx
-	for (size_t i = 0; i < writeLength; i++) {
-		double fIdx = rsub(dStartIdx, i * ratio, ringSize);
-		size_t iIdx = static_cast<size_t>(ceil(fIdx));
+	size_t i = (readStartIdx + 1) * ratio - 1; // writeStartIdx
+	while (true) {
+		double fIdx = i / ratio;
+		size_t iIdx = static_cast<size_t>(fIdx);
 
-		if (lastIdx != iIdx) {
-			b[0] = b[1];
-			b[1] = b[2];
-			b[2] = b[3];
-			b[3] = buffer[rsub(iIdx, size_t(2), ringSize)];
+		if (lastIdx > iIdx) {
+			lastIdx--;
+			b[1] = b[0];
+			b[2] = b[1];
+			b[3] = b[2];
+			size_t indexAhead = rsub(lastIdx, 2);
+			if ((!bEndAtWritePtr && lastIdx > indexAhead) || (indexAhead >= writePtr)) {
+				b[0] = buffer[indexAhead];
+			}
 		}
 
-		buffer[writeStartIdx - i] = cubic(b, fIdx - static_cast<double>(iIdx));
+		buffer[i] = cubic(b, 1.0 - (fIdx - static_cast<double>(iIdx)));
+		
+		if (i-- == writeEndIdx) break;
 	}
 }
 
@@ -273,9 +215,9 @@ void ADelayLine::init(float sampleRate)
 	buffer.init(sampleDelay, maxDelay);
 }
 
-void ADelayLine::updateDelay(float sampleRate, size_t interpSamples)
+void ADelayLine::updateDelayLength(float sampleRate)
 {
 	float dist = mat::dist(source.lock()->position(), dest.lock()->position());
 	size_t sampleDelay = static_cast<size_t>(sampleRate * dist * soundSpeed);
-	buffer.resize(sampleDelay, interpSamples);
+	buffer.resize(sampleDelay);
 }
