@@ -26,6 +26,9 @@ public:
 	// Returns the world space position of the owning object
 	const mat::vec3& position() const;
 
+	// Returns the world space velocity of the owning object
+	const mat::vec3& velocity() const;
+
 	// Returns the world space forward vector of the owning object
 	const mat::vec3& forward() const;
 
@@ -35,6 +38,9 @@ public:
 	// Called when a connected object updates its transform. Does not run in the audio thread.
 	// bInput == true if this is an input to the called AudioComponent, == false if output.
 	virtual void otherTransformUpdated(const ADelayLine& connection, bool bInput) {};
+
+	// Called when the velocity of the owning object changed. Does not run in the audio thread.
+	void updateVelocity(const mat::vec3& velocity);
 
 	// This optional function is called just before processing a full callback.
 	// It can be used to prep output buffers or other internals.
@@ -80,6 +86,9 @@ private:
 	// World space position of this object, updated by AudioEngine. It is not
 	// guaranteed to always be in sync with the actual owning object's location.
 	mat::vec3 m_position;
+
+	// World space velocity of this object, updated in a non-audio thread.
+	mat::vec3 m_velocity;
 
 	// World space forward vector of this object, updated by AudioEngine. It is not
 	// guaranteed to always be in sync with the actual owning object's forward vector.

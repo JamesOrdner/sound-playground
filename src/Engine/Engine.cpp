@@ -12,7 +12,7 @@ Engine& Engine::instance()
 
 EWorld& Engine::world()
 {
-	return *_world;
+	return *m_world;
 }
 
 AudioEngine& Engine::audio()
@@ -49,6 +49,8 @@ void Engine::run()
 			}
 		}
 
+		m_world->tick(lastFrameTime);
+
 		renderer.draw(window, meshes);
 		
 		Uint32 newSdlTime = SDL_GetTicks();
@@ -80,7 +82,7 @@ std::shared_ptr<EModel> Engine::raycastScreen(int x, int y, mat::vec3& hitLoc)
 	vec4 screen_dir{ 0.f, 0.f, 1.f, 0.f };
 	vec3 world_dir(renderer.screenToWorldMatrix() * screen_dir);
 
-	return _world->raycast(world_orig, world_dir, hitLoc);
+	return m_world->raycast(world_orig, world_dir, hitLoc);
 }
 
 void Engine::registerModel(const std::shared_ptr<EModel>& model)
@@ -120,7 +122,7 @@ Engine::Engine() :
 	lastFrameTime(0.f)
 {
 	if (init()) {
-		_world = std::make_unique<EWorld>();
+		m_world = std::make_unique<EWorld>();
 		audioEngine.start();
 		bInitialized = true;
 	}

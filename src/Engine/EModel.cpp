@@ -1,5 +1,6 @@
 #include "EModel.h"
 #include "../Graphics/GMesh.h"
+#include "../Audio/AudioComponent.h"
 
 EModel::EModel(const std::string& filepath) : bDirtyTransform(false)
 {
@@ -90,6 +91,22 @@ void EModel::setScale(const mat::vec3& scale)
 {
 	EObject::setScale(scale);
 	bDirtyTransform = true;
+}
+
+void EModel::updatePhysics(float deltaTime)
+{
+	if (m_position != physicsPosition) {
+		if (AudioComponent* ac = audioComponent()) {
+			mat::vec3 dir = physicsPosition - m_position;
+			ac->updateVelocity(dir / deltaTime);
+		}
+		physicsPosition = m_position;
+	}
+	else {
+		if (AudioComponent* ac = audioComponent()) {
+			ac->updateVelocity(mat::vec3());
+		}
+	}
 }
 
 mat::mat4 EModel::transformMatrix()

@@ -52,7 +52,12 @@ mat::vec3 EObject::forward()
 	return mat::rotate(mat::vec3{ 0.f, 0.f, 1.f }, m_rotation);
 }
 
-std::shared_ptr<AudioComponent> EObject::audioComponent()
+AudioComponent* EObject::audioComponent()
+{
+	return m_audioComponent.get();
+}
+
+std::shared_ptr<AudioComponent> EObject::audioComponentShared()
 {
 	return m_audioComponent;
 }

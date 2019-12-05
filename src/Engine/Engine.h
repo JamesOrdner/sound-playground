@@ -62,7 +62,7 @@ private:
 	std::shared_ptr<GMesh> makeMesh(const std::string& filepath);
 
 	// The world, containing all objects
-	std::unique_ptr<EWorld> _world;
+	std::unique_ptr<EWorld> m_world;
 
 	// Stores pointers to all loaded meshes, indexed by path
 	std::map<std::string, std::weak_ptr<GMesh>> meshes;

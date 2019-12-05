@@ -3,13 +3,19 @@
 #include "EModel.h"
 #include "Engine.h"
 
+EWorld::EWorld() :
+	physicsUpdateMinInterval(0.05f),
+	physicsDeltaTime(0.f)
+{
+}
+
 void EWorld::addObject(const std::shared_ptr<EObject>& object)
 {
 	object->bExistsInWorld = true;
 	objects.push_back(object);
 
 	Engine& engine = Engine::instance();
-	if (const auto& audioComponent = object->audioComponent()) {
+	if (const auto& audioComponent = object->audioComponentShared()) {
 		// Existing audio component will not be registered before adding to the world
 		engine.audio().registerComponent(audioComponent, object);
 	}
@@ -26,7 +32,7 @@ void EWorld::removeObject(const std::shared_ptr<EObject>& object)
 	objects.remove(object);
 
 	Engine& engine = Engine::instance();
-	if (const auto& audioComponent = object->audioComponent()) {
+	if (const auto& audioComponent = object->audioComponentShared()) {
 		engine.audio().unregisterComponent(audioComponent);
 	}
 
@@ -53,4 +59,13 @@ std::shared_ptr<EModel> EWorld::raycast(const mat::vec3& origin, const mat::vec3
 		}
 	}
 	return hitObject;
+}
+
+void EWorld::tick(float deltaTime)
+{
+	physicsDeltaTime += deltaTime;
+	if (physicsDeltaTime > physicsUpdateMinInterval) {
+		for (const auto& object : objects) object->updatePhysics(physicsDeltaTime);
+		physicsDeltaTime = 0.f;
+	}
 }

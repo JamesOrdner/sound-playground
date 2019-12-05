@@ -160,6 +160,32 @@ namespace mat // Matrix
 		return v;
 	}
 
+	template <typename T, int size>
+	constexpr Vector<T, size> operator/(const Vector<T, size>& lhs, const T& rhs) {
+		Vector<T, size> v;
+		for (int i = 0; i < size; i++) v.data[i] = lhs.data[i] / rhs;
+		return v;
+	}
+
+	template <typename T, int size>
+	constexpr Vector<T, size> operator/(const Vector<T, size>& lhs, const Vector<T, size>& rhs) {
+		Vector<T, size> v;
+		for (int i = 0; i < size; i++) v.data[i] = lhs.data[i] / rhs.data[i];
+		return v;
+	}
+
+	template <typename T, int size>
+	constexpr bool operator==(const Vector<T, size>& lhs, const Vector<T, size>& rhs) {
+		for (int i = 0; i < size; i++) if (lhs.data[i] != rhs.data[i]) return false;
+		return true;
+	}
+
+	template <typename T, int size>
+	constexpr bool operator!=(const Vector<T, size>& lhs, const Vector<T, size>& rhs) {
+		for (int i = 0; i < size; i++) if (lhs.data[i] != rhs.data[i]) return true;
+		return false;
+	}
+
 	/** Vector Functions */
 
 	template <typename T, int size>

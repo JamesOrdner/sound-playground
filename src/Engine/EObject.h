@@ -44,7 +44,10 @@ public:
 	mat::vec3 forward();
 
 	// Returns the object's audio component, if present
-	std::shared_ptr<AudioComponent> audioComponent();
+	AudioComponent* audioComponent();
+
+	// Returns the object's audio component as a shared pointer, if present
+	std::shared_ptr<AudioComponent> audioComponentShared();
 
 	// Registers an audio component with this object, replacing any existing component
 	void addAudioComponent(
@@ -53,6 +56,9 @@ public:
 
 	// Removes the audio component from this object
 	void removeAudioComponent();
+
+	// Called periodically, usually at a lower rate than the frame rate
+	virtual void updatePhysics(float deltaTime) {};
 
 protected:
 

@@ -52,6 +52,8 @@ public:
 	// Sets the scale of the model
 	void setScale(const mat::vec3& scale) override;
 
+	void updatePhysics(float deltaTime) override;
+
 private:
 
 	// Filepath of the model's mesh
@@ -62,4 +64,9 @@ private:
 
 	// Set to true when location, rotation, or scale is modified
 	bool bDirtyTransform;
+
+	/** Physics */
+
+	// Position of the model after most recent physics update
+	mat::vec3 physicsPosition;
 };
