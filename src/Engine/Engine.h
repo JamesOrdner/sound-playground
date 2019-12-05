@@ -47,6 +47,9 @@ private:
 	// True only after a successful call to init()
 	bool bInitialized;
 
+	// Length in seconds of the last frame
+	float lastFrameTime;
+
 	// Register a model with the engine for rendering. Does not check for double registration.
 	void registerModel(const std::shared_ptr<EModel>& model);
 	friend void EWorld::addObject(const std::shared_ptr<EObject>& object);

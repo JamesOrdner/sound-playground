@@ -30,7 +30,7 @@ void ReadWriteBuffer::init(size_t sampleDelay, size_t maxSampleDelay)
 
 size_t ReadWriteBuffer::push(float sample)
 {
-	if (m_size == m_capacity) return 0;
+	if (m_size >= m_capacity) return 0;
 	buffer[writePtr++] = sample;
 	if (writePtr == m_capacity) writePtr = 0;
 	m_size++;
@@ -39,6 +39,7 @@ size_t ReadWriteBuffer::push(float sample)
 
 size_t ReadWriteBuffer::push(float* samples, size_t n)
 {
+	if (m_size >= m_capacity) return 0;
 	size_t f = m_capacity - m_size; // free space
 	if (n > f) n = f;
 	if (writePtr + n > m_capacity) {
@@ -89,6 +90,8 @@ size_t ReadWriteBuffer::pullCount()
 
 void ReadWriteBuffer::resize(size_t newLength)
 {
+	return;
+
 	if (newLength < minBufferSize) newLength = minBufferSize;
 	if (newLength == m_capacity) return;
 	if (m_size == 0) { // buffer empty, reset and return
@@ -98,96 +101,9 @@ void ReadWriteBuffer::resize(size_t newLength)
 		return;
 	}
 
-	float ro = buffer[readPtr];
-	float wo = buffer[writePtr];
-
-	double ratio = static_cast<double>(newLength) / static_cast<double>(m_capacity);
-
-	size_t newWritePtr = writePtr * ratio;
-	if (ratio < 1.0) { // shrink
-		resample_forward(0, newWritePtr ? newWritePtr - 1 : newLength - 1, ratio);
-		if (writePtr) resample_forward(writePtr, newLength - 1, ratio);
-	}
-	else { // expand
-		resample_back(m_capacity - 1, newWritePtr, ratio);
-		if (writePtr) resample_back(writePtr - 1, 0, ratio);
-	}
-
-	readPtr = readPtr * ratio;
-	writePtr = newWritePtr;
-	m_capacity = newLength;
-	if (m_size > 0) {
-		m_size = writePtr > readPtr ? writePtr - readPtr : m_capacity - readPtr + writePtr;
-	}
-}
-
-void ReadWriteBuffer::resample_forward(size_t readStartIdx, size_t writeEndIdx, double ratio)
-{
-	// End interpolation region at writePtr if true, or at end of buffer if false
-	bool bEndAtWritePtr = readStartIdx < writePtr;
-	
-	float b[4] = { // read ahead buffer, necessary when in-place resampling overlaps
-		buffer[readStartIdx == writePtr ? readStartIdx : rsub(readStartIdx, 1)],
-		buffer[readStartIdx],
-		buffer[radd(readStartIdx, 1)],
-		buffer[radd(readStartIdx, 2)]
-	};
-
-	double dStartIdx = static_cast<double>(readStartIdx);
-	size_t lastIdx = readStartIdx; // move read-ahead buffer when lastIdx differs from iIdx
-	size_t writeStartIdx = readStartIdx * ratio;
-	for (size_t i = writeStartIdx; i <= writeEndIdx; i++) {
-		double fIdx = i / ratio;
-		size_t iIdx = static_cast<size_t>(fIdx);
-
-		while (lastIdx < iIdx) {
-			lastIdx++;
-			b[0] = b[1];
-			b[1] = b[2];
-			b[2] = b[3];
-			size_t indexAhead = radd(lastIdx, 2);
-			if ((!bEndAtWritePtr && lastIdx < indexAhead) || (indexAhead < writePtr)) {
-				b[3] = buffer[indexAhead];
-			}
-		}
-
-		buffer[i] = cubic(b, fIdx - static_cast<double>(iIdx));
-	}
-}
-
-void ReadWriteBuffer::resample_back(size_t readStartIdx, size_t writeEndIdx, double ratio)
-{
-	// End interpolation region at writePtr if true, or at beginning of buffer if false
-	bool bEndAtWritePtr = writePtr < readStartIdx;
-
-	float b[4] = { // read ahead buffer, necessary when in-place resampling overlaps
-		buffer[rsub(readStartIdx, 2)],
-		buffer[rsub(readStartIdx, 1)],
-		buffer[readStartIdx],
-		buffer[radd(readStartIdx, 1) == writePtr ? readStartIdx : radd(readStartIdx, 1)]
-	};
-
-	double dStartIdx = static_cast<double>(readStartIdx);
-	size_t lastIdx = readStartIdx; // move read-ahead buffer when lastIdx differs from iIdx
-	size_t i = (readStartIdx + 1) * ratio - 1; // writeStartIdx
-	while (true) {
-		double fIdx = i / ratio;
-		size_t iIdx = static_cast<size_t>(fIdx);
-
-		if (lastIdx > iIdx) {
-			lastIdx--;
-			b[1] = b[0];
-			b[2] = b[1];
-			b[3] = b[2];
-			size_t indexAhead = rsub(lastIdx, 2);
-			if ((!bEndAtWritePtr && lastIdx > indexAhead) || (indexAhead >= writePtr)) {
-				b[0] = buffer[indexAhead];
-			}
-		}
-
-		buffer[i] = cubic(b, 1.0 - (fIdx - static_cast<double>(iIdx)));
-		
-		if (i-- == writeEndIdx) break;
+	if (newLength < m_capacity) {
+		m_capacity = newLength;
+		return;
 	}
 }
 
@@ -202,6 +118,9 @@ float ReadWriteBuffer::cubic(float b[], double i)
 }
 
 ADelayLine::ADelayLine(const std::weak_ptr<AudioComponent>& source, const std::weak_ptr<AudioComponent>& dest) :
+	velocity(0.f),
+	b{},
+	sampleInterpOffset(0.f),
 	source(source),
 	dest(dest)
 {
@@ -210,14 +129,64 @@ ADelayLine::ADelayLine(const std::weak_ptr<AudioComponent>& source, const std::w
 void ADelayLine::init(float sampleRate)
 {
 	float dist = mat::dist(source.lock()->position(), dest.lock()->position());
-	size_t sampleDelay = static_cast<size_t>(sampleRate * dist * soundSpeed);
-	size_t maxDelay = static_cast<size_t>(sampleRate * maximumDistance * soundSpeed);
+	float fSampleDelay = sampleRate * dist * soundSpeed;
+	float fMaxDelay = sampleRate * maximumDistance * soundSpeed;
+	size_t sampleDelay = static_cast<size_t>(fSampleDelay);
+	size_t maxDelay = static_cast<size_t>(fMaxDelay);
 	buffer.init(sampleDelay, maxDelay);
 }
 
 void ADelayLine::updateDelayLength(float sampleRate)
 {
 	float dist = mat::dist(source.lock()->position(), dest.lock()->position());
-	size_t sampleDelay = static_cast<size_t>(sampleRate * dist * soundSpeed);
+	float fSampleDelay = sampleRate * dist * soundSpeed;
+	size_t sampleDelay = static_cast<size_t>(fSampleDelay);
 	buffer.resize(sampleDelay);
+}
+
+size_t ADelayLine::push(float* samples, size_t n)
+{
+	size_t i = 0;
+	while (buffer.pushCount() && i < n) {
+		if (sampleInterpOffset < 1.f) {
+			// clamp lower bound, don't allow going back in time
+			sampleInterpOffset += std::max(1.f - velocity * soundSpeed, 0.f);
+		}
+		
+		while (sampleInterpOffset >= 1.f && i < n) {
+			b[0] = b[1];
+			b[1] = b[2];
+			b[2] = b[3];
+			b[3] = samples[i++];
+			sampleInterpOffset--;
+		}
+
+		// out of input samples
+		if (sampleInterpOffset >= 1.f) return i;
+		
+		// cubic interp
+		float t = sampleInterpOffset;
+		float a0 = b[3] - b[2] - b[0] + b[1];
+		float a1 = b[0] - b[1] - a0;
+		float a2 = b[2] - b[0];
+		float a3 = b[1];
+		float result = a0 * t * t * t + a1 * t * t + a2 * t + a3;
+		buffer.push(result);
+	}
+	return i;
+}
+
+bool ADelayLine::pushable()
+{
+	return buffer.pushCount();
+}
+
+size_t ADelayLine::read(float* samples, size_t n)
+{
+	return buffer.read(samples, n);
+}
+
+size_t ADelayLine::readable()
+{
+	return buffer.pullCount();
 }

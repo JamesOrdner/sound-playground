@@ -24,6 +24,7 @@ void Engine::run()
 {
 	if (!bInitialized) return;
 	bool quit = false;
+	Uint32 sdlTime = SDL_GetTicks();
 	while (!quit) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
@@ -49,6 +50,10 @@ void Engine::run()
 		}
 
 		renderer.draw(window, meshes);
+		
+		Uint32 newSdlTime = SDL_GetTicks();
+		lastFrameTime = static_cast<float>(newSdlTime - sdlTime) * 0.001f;
+		sdlTime = newSdlTime;
 	}
 }
 
@@ -111,7 +116,8 @@ std::shared_ptr<GMesh> Engine::makeMesh(const std::string& filepath)
 	}
 }
 
-Engine::Engine()
+Engine::Engine() :
+	lastFrameTime(0.f)
 {
 	if (init()) {
 		_world = std::make_unique<EWorld>();

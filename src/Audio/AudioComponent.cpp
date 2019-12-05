@@ -20,16 +20,6 @@ void AudioComponent::init(float sampleRate, size_t channels, size_t bufferSize)
 	for (const auto& output : outputs) output->init(sampleRate);
 }
 
-size_t AudioComponent::shortestInput()
-{
-	size_t shortest = SIZE_MAX;
-	for (const auto& input : inputs) {
-		size_t size = input->buffer.capacity();
-		if (size < shortest) shortest = size;
-	}
-	return shortest;
-}
-
 const mat::vec3& AudioComponent::position() const
 {
 	return m_position;
@@ -57,17 +47,7 @@ size_t AudioComponent::pullCount()
 {
 	size_t shortest = SIZE_MAX;
 	for (const auto& input : inputs) {
-		size_t count = input->buffer.pullCount();
-		if (count < shortest) shortest = count;
-	}
-	return shortest;
-}
-
-size_t AudioComponent::pushCount()
-{
-	size_t shortest = SIZE_MAX;
-	for (const auto& output : outputs) {
-		size_t count = output->buffer.pushCount();
+		size_t count = input->readable();
 		if (count < shortest) shortest = count;
 	}
 	return shortest;

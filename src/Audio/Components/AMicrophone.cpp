@@ -50,7 +50,7 @@ size_t AMicrophone::process(size_t n)
 	}
 
 	for (const auto& input : inputs) {
-		n = input->buffer.read(inputBuffer, n);
+		n = input->read(inputBuffer, n);
 		for (size_t i = 0; i < n; i++) {
 			// This is all hardcoded for stereo, needs to be changed eventually
 			float gL = gainL.update();

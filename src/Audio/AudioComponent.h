@@ -7,7 +7,7 @@
 
 // Forward declarations
 class EObject;
-struct ADelayLine;
+class ADelayLine;
 
 class AudioComponent
 {
@@ -22,9 +22,6 @@ public:
 
 	// Clean up internals and delete any memory allocated in init()
 	virtual void deinit() {};
-	
-	// Sample capacity of the shortest input buffer
-	size_t shortestInput();
 
 	// Returns the world space position of the owning object
 	const mat::vec3& position() const;
@@ -71,9 +68,6 @@ protected:
 
 	// Outputs to other AudioComponents
 	std::list<std::shared_ptr<ADelayLine>> outputs;
-
-	// Returns the least free buffer space across all outputs
-	size_t pushCount();
 
 	// This mono buffer is filled during process() and fed to the room IR filter
 	std::vector<float> indirectInputBuffer;

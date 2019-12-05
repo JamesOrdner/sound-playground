@@ -48,14 +48,8 @@ private:
 	// Number of samples available for reading
 	size_t m_size;
 
-	// Current active capcity of buffer. Will be less than buffer.size()
+	// Current capacity of buffer. Will be less than or equal to buffer.size()
 	size_t m_capacity;
-
-	// Resample a contiguous block of memory. Returns the last index written to
-	void resample_forward(size_t readStartIdx, size_t writeEndIdx, double ratio);
-
-	// Resample a block of memory starting at the end index. Returns the last index written to
-	void resample_back(size_t readStartIdx, size_t writeEndIdx, double ratio);
 
 	// Cubic interpolation 
 	float cubic(float buffer[], double index);
@@ -81,19 +75,48 @@ private:
 class AudioComponent;
 
 // ADelayLine is used to connect two different, unobstructed AudioComponent objects
-struct ADelayLine
+class ADelayLine
 {
+public:
+
 	ADelayLine(const std::weak_ptr<AudioComponent>& source, const std::weak_ptr<AudioComponent>& dest);
 
-	// Init must be called with the session sample rate before use. source and dest
-	// pointers must be set before use!
+	// Relative velocity of distance between source and destination, in meters per second.
+	// Velocity is positive if distance is increasing, or negative if decreasing.
+	float velocity;
+
+	// Init must be called with the session sample rate before use
 	void init(float sampleRate);
 
 	// Update the delay length of the delay line. Called after a
 	// change in position of either the source or destination.
 	void updateDelayLength(float sampleRate);
 
-	ReadWriteBuffer buffer;
+	// Push samples to the delay line. Returns the number of saved samples, which may be less than `n`
+	size_t push(float* samples, size_t n = 1);
+
+	// Return true if this buffer is not full
+	bool pushable();
+
+	// Returns the number of samples read, which may be less than `n`
+	size_t read(float* samples, size_t n);
+
+	// Returns the number of samples available for reading
+	size_t readable();
+
+	// Source audio component
 	std::weak_ptr<AudioComponent> source;
+
+	// Destination audio component
 	std::weak_ptr<AudioComponent> dest;
+
+private:
+
+	// Stores the four most recent input samples, used for velocity-dependent cubic interpolation
+	float b[4];
+
+	// [0, 1), offset from interpBuffer[1]
+	float sampleInterpOffset;
+
+	ReadWriteBuffer buffer;
 };
