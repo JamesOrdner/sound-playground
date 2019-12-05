@@ -27,13 +27,17 @@ public:
 	size_t shortestInput();
 
 	// Returns the world space position of the owning object
-	const mat::vec3& position();
+	const mat::vec3& position() const;
 
 	// Returns the world space forward vector of the owning object
-	const mat::vec3& forward();
+	const mat::vec3& forward() const;
 
-	// Called when the owning EObject transform changes
-	void transformUpdated();
+	// Called when the owning EObject transform changes. Does not run in the audio thread.
+	virtual void transformUpdated();
+
+	// Called when a connected object updates its transform. Does not run in the audio thread.
+	// bInput == true if this is an input to the called AudioComponent, == false if output.
+	virtual void otherTransformUpdated(const ADelayLine& connection, bool bInput) {};
 
 	// This optional function is called just before processing a full callback.
 	// It can be used to prep output buffers or other internals.

@@ -30,12 +30,12 @@ size_t AudioComponent::shortestInput()
 	return shortest;
 }
 
-const mat::vec3& AudioComponent::position()
+const mat::vec3& AudioComponent::position() const
 {
 	return m_position;
 }
 
-const mat::vec3& AudioComponent::forward()
+const mat::vec3& AudioComponent::forward() const
 {
 	return m_forward;
 }
@@ -43,6 +43,14 @@ const mat::vec3& AudioComponent::forward()
 void AudioComponent::transformUpdated()
 {
 	bDirtyTransform = true;
+	for (const auto& output : outputs) {
+		auto ptr = output->dest.lock();
+		ptr->otherTransformUpdated(*output, true);
+	}
+	for (const auto& input : inputs) {
+		auto ptr = input->dest.lock();
+		ptr->otherTransformUpdated(*input, false);
+	}
 }
 
 size_t AudioComponent::pullCount()

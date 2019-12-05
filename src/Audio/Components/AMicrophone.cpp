@@ -3,7 +3,8 @@
 
 AMicrophone::AMicrophone() :
 	outputPtr(0),
-	inputBuffer(nullptr)
+	inputBuffer(nullptr),
+	gainL(0.5)
 {
 	bAcceptsInput = true;
 	bAcceptsOutput = false;
@@ -13,11 +14,28 @@ void AMicrophone::init(float sampleRate, size_t channels, size_t bufferSize)
 {
 	AudioOutputComponent::init(sampleRate, channels, bufferSize);
 	inputBuffer = new float[bufferSize];
+	gainL.sampleRate = sampleRate;
 }
 
 void AMicrophone::deinit()
 {
 	delete[] inputBuffer;
+}
+
+void AMicrophone::transformUpdated()
+{
+	AudioOutputComponent::transformUpdated();
+	float gL, gR;
+	calcStereoGain(*inputs.front()->source.lock(), gL, gR);
+	gainL.target = gL;
+}
+
+void AMicrophone::otherTransformUpdated(const ADelayLine& connection, bool bInput)
+{
+	float gL, gR;
+	auto other = bInput ? connection.source.lock() : connection.dest.lock();
+	calcStereoGain(*other, gL, gR);
+	gainL.target = gL;
 }
 
 void AMicrophone::preprocess()
@@ -32,10 +50,10 @@ size_t AMicrophone::process(size_t n)
 	if (p < n) n = p;
 	for (const auto& input : inputs) {
 		// This is all hardcoded for stereo, needs to be changed eventually
-		float gL, gR;
-		calcStereoGain(input->source.lock(), gL, gR);
 		input->buffer.read(inputBuffer, n);
 		for (size_t i = 0; i < n; i++) {
+			float gL = gainL.update();
+			float gR = 1.f - gL;
 			outputBuffer[outputPtr + i * 2] += inputBuffer[i] * gL;
 			outputBuffer[outputPtr + i * 2 + 1] += inputBuffer[i] * gR;
 		}
@@ -44,9 +62,9 @@ size_t AMicrophone::process(size_t n)
 	return n;
 }
 
-void AMicrophone::calcStereoGain(const std::shared_ptr<AudioComponent>& source, float& gainL, float& gainR)
+void AMicrophone::calcStereoGain(const AudioComponent& source, float& gainL, float& gainR)
 {
-	mat::vec3 dir = source->position() - position();
+	mat::vec3 dir = source.position() - position();
 	float angle = atanf(dir.x / fabsf(dir.z)) * 0.5f + 0.25f * mat::pi;
 	gainL = cosf(angle);
 	gainR = sinf(angle);
