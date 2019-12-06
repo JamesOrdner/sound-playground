@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../AudioComponent.h"
+#include "AudioComponent.h"
 #include <fftw3.h>
 
 class ASpeaker : public AudioComponent

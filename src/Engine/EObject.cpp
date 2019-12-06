@@ -1,6 +1,6 @@
 #include "EObject.h"
 #include "Engine.h"
-#include "../Audio/AudioComponent.h"
+#include "../Audio/Components/AudioComponent.h"
 
 EObject::EObject() :
 	bExistsInWorld(false),

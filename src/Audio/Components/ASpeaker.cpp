@@ -1,6 +1,6 @@
 #include "ASpeaker.h"
-#include "../ADelayLine.h"
 #include "../../Engine/EObject.h"
+#include "../DSP/ADelayLine.h"
 #include "../AWAVFile.h"
 
 // IR partition block size

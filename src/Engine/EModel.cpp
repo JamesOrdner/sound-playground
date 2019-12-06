@@ -1,6 +1,6 @@
 #include "EModel.h"
 #include "../Graphics/GMesh.h"
-#include "../Audio/AudioComponent.h"
+#include "../Audio/Components/AudioComponent.h"
 
 EModel::EModel(const std::string& filepath) : bDirtyTransform(false)
 {

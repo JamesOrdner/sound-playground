@@ -1,6 +1,6 @@
 #include "AudioComponent.h"
-#include "../Engine/EObject.h"
-#include "ADelayLine.h"
+#include "../../Engine/EObject.h"
+#include "../DSP/ADelayLine.h"
 
 AudioComponent::AudioComponent() :
 	bAcceptsInput(false),

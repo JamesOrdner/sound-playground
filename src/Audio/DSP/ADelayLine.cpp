@@ -1,5 +1,5 @@
 #include "ADelayLine.h"
-#include "AudioComponent.h"
+#include "../Components/AudioComponent.h"
 #include <algorithm>
 
 // Speed of sound in air (seconds per meter)

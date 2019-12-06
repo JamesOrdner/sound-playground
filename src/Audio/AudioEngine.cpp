@@ -1,7 +1,7 @@
 #include "AudioEngine.h"
-#include "ADelayLine.h"
-#include "AudioComponent.h"
-#include "AudioOutputComponent.h"
+#include "DSP/ADelayLine.h"
+#include "Components/AudioComponent.h"
+#include "Components/AudioOutputComponent.h"
 #include "../Engine/EObject.h"
 #include <portaudio.h>
 #include <pa_win_wasapi.h>

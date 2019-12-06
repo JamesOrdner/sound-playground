@@ -1,5 +1,5 @@
 #include "AMicrophone.h"
-#include "../ADelayLine.h"
+#include "../DSP/ADelayLine.h"
 
 AMicrophone::AMicrophone() :
 	outputPtr(0),
