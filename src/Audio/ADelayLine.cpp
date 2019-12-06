@@ -107,16 +107,6 @@ void ReadWriteBuffer::resize(size_t newLength)
 	}
 }
 
-float ReadWriteBuffer::cubic(float b[], double i)
-{
-	float t = static_cast<float>(i);
-	float a0 = b[3] - b[2] - b[0] + b[1];
-	float a1 = b[0] - b[1] - a0;
-	float a2 = b[2] - b[0];
-	float a3 = b[1];
-	return a0 * t * t * t + a1 * t * t + a2 * t + a3;
-}
-
 ADelayLine::ADelayLine(const std::weak_ptr<AudioComponent>& source, const std::weak_ptr<AudioComponent>& dest) :
 	velocity(0.f),
 	b{},

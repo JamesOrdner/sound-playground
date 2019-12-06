@@ -172,7 +172,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Audio\ADelayLine.cpp" />
-    <ClCompile Include="src\Audio\AInterpParameter.cpp" />
+    <ClCompile Include="src\Audio\AWAVFile.cpp" />
+    <ClCompile Include="src\Audio\DSP\AInterpParameter.cpp" />
     <ClCompile Include="src\Audio\AudioComponent.cpp" />
     <ClCompile Include="src\Audio\AudioOutputComponent.cpp" />
     <ClCompile Include="src\Audio\Components\AMicrophone.cpp" />
@@ -191,7 +192,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Audio\ADelayLine.h" />
-    <ClInclude Include="src\Audio\AInterpParameter.h" />
+    <ClInclude Include="src\Audio\AWAVFile.h" />
+    <ClInclude Include="src\Audio\DSP\AInterpParameter.h" />
     <ClInclude Include="src\Audio\AudioComponent.h" />
     <ClInclude Include="src\Audio\AudioOutputComponent.h" />
     <ClInclude Include="src\Audio\Components\AMicrophone.h" />

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../AudioOutputComponent.h"
-#include "../AInterpParameter.h"
+#include "../DSP/AInterpParameter.h"
 
 class AMicrophone : public AudioOutputComponent
 {

@@ -55,8 +55,8 @@ size_t AMicrophone::process(size_t n)
 			// This is all hardcoded for stereo, needs to be changed eventually
 			float gL = gainL.update();
 			float gR = 1.f - gL;
-			outputBuffer[outputPtr++] += inputBuffer[i] * 0.5f;
-			outputBuffer[outputPtr++] += inputBuffer[i] * 0.5f;
+			outputBuffer[outputPtr++] += inputBuffer[i] * gL * 0.5f;
+			outputBuffer[outputPtr++] += inputBuffer[i] * gR * 0.5f;
 		}
 	}
 	return n;

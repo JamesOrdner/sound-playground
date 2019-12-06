@@ -51,9 +51,6 @@ private:
 	// Current capacity of buffer. Will be less than or equal to buffer.size()
 	size_t m_capacity;
 
-	// Cubic interpolation 
-	float cubic(float buffer[], double index);
-
 	// Ring mod addition
 	inline size_t radd(size_t lhs, size_t rhs) {
 		size_t sum = lhs + rhs;

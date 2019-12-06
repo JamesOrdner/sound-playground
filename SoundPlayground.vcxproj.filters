@@ -63,7 +63,10 @@
     <ClCompile Include="src\Graphics\GProgram.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Audio\AInterpParameter.cpp">
+    <ClCompile Include="src\Audio\DSP\AInterpParameter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Audio\AWAVFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -110,7 +113,10 @@
     <ClInclude Include="src\Graphics\GProgram.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Audio\AInterpParameter.h">
+    <ClInclude Include="src\Audio\DSP\AInterpParameter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Audio\AWAVFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
