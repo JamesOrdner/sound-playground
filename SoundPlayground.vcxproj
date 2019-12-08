@@ -171,6 +171,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Audio\DSP\AConvolver.cpp" />
     <ClCompile Include="src\Audio\DSP\ADelayLine.cpp" />
     <ClCompile Include="src\Audio\AWAVFile.cpp" />
     <ClCompile Include="src\Audio\DSP\AInterpParameter.cpp" />
@@ -191,8 +192,10 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Audio\DSP\AConvolver.h" />
     <ClInclude Include="src\Audio\DSP\ADelayLine.h" />
     <ClInclude Include="src\Audio\AWAVFile.h" />
+    <ClInclude Include="src\Audio\DSP\ADSPBase.h" />
     <ClInclude Include="src\Audio\DSP\AInterpParameter.h" />
     <ClInclude Include="src\Audio\Components\AudioComponent.h" />
     <ClInclude Include="src\Audio\Components\AudioOutputComponent.h" />

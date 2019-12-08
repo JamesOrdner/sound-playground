@@ -69,6 +69,9 @@
     <ClCompile Include="src\Audio\DSP\ADelayLine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Audio\DSP\AConvolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\Engine.h">
@@ -117,6 +120,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Audio\DSP\ADelayLine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Audio\DSP\ADSPBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Audio\DSP\AConvolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
