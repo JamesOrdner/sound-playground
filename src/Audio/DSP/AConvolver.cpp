@@ -143,10 +143,11 @@ void AConvolver::process(float* outbuffer, float* inbuffer, size_t n)
 						float b = freqDelayLine[fdlIdx][n][1];
 						float c = impulseResponseFFTs[irIdx][n][0];
 						float d = impulseResponseFFTs[irIdx][n][1];
-						float real = a * c - b * d;
-						float imag = (a + b) * (c + d) - a * c - b * d;
-						ifftInput[n][0] += real;
-						ifftInput[n][1] += imag;
+						float ac = a * c;
+						float bd = b * d;
+						float abcd = (a + b) * (c + d);
+						ifftInput[n][0] += ac - bd;
+						ifftInput[n][1] += abcd - ac - bd;
 					}
 				}
 
