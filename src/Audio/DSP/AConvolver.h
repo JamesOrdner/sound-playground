@@ -4,6 +4,7 @@
 #include <fftw3.h>
 #include <string>
 #include <vector>
+#include <complex>
 
 class AConvolver : public ADSPBase
 {
@@ -19,6 +20,8 @@ public:
 
 private:
 
+	typedef std::complex<float> complex;
+
 	// Filepath of the impulse response file
 	std::string filepath;
 
@@ -26,19 +29,19 @@ private:
 	size_t partitions;
 
 	// Partitioned, complex frequency-domain impulse response blocks
-	std::vector<fftwf_complex*> impulseResponseFFTs;
+	std::vector<complex*> impulseResponseFFTs;
 
 	// Stores input samples to be used as input to FFT
 	float* inputBuffer;
 
 	// Output of FFT of input stream
-	fftwf_complex* fftResult;
+	complex* fftResult;
 
 	// Partitioned, complex input frequency-domain delay line
-	std::vector<fftwf_complex*> freqDelayLine;
+	std::vector<complex*> freqDelayLine;
 
 	// Input to the final IFFT after all multiply and add operations
-	fftwf_complex* ifftInput;
+	complex* ifftInput;
 
 	// Stores final output samples to be sent to output
 	float* outputBuffer;
