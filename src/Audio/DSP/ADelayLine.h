@@ -12,28 +12,29 @@ public:
 	// Resize buffer to sampleDelay and allocate enough memory to expand to maxSampleDelay
 	void init(size_t sampleDelay, size_t maxSampleDelay);
 
-	// Push a single sample to the buffer. Returns 1 if
-	//  successful, or 0 if the buffer is full.
-	size_t push(float sample);
+	// Write a single sample to the buffer. Returns 1 if
+	// successful, or 0 if the buffer is full.
+	size_t write(float sample);
 
-	// Push samples to the buffer. Returns the number of saved samples.
+	// Write samples to the buffer. Returns the number of saved samples.
 	// This will be less than `n` if the buffer is full.
-	size_t push(float* samples, size_t n);
+	size_t write(float* samples, size_t n);
 
 	// Returns the number of samples read. May be less than `n`
 	size_t read(float* samples, size_t n);
 
-	// Resize the buffer to newLength, interpolating the entire buffer to fit.
+	// Resize the buffer capacity to newLength. No stored samples are lost in this
+	// operation, which may result in a readable() value greater than capacity().
 	void resize(size_t newLength);
 
 	// Return the active buffer size
 	size_t capacity();
 
-	// Return the number of samples that can be pushed
-	size_t pushCount();
+	// Return the number of samples that can be written
+	size_t writeable();
 
-	// Return the number of samples that can be pulled
-	size_t pullCount();
+	// Return the number of samples that can be read
+	size_t readable();
 
 private:
 
@@ -45,16 +46,30 @@ private:
 	// An index which points to the current write position
 	size_t writePtr;
 
+	// An index, set during resizing operations, which points to one past the
+	// last valid index before resizing. This variable is 0 when inactive.
+	size_t oldCapacityPtr;
+
 	// Number of samples available for reading
 	size_t m_size;
 
 	// Current capacity of buffer. Will be less than or equal to buffer.size()
 	size_t m_capacity;
 
+	// Set to the desired new capacity if a resize is requested while the buffer is
+	// in a non-resizeable state. This variable is 0 if no resize is pending.
+	size_t m_targetCapacity;
+
 	// Ring mod addition
 	inline size_t radd(size_t lhs, size_t rhs) {
 		size_t sum = lhs + rhs;
 		return sum >= m_capacity ? sum % m_capacity : sum;
+	}
+
+	// Ring mod addition with custom size
+	inline size_t radd(size_t lhs, size_t rhs, size_t size) {
+		size_t sum = lhs + rhs;
+		return sum >= size ? sum % size : sum;
 	}
 
 	// Ring mod subtraction
@@ -85,15 +100,15 @@ public:
 	// Init must be called with the session sample rate before use
 	void init(float sampleRate);
 
-	// Update the delay length of the delay line. Called after a
-	// change in position of either the source or destination.
-	void updateDelayLength(float sampleRate);
+	// Update the length of the delay line based on the current positions of the source and
+	// dest components. Should be called after a change in position of either component.
+	void updateDelayLength();
 
 	// Push samples to the delay line. Returns the number of saved samples, which may be less than `n`
-	size_t push(float* samples, size_t n = 1);
+	size_t write(float* samples, size_t n = 1);
 
 	// Return true if this buffer is not full
-	bool pushable();
+	bool writeable();
 
 	// Returns the number of samples read, which may be less than `n`
 	size_t read(float* samples, size_t n);
@@ -109,10 +124,13 @@ public:
 
 private:
 
+	// Stored session sample rate, updated in init()
+	float sampleRate;
+
 	// Stores the four most recent input samples, used for velocity-dependent cubic interpolation
 	float b[4];
 
-	// [0, 1), offset from interpBuffer[1]
+	// [0, 1). Fractional sample offset from interpBuffer[1]
 	float sampleInterpOffset;
 
 	ReadWriteBuffer buffer;

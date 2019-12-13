@@ -29,11 +29,11 @@ size_t ASpeaker::process(size_t n)
 {
 	float out;
 	for (size_t i = 0; i < n; i++) {
-		for (const auto& output : outputs) if (!output->pushable()) return i;
-		//float gen = sinf(t++ * 2.f * mat::pi * 500.f / sampleRate);
-		float gen = static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f;
+		for (const auto& output : outputs) if (!output->writeable()) return i;
+		float gen = sinf(t++ * 2.f * mat::pi * 500.f / sampleRate); // sin wave
+		// float gen = static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f; // white noise
 		convolver->process(&out, &gen);
-		for (const auto& output : outputs) output->push(&out);
+		for (const auto& output : outputs) output->write(&out);
 	}
 	
 	return n;
