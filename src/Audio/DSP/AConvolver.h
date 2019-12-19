@@ -10,7 +10,7 @@ class AConvolver : public ADSPBase
 {
 public:
 
-	AConvolver(std::string impulseResponseFilepath);
+	AConvolver(std::string impulseResponseFilepath = "");
 	~AConvolver() {};
 
 	// ADSPBase interface

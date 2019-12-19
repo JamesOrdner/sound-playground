@@ -6,18 +6,15 @@ AudioComponent::AudioComponent() :
 	bAcceptsInput(false),
 	bAcceptsOutput(false),
 	bDirtyTransform(false),
-	sampleRate(0.f),
-	channels(0)
+	sampleRate(0.f)
 {
 }
 
 void AudioComponent::init(float sampleRate, size_t channels, size_t bufferSize)
 {
-	this->sampleRate = sampleRate;
-	this->channels = channels;
-	indirectInputBuffer.resize(bufferSize);
 	for (const auto& input : inputs) input->init(sampleRate);
 	for (const auto& output : outputs) output->init(sampleRate);
+	this->sampleRate = sampleRate;
 }
 
 const mat::vec3& AudioComponent::position() const

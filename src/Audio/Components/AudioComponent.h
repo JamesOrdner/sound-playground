@@ -63,20 +63,14 @@ protected:
 	// Sample rate of the current session
 	float sampleRate;
 
-	// Number of output channels
-	size_t channels;
-
 	// Inputs from other AudioComponents
 	std::list<std::shared_ptr<ADelayLine>> inputs;
-
-	// Returns the least number of currently available samples across all inputs
-	size_t pullCount();
 
 	// Outputs to other AudioComponents
 	std::list<std::shared_ptr<ADelayLine>> outputs;
 
-	// This mono buffer is filled during process() and fed to the room IR filter
-	std::vector<float> indirectInputBuffer;
+	// Returns the least number of currently available samples across all inputs
+	size_t pullCount();
 
 private:
 

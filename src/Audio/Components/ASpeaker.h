@@ -1,10 +1,10 @@
 #pragma once
 
-#include "AudioComponent.h"
+#include "AuralizingAudioComponent.h"
 #include "../DSP/AConvolver.h"
 #include <memory>
 
-class ASpeaker : public AudioComponent
+class ASpeaker : public AuralizingAudioComponent
 {
 public:
 

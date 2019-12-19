@@ -12,7 +12,7 @@ AMicrophone::AMicrophone() :
 
 void AMicrophone::init(float sampleRate, size_t channels, size_t bufferSize)
 {
-	AudioOutputComponent::init(sampleRate, channels, bufferSize);
+	OutputAudioComponent::init(sampleRate, channels, bufferSize);
 	inputBuffer = new float[bufferSize];
 	gainL.sampleRate = sampleRate;
 }
@@ -24,7 +24,7 @@ void AMicrophone::deinit()
 
 void AMicrophone::transformUpdated()
 {
-	AudioOutputComponent::transformUpdated();
+	OutputAudioComponent::transformUpdated();
 	float gL, gR;
 	calcStereoGain(*inputs.front()->source.lock(), gL, gR);
 	gainL.target = gL;

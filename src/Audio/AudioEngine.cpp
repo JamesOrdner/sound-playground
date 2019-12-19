@@ -1,7 +1,7 @@
 #include "AudioEngine.h"
 #include "DSP/ADelayLine.h"
 #include "Components/AudioComponent.h"
-#include "Components/AudioOutputComponent.h"
+#include "Components/OutputAudioComponent.h"
 #include "../Engine/EObject.h"
 #include <portaudio.h>
 #include <pa_win_wasapi.h>
@@ -144,7 +144,7 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 				}
 			}
 
-			if (remaining[i++] && std::dynamic_pointer_cast<AudioOutputComponent>(c)) done = false;
+			if (remaining[i++] && std::dynamic_pointer_cast<OutputAudioComponent>(c)) done = false;
 			i %= remaining.size();
 		}
 	}
@@ -153,7 +153,7 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 	unsigned long len = frames * channels;
 	for (unsigned long i = 0; i < len; i++) buffer[i] = 0.f;
 	for (const auto& c : components) {
-		if (const auto& outputComponent = std::dynamic_pointer_cast<AudioOutputComponent>(c)) {
+		if (const auto& outputComponent = std::dynamic_pointer_cast<OutputAudioComponent>(c)) {
 			const auto& cOut = outputComponent->collectOutput();
 			for (unsigned long i = 0; i < len; i++) buffer[i] += cOut[i];
 		}

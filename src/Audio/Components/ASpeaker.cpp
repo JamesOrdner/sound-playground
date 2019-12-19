@@ -7,19 +7,19 @@ ASpeaker::ASpeaker() :
 {
 	bAcceptsInput = false;
 	bAcceptsOutput = true;
-
+	
 	convolver = std::make_unique<AConvolver>("res/sound/auratone_8192.wav");
 }
 
 void ASpeaker::init(float sampleRate, size_t channels, size_t bufferSize)
 {
-	AudioComponent::init(sampleRate, channels, bufferSize);
+	AuralizingAudioComponent::init(sampleRate, channels, bufferSize);
 	convolver->init(sampleRate);
 }
 
 void ASpeaker::deinit()
 {
-	AudioComponent::deinit();
+	AuralizingAudioComponent::deinit();
 	convolver->deinit();
 }
 
