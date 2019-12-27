@@ -122,7 +122,7 @@ void AConvolver::deinit()
 	ifftPlan = nullptr;
 }
 
-void AConvolver::process(float* outbuffer, float* inbuffer, size_t n)
+void AConvolver::process(float* outbuffer, const float* inbuffer, size_t n)
 {
 	if (!partitions) {
 		std::copy_n(inbuffer, n, outbuffer);

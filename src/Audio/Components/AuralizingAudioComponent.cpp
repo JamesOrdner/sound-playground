@@ -1,51 +1,52 @@
 #include "AuralizingAudioComponent.h"
 #include "OutputAudioComponent.h"
 
-void AuralizingAudioComponent::init(float sampleRate, size_t channels, size_t bufferSize)
+AuralizingAudioComponent::AuralizingAudioComponent() :
+	indirectBufferOffset(0)
 {
-	AudioComponent::init(sampleRate, channels, bufferSize);
-	indirectBuffer.init(bufferSize, bufferSize);
-	processIndirectBuffer.reserve(bufferSize);
 }
 
-void AuralizingAudioComponent::registerReceiver(OutputAudioComponent* receiver)
+void AuralizingAudioComponent::transformUpdated()
+{
+	AudioComponent::transformUpdated();
+	for (auto& send : indirectReceivers) send->auralize();
+}
+
+void AuralizingAudioComponent::preprocess()
+{
+	AudioComponent::preprocess();
+	indirectBufferOffset = 0;
+}
+
+IndirectSend* AuralizingAudioComponent::registerIndirectReceiver(OutputAudioComponent* receiver)
 {
 	// Check for existing entry
-	for (auto it = receivers.cbegin(); it != receivers.cend(); it++) {
-		if (it->receiver == receiver) return;
+	for (auto it = indirectReceivers.cbegin(); it != indirectReceivers.cend(); it++) {
+		if ((*it)->receiver == receiver) return it->get();
 	}
 
-	AuralSend send;
-	send.receiver = receiver;
-	receivers.push_back(send);
+	auto send = std::make_unique<IndirectSend>(this, receiver);
+	IndirectSend* sendPtr = send.get();
+	indirectReceivers.push_front(std::move(send));
+	return sendPtr;
 }
 
-void AuralizingAudioComponent::unregisterReceiver(const OutputAudioComponent* receiver)
+void AuralizingAudioComponent::unregisterIndirectReceiver(const OutputAudioComponent* receiver)
 {
-	for (auto it = receivers.cbegin(); it != receivers.cend(); it++) {
-		if (it->receiver == receiver) {
-			receivers.erase(it);
+	for (auto it = indirectReceivers.cbegin(); it != indirectReceivers.cend(); it++) {
+		if ((*it)->receiver == receiver) {
+			indirectReceivers.erase(it);
 			break;
 		}
 	}
 }
 
-void AuralizingAudioComponent::processIndirect()
+void AuralizingAudioComponent::processIndirect(const float* componentOutput, size_t n)
 {
-	size_t n = indirectBuffer.readable();
-	if (n != processIndirectBuffer.capacity()) {
-		printf("WARNING: AuralizingAudioComponent::processIndirect(): buffer size mismatch!\n");
-		return;
+	for (auto& send : indirectReceivers) {
+		float* dest = send->receiver->rawOutputBuffer() + indirectBufferOffset;
+		send->convolver.process(dest, componentOutput, n);
 	}
 
-	indirectBuffer.read(processIndirectBuffer.data(), n);
-	for (auto it = receivers.begin(); it != receivers.end(); it++) {
-		float* out = it->receiver->outputBuffer.data();
-		size_t ptr = 0;
-		for (size_t i = 0; i < n; i++) {
-			for (size_t ch = 0; ch < it->convolver.size(); ch++) {
-				it->convolver[ch].process(out + ptr++, processIndirectBuffer.data() + i);
-			}
-		}
-	}
+	indirectBufferOffset += n;
 }

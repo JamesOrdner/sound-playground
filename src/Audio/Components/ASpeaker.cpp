@@ -34,6 +34,7 @@ size_t ASpeaker::process(size_t n)
 		// float gen = static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f; // white noise
 		convolver->process(&out, &gen);
 		for (const auto& output : outputs) output->write(&out);
+		processIndirect(&gen, 1);
 	}
 	
 	return n;

@@ -40,7 +40,7 @@ public:
 private:
 
 	// Pointer to the active stream (may be null)
-	void* stream;
+	void* audioStream;
 	
 	// Current audio device sample rate
 	float sampleRate;

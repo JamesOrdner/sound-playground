@@ -17,9 +17,11 @@ public:
 
 	// Process is called during processing and fills `outbuffer` with `n` output samples.
 	// If this DSP object accepts input, `inbuffer` contains `n` input samples.
-	virtual void process(float* outbuffer, float* inbuffer, size_t n = 1) = 0;
+	virtual void process(float* outbuffer, const float* inbuffer, size_t n = 1) = 0;
 
 protected:
 
 	float sampleRate;
+
+	ADSPBase() : bAcceptsInput(false), sampleRate(0) {};
 };

@@ -19,6 +19,7 @@ void AMicrophone::init(float sampleRate, size_t channels, size_t bufferSize)
 
 void AMicrophone::deinit()
 {
+	OutputAudioComponent::deinit();
 	delete[] inputBuffer;
 }
 
@@ -32,6 +33,7 @@ void AMicrophone::transformUpdated()
 
 void AMicrophone::otherTransformUpdated(const ADelayLine& connection, bool bInput)
 {
+	OutputAudioComponent::otherTransformUpdated(connection, bInput);
 	float gL, gR;
 	calcStereoGain(*connection.source.lock(), gL, gR);
 	gainL.target = gL;
@@ -39,8 +41,8 @@ void AMicrophone::otherTransformUpdated(const ADelayLine& connection, bool bInpu
 
 void AMicrophone::preprocess()
 {
+	OutputAudioComponent::preprocess();
 	outputPtr = 0;
-	std::fill(outputBuffer.begin(), outputBuffer.end(), 0.f);
 }
 
 size_t AMicrophone::process(size_t n)
@@ -59,6 +61,7 @@ size_t AMicrophone::process(size_t n)
 			outputBuffer[outputPtr++] += inputBuffer[i] * gR * 0.5f;
 		}
 	}
+
 	return n;
 }
 

@@ -23,7 +23,7 @@ int pa_callback(
 }
 
 AudioEngine::AudioEngine() :
-	stream(nullptr),
+	audioStream(nullptr),
 	sampleRate(44100.f),
 	channels(2),
 	bufferLength(256)
@@ -60,7 +60,7 @@ bool AudioEngine::init()
 			outputParams.suggestedLatency = Pa_GetDeviceInfo(i)->defaultLowOutputLatency;
 			outputParams.hostApiSpecificStreamInfo = &wasapiInfo;
 			err = Pa_OpenStream(
-				&stream,
+				&audioStream,
 				nullptr,
 				&outputParams,
 				sampleRate,
@@ -86,9 +86,9 @@ bool AudioEngine::init()
 
 void AudioEngine::deinit()
 {
-	if (stream) {
-		Pa_CloseStream(stream);
-		stream = nullptr;
+	if (audioStream) {
+		Pa_CloseStream(audioStream);
+		audioStream = nullptr;
 	}
 	Pa_Terminate();
 	for (const auto& c : components) c->deinit();
@@ -96,8 +96,8 @@ void AudioEngine::deinit()
 
 bool AudioEngine::start()
 {
-	if (!stream) return false;
-	PaError err = Pa_StartStream(stream);
+	if (!audioStream) return false;
+	PaError err = Pa_StartStream(audioStream);
 	if (err != paNoError) {
 		printf("PortAudio error: %s\n", Pa_GetErrorText(err));
 		return false;
@@ -109,8 +109,8 @@ bool AudioEngine::start()
 
 void AudioEngine::stop()
 {
-	if (!stream) return;
-	PaError err = Pa_StopStream(stream);
+	if (!audioStream) return;
+	PaError err = Pa_StopStream(audioStream);
 	if (err != paNoError) {
 		printf("PortAudio error: %s\n", Pa_GetErrorText(err));
 	}
@@ -154,7 +154,7 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 	for (unsigned long i = 0; i < len; i++) buffer[i] = 0.f;
 	for (const auto& c : components) {
 		if (const auto& outputComponent = std::dynamic_pointer_cast<OutputAudioComponent>(c)) {
-			const auto& cOut = outputComponent->collectOutput();
+			float* cOut = outputComponent->rawOutputBuffer();
 			for (unsigned long i = 0; i < len; i++) buffer[i] += cOut[i];
 		}
 	}
@@ -168,7 +168,7 @@ void AudioEngine::registerComponent(
 	component->m_position = owner->position();
 	component->m_forward = owner->forward();
 
-	if (stream) component->init(sampleRate, channels, bufferLength);
+	if (audioStream) component->init(sampleRate, channels, bufferLength);
 
 	// Setup delay lines
 	const mat::vec3& thisPos = component->position();
@@ -187,6 +187,26 @@ void AudioEngine::registerComponent(
 			input->init(sampleRate);
 			compOther->outputs.push_back(input);
 			component->inputs.push_back(input);
+		}
+	}
+
+	// If OutputAudioComponent, setup indirect connections to this object
+	if (const auto& oComp = std::dynamic_pointer_cast<OutputAudioComponent>(component)) {
+		for (const auto& compOther : components) {
+			if (auto aComp = std::dynamic_pointer_cast<AuralizingAudioComponent>(compOther)) {
+				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp.get());
+				oComp->registerIndirectSend(sendPtr);
+			}
+		}
+	}
+
+	// If AuralizingAudioComponent, setup indirect connections from this object
+	if (const auto& aComp = std::dynamic_pointer_cast<AuralizingAudioComponent>(component)) {
+		for (const auto& compOther : components) {
+			if (auto oComp = std::dynamic_pointer_cast<OutputAudioComponent>(compOther)) {
+				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp.get());
+				oComp->registerIndirectSend(sendPtr);
+			}
 		}
 	}
 

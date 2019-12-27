@@ -16,7 +16,7 @@ public:
 	// ADSPBase interface
 	void init(float sampleRate) override;
 	void deinit() override;
-	void process(float* outbuffer, float* inbuffer = nullptr, size_t n = 1) override;
+	void process(float* outbuffer, const float* inbuffer = nullptr, size_t n = 1) override;
 
 private:
 

@@ -46,8 +46,8 @@ public:
 	// It can be used to prep output buffers or other internals.
 	virtual void preprocess() {};
 
-	// Pull from the input delay lines and attempt to fill the omniOutputBuffer
-	// and all output delay lines with n samples. Returns the number of outputted
+	// Pull from the input delay lines and attempt to fill output buffers and
+	// and output delay lines with n samples. Returns the number of outputted
 	// samples, which will often be less than n due to full output buffers or
 	// running out of input samples.
 	virtual size_t process(size_t n) = 0;
@@ -77,15 +77,13 @@ private:
 	// Weak pointer to the owning EObject
 	std::weak_ptr<EObject> m_owner;
 
-	// World space position of this object, updated by AudioEngine. It is not
-	// guaranteed to always be in sync with the actual owning object's location.
+	// World space position of this object, updated periodically by AudioEngine
 	mat::vec3 m_position;
 
-	// World space velocity of this object, updated in a non-audio thread.
+	// World space velocity of this object, updated outside the audio thread
 	mat::vec3 m_velocity;
 
-	// World space forward vector of this object, updated by AudioEngine. It is not
-	// guaranteed to always be in sync with the actual owning object's forward vector.
+	// World space forward vector of this object, updated periodically by AudioEngine
 	mat::vec3 m_forward;
 
 	// Marked true when the owning EObject's transform has been modified

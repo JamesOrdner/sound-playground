@@ -3,53 +3,64 @@
 #include "AudioComponent.h"
 #include "../DSP/ADelayLine.h"
 #include "../DSP/AConvolver.h"
+#include <memory>
 
-// Forward declarations
-class OutputAudioComponent;
-
-// AuralSend represents a connection from an owning AuralizingAudioComponent to an OutputAudioComponent
+// IndirectSend represents a connection from an owning AuralizingAudioComponent to an OutputAudioComponent
 // receiver. It stores all necessary, send-specific information for the indirect connection.
-struct AuralSend
+struct IndirectSend
 {
+	// AudioComponent sending indirect audio to the OutputAudioComponent
+	class AuralizingAudioComponent* sender;
+
 	// AudioComponent receiving indirect audio from the AuralizingAudioComponent
-	OutputAudioComponent* receiver;
+	class OutputAudioComponent* receiver;
 
 	// Indirect impulse response from the AuralizingAudioComponent to the receiver.
 	// One impulse response vector per receiver output channel.
-	std::vector<std::vector<float>> indirectIR;
+	std::vector<float> indirectIR;
 
 	// Convolver(s) responsible for convolving the dry AuralizingAudioComponent signal with the room IR.
-	// One convolver per receiver output channel.
-	std::vector<AConvolver> convolver;
+	// TODO: Multichannel. One convolver per receiver output channel.
+	AConvolver convolver;
+
+	IndirectSend(class AuralizingAudioComponent* sender, class OutputAudioComponent* receiver) :
+		sender(sender), receiver(receiver)
+	{
+	}
+
+	void auralize() {}
 };
+
+// Forward declarations
+class OutputAudioComponent;
 
 class AuralizingAudioComponent : public AudioComponent
 {
 public:
 
+	AuralizingAudioComponent();
+
 	// Register a receiving component with this component. Called outside the audio thread.
-	void registerReceiver(OutputAudioComponent* receiver);
+	// Returns a pointer to the created IndirectSend object.
+	IndirectSend* registerIndirectReceiver(OutputAudioComponent* receiver);
 
 	// Unregister a receiving component from this component. Called outside the audio thread.
-	void unregisterReceiver(const OutputAudioComponent* receiver);
-
-	// Iterate all OutputAudioComponent indirect sends and contribute to their output. This must be called after the
-	// usual process() routine has completed and indirectBuffer filled with a full buffer size's worth of samples.
-	void processIndirect();
+	void unregisterIndirectReceiver(const OutputAudioComponent* receiver);
 
 	// AudioComponent interface
-	virtual void init(float sampleRate, size_t channels, size_t bufferSize) override;
+	virtual void transformUpdated() override;
+	virtual void preprocess() override;
 
 protected:
 
-	// This mono buffer is filled during process() and fed to the room IR filter
-	ReadWriteBuffer indirectBuffer;
+	// Process `n` output samples with auralization filters and send to indirect receivers
+	void processIndirect(const float* componentOutput, size_t n);
 
 private:
 
-	// AudioComponents receiving indirect sound from this component
-	std::list<AuralSend> receivers;
+	// Sends to OutputAudioComponents receiving indirect sound from this component
+	std::list<std::unique_ptr<IndirectSend>> indirectReceivers;
 
-	// Buffer needed for efficient processing
-	std::vector<float> processIndirectBuffer;
+	// Write offset within the current buffer, reset to 0 each preprocess() call
+	size_t indirectBufferOffset;
 };
