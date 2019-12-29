@@ -139,8 +139,6 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 					c->m_position = ptr->position();
 					c->m_forward = ptr->forward();
 					c->bDirtyTransform = false;
-					for (auto& op : c->outputs) op->updateDelayLength();
-					for (auto& ip : c->inputs)  ip->updateDelayLength();
 				}
 			}
 

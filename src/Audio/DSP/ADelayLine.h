@@ -9,8 +9,9 @@ public:
 
 	ReadWriteBuffer();
 
-	// Resize buffer to sampleDelay and allocate enough memory to expand to maxSampleDelay
-	void init(size_t sampleDelay, size_t maxSampleDelay);
+	// Initialize the buffer with capacity `sampleDelay`. Optionally include `intialSize`,
+	// the initial number of zero samples
+	void init(size_t delayLength, size_t initialSize = 0);
 
 	// Write a single sample to the buffer. Returns 1 if
 	// successful, or 0 if the buffer is full.
@@ -22,10 +23,6 @@ public:
 
 	// Returns the number of samples read. May be less than `n`
 	size_t read(float* samples, size_t n);
-
-	// Resize the buffer capacity to newLength. No stored samples are lost in this
-	// operation, which may result in a readable() value greater than capacity().
-	void resize(size_t newLength);
 
 	// Return the active buffer size
 	size_t capacity();
@@ -46,24 +43,13 @@ private:
 	// An index which points to the current write position
 	size_t writePtr;
 
-	// An index, set during resizing operations, which points to one past the
-	// last valid index before resizing. This variable is 0 when inactive.
-	size_t oldCapacityPtr;
-
-	// Number of samples available for reading
-	size_t m_size;
-
-	// Current capacity of buffer. Will be less than or equal to buffer.size()
-	size_t m_capacity;
-
-	// Set to the desired new capacity if a resize is requested while the buffer is
-	// in a non-resizeable state. This variable is 0 if no resize is pending.
-	size_t m_targetCapacity;
+	// Number of valid samples in the buffer
+	size_t size;
 
 	// Ring mod addition
 	inline size_t radd(size_t lhs, size_t rhs) {
 		size_t sum = lhs + rhs;
-		return sum >= m_capacity ? sum % m_capacity : sum;
+		return sum >= buffer.size() ? sum % buffer.size() : sum;
 	}
 
 	// Ring mod addition with custom size
@@ -74,7 +60,7 @@ private:
 
 	// Ring mod subtraction
 	inline size_t rsub(size_t lhs, size_t rhs) {
-		return lhs >= rhs ? lhs - rhs : m_capacity - (rhs - lhs);
+		return lhs >= rhs ? lhs - rhs : buffer.size() - (rhs - lhs);
 	}
 
 	// Absolute value difference
@@ -100,10 +86,6 @@ public:
 	// Init must be called with the session sample rate before use
 	void init(float sampleRate);
 
-	// Update the length of the delay line based on the current positions of the source and
-	// dest components. Should be called after a change in position of either component.
-	void updateDelayLength();
-
 	// Push samples to the delay line. Returns the number of saved samples, which may be less than `n`
 	size_t write(float* samples, size_t n = 1);
 
@@ -124,14 +106,11 @@ public:
 
 private:
 
-	// Stored session sample rate, updated in init()
-	float sampleRate;
+	ReadWriteBuffer buffer;
 
 	// Stores the four most recent input samples, used for velocity-dependent cubic interpolation
 	float b[4];
 
 	// [0, 1). Fractional sample offset from interpBuffer[1]
 	float sampleInterpOffset;
-
-	ReadWriteBuffer buffer;
 };

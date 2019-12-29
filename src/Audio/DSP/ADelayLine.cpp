@@ -13,42 +13,35 @@ constexpr size_t minBufferSize = 16;
 ReadWriteBuffer::ReadWriteBuffer() :
 	readPtr(0), 
 	writePtr(0),
-	oldCapacityPtr(0),
-	m_size(0),
-	m_capacity(0),
-	m_targetCapacity(0)
+	size(0)
 {
 }
 
-void ReadWriteBuffer::init(size_t sampleDelay, size_t maxSampleDelay)
+void ReadWriteBuffer::init(size_t delayLength, size_t initialSize)
 {
-	if (sampleDelay < minBufferSize) sampleDelay = minBufferSize;
-	buffer.resize(maxSampleDelay);
+	buffer.empty();
+	buffer.resize(delayLength);
 	readPtr = 0;
-	writePtr = 0;
-	oldCapacityPtr = 0;
-	m_size = sampleDelay;
-	m_capacity = sampleDelay;
-	m_targetCapacity = 0;
+	writePtr = initialSize;
+	size = initialSize;
 }
 
 size_t ReadWriteBuffer::write(float sample)
 {
-	if (m_size >= m_capacity || (oldCapacityPtr && writePtr == readPtr)) return 0;
+	if (size == buffer.size()) return 0;
 	buffer[writePtr++] = sample;
-	if (writePtr == m_capacity) writePtr = 0;
-	m_size++;
+	if (writePtr == buffer.size()) writePtr = 0;
+	size++;
 	return 1;
 }
 
 size_t ReadWriteBuffer::write(float* samples, size_t n)
 {
-	if (m_size >= m_capacity) return 0;
-	size_t f = m_capacity - m_size; // free space
-	if (oldCapacityPtr) f = std::min(readPtr - writePtr, f);
+	if (size == buffer.size()) return 0;
+	size_t f = buffer.size() - size; // free space
 	if (n > f) n = f;
-	if (writePtr + n > m_capacity) {
-		size_t nEnd = m_capacity - writePtr;
+	if (writePtr + n > buffer.size()) {
+		size_t nEnd = buffer.size() - writePtr;
 		size_t nFront = n - nEnd;
 		std::copy_n(samples, nEnd, &buffer[writePtr]);
 		std::copy_n(samples + nEnd, nFront, &buffer[0]);
@@ -57,111 +50,62 @@ size_t ReadWriteBuffer::write(float* samples, size_t n)
 		std::copy_n(samples, n, &buffer[writePtr]);
 	}
 	writePtr = radd(writePtr, n);
-	m_size += n;
+	size += n;
 	return n;
 }
 
 size_t ReadWriteBuffer::read(float* samples, size_t n)
 {
-	if (m_size == 0) return 0;
-	if (n > m_size) n = m_size;
-	size_t readTotal = n;
+	if (size == 0) return 0;
+	if (n > size) n = size;
 
-	while (oldCapacityPtr && readPtr + n >= oldCapacityPtr) {
-		size_t nToEnd = oldCapacityPtr - readPtr;
-		std::copy_n(&buffer[readPtr], nToEnd, samples + readTotal - n);
-		n -= nToEnd;
-		m_size -= nToEnd;
-		readPtr = 0;
-		oldCapacityPtr = (m_size >= m_capacity) ? m_size : 0;
-	}
-	size_t endIdx = oldCapacityPtr ? oldCapacityPtr : m_capacity;
-
-	if (readPtr + n > endIdx) { // will never run if the above if() block runs
-		size_t nEnd = endIdx - readPtr;
+	if (readPtr + n > buffer.size()) {
+		size_t nEnd = buffer.size() - readPtr;
 		size_t nFront = n - nEnd;
 		std::copy_n(&buffer[readPtr], nEnd, samples);
 		std::copy_n(&buffer[0], nFront, samples + nEnd);
 	}
 	else {
-		std::copy_n(&buffer[readPtr], n, samples + readTotal - n);
+		std::copy_n(&buffer[readPtr], n, samples);
 	}
 
-	m_size -= n;
-	readPtr = radd(readPtr, n, endIdx);
-	// if there is a pending resize and we are done with old resize, do it now
-	if (m_targetCapacity && !oldCapacityPtr) resize(m_targetCapacity);
-	return readTotal;
+	size -= n;
+	readPtr = radd(readPtr, n);
+	return n;
 }
 
 size_t ReadWriteBuffer::capacity()
 {
-	return m_capacity;
+	return buffer.size();
 }
 
 size_t ReadWriteBuffer::writeable()
 {
-	return m_capacity > m_size ? m_capacity - m_size : 0;
+	return buffer.size() - size;
 }
 
 size_t ReadWriteBuffer::readable()
 {
-	return m_size;
-}
-
-void ReadWriteBuffer::resize(size_t newLength)
-{
-	if (oldCapacityPtr) {
-		// we're still processing old resize
-		m_targetCapacity = newLength;
-		return;
-	}
-
-	if (newLength < minBufferSize) newLength = minBufferSize;
-	if (newLength == m_capacity) return;
-
-	if (m_size == 0) {
-		readPtr = 0;
-		writePtr = 0;
-	}
-	else {
-		if (m_size && writePtr <= readPtr /** segmented */) oldCapacityPtr = m_capacity;
-		else if (writePtr >= newLength) oldCapacityPtr = writePtr;
-
-		if (writePtr >= newLength) writePtr = 0;
-	}
-
-	m_capacity = newLength;
-	m_targetCapacity = 0;
+	return size;
 }
 
 ADelayLine::ADelayLine(const std::weak_ptr<AudioComponent>& source, const std::weak_ptr<AudioComponent>& dest) :
 	velocity(0.f),
-	sampleRate(0.f),
-	b{},
-	sampleInterpOffset(0.f),
 	source(source),
-	dest(dest)
+	dest(dest),
+	b{},
+	sampleInterpOffset(0.f)
 {
 }
 
 void ADelayLine::init(float sampleRate)
 {
 	float dist = mat::dist(source.lock()->position(), dest.lock()->position());
-	float fSampleDelay = sampleRate * dist * soundSpeed;
-	float fMaxDelay = sampleRate * maximumDistance * soundSpeed;
-	size_t sampleDelay = static_cast<size_t>(fSampleDelay);
-	size_t maxDelay = static_cast<size_t>(fMaxDelay);
-	buffer.init(sampleDelay, maxDelay);
-	this->sampleRate = sampleRate;
-}
-
-void ADelayLine::updateDelayLength()
-{
-	float dist = mat::dist(source.lock()->position(), dest.lock()->position());
-	float fSampleDelay = sampleRate * dist * soundSpeed;
-	size_t sampleDelay = static_cast<size_t>(fSampleDelay);
-	buffer.resize(sampleDelay);
+	float fMaxSampleDelay = sampleRate * maximumDistance * soundSpeed;
+	float fInitSampleDelay = sampleRate * dist * soundSpeed;
+	size_t maxSampleDelay = static_cast<size_t>(fMaxSampleDelay);
+	size_t initSampleDelay = static_cast<size_t>(fInitSampleDelay);
+	buffer.init(maxSampleDelay, initSampleDelay);
 }
 
 size_t ADelayLine::write(float* samples, size_t n)
