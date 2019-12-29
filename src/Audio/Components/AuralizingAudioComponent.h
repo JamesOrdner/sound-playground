@@ -17,16 +17,13 @@ struct IndirectSend
 
 	// Indirect impulse response from the AuralizingAudioComponent to the receiver.
 	// One impulse response vector per receiver output channel.
-	std::vector<float> indirectIR;
+	std::vector<std::vector<float>> indirectIRs;
 
 	// Convolver(s) responsible for convolving the dry AuralizingAudioComponent signal with the room IR.
-	// TODO: Multichannel. One convolver per receiver output channel.
-	AConvolver convolver;
+	// One convolver per receiver output channel.
+	std::vector<AConvolver> convolvers;
 
-	IndirectSend(class AuralizingAudioComponent* sender, class OutputAudioComponent* receiver) :
-		sender(sender), receiver(receiver)
-	{
-	}
+	IndirectSend() : sender(nullptr), receiver(nullptr) {}
 
 	void auralize() {}
 };
@@ -49,17 +46,22 @@ public:
 
 	// AudioComponent interface
 	virtual void transformUpdated() override;
+	virtual void init(float sampleRate, size_t channels, size_t bufferSize) override;
+	virtual void deinit() override;
 	virtual void preprocess() override;
 
 protected:
 
 	// Process `n` output samples with auralization filters and send to indirect receivers
-	void processIndirect(const float* componentOutput, size_t n);
+	void processIndirect(float* componentOutput, size_t n);
 
 private:
 
 	// Sends to OutputAudioComponents receiving indirect sound from this component
 	std::list<std::unique_ptr<IndirectSend>> indirectReceivers;
+
+	// This buffer is required for processIndirect()
+	std::vector<float> processIndirectBuffer;
 
 	// Write offset within the current buffer, reset to 0 each preprocess() call
 	size_t indirectBufferOffset;

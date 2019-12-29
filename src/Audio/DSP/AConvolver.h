@@ -10,8 +10,12 @@ class AConvolver : public ADSPBase
 {
 public:
 
-	AConvolver(std::string impulseResponseFilepath = "");
+	AConvolver();
+	AConvolver(std::string impulseResponseFilepath);
 	~AConvolver() {};
+
+	// Set the impulse response of the convolver. Sample rate is assumed to be that of the session.
+	void setIR(const std::vector<float>& newIR);
 
 	// ADSPBase interface
 	void init(float sampleRate) override;
@@ -22,8 +26,8 @@ private:
 
 	typedef std::complex<float> complex;
 
-	// Filepath of the impulse response file
-	std::string filepath;
+	// Time-domain impulse response of this convolver. Sample rate is assumed to be that of the session.
+	std::vector<float> impulseResponse;
 
 	// Number of FFT partitions, dependent on impulse response length
 	size_t partitions;
@@ -57,6 +61,12 @@ private:
 
 	// Output IFFT plan
 	fftwf_plan ifftPlan;
+
+	// Called during init(), or if IR is changed after initialization. Assumes valid sampleRate.
+	void loadIR();
+
+	// Unload an impulse response and clean up relevant memory. Safe to call multiple times.
+	void unloadIR();
 
 	// If condition is true, return true. Otherwise, call deinit() and return false
 	inline bool assert(bool condition);

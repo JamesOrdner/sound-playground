@@ -12,6 +12,28 @@ void AuralizingAudioComponent::transformUpdated()
 	for (auto& send : indirectReceivers) send->auralize();
 }
 
+void AuralizingAudioComponent::init(float sampleRate, size_t channels, size_t bufferSize)
+{
+	AudioComponent::init(sampleRate, channels, bufferSize);
+	processIndirectBuffer.resize(bufferSize);
+	for (auto& receiver : indirectReceivers) {
+		for (auto& convolver : receiver->convolvers) {
+			convolver.init(sampleRate);
+		}
+	}
+}
+
+void AuralizingAudioComponent::deinit()
+{
+	AudioComponent::deinit();
+	processIndirectBuffer.clear();
+	for (auto& receiver : indirectReceivers) {
+		for (auto& convolver : receiver->convolvers) {
+			convolver.deinit();
+		}
+	}
+}
+
 void AuralizingAudioComponent::preprocess()
 {
 	AudioComponent::preprocess();
@@ -25,7 +47,18 @@ IndirectSend* AuralizingAudioComponent::registerIndirectReceiver(OutputAudioComp
 		if ((*it)->receiver == receiver) return it->get();
 	}
 
-	auto send = std::make_unique<IndirectSend>(this, receiver);
+	auto send = std::make_unique<IndirectSend>();
+	send->sender = this;
+	send->receiver = receiver;
+
+	for (int i = 0; i < 2; i++) { // TEMP
+		std::vector<float> v(i * 100);
+		v.push_back(0.4f);
+		send->indirectIRs.push_back(v);
+		send->convolvers.emplace_back();
+		send->convolvers.back().setIR(v);
+	}
+
 	IndirectSend* sendPtr = send.get();
 	indirectReceivers.push_front(std::move(send));
 	return sendPtr;
@@ -41,12 +74,20 @@ void AuralizingAudioComponent::unregisterIndirectReceiver(const OutputAudioCompo
 	}
 }
 
-void AuralizingAudioComponent::processIndirect(const float* componentOutput, size_t n)
+void AuralizingAudioComponent::processIndirect(float* componentOutput, size_t n)
 {
-	for (auto& send : indirectReceivers) {
-		float* dest = send->receiver->rawOutputBuffer() + indirectBufferOffset;
-		send->convolver.process(dest, componentOutput, n);
-	}
+	//for (auto& send : indirectReceivers) {
+	//	size_t channels = send->convolvers.size();
+	//	float* dest = send->receiver->rawOutputBuffer() + indirectBufferOffset * channels;
+	//	if ((indirectBufferOffset + n) >= processIndirectBuffer.size()) {
+	//		// if end idx goes past end of dest buffer
+	//		exit(1);
+	//	}
+	//	for (size_t ch = 0; ch < channels; ch++) {
+	//		send->convolvers[ch].process(processIndirectBuffer.data(), componentOutput, n);
+	//		for (size_t i = 0; i < n; i++) dest[i * channels + ch] += processIndirectBuffer[i];
+	//	}
+	//}
 
-	indirectBufferOffset += n;
+	//indirectBufferOffset += n;
 }

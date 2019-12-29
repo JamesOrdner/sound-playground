@@ -5,8 +5,7 @@
 constexpr size_t blockSize = 256;
 constexpr size_t N = blockSize * 2;
 
-AConvolver::AConvolver(std::string impulseResponseFilepath) :
-	filepath(impulseResponseFilepath),
+AConvolver::AConvolver() :
 	partitions(0),
 	inputBuffer(nullptr),
 	fftResult(nullptr),
@@ -18,21 +17,48 @@ AConvolver::AConvolver(std::string impulseResponseFilepath) :
 	ifftPlan(nullptr)
 {
 	bAcceptsInput = true;
+	bCanProcessInPlace = true;
+}
+
+AConvolver::AConvolver(std::string impulseResponseFilepath) : AConvolver()
+{
+	AWAVFile wav(impulseResponseFilepath);
+	if (wav.data.empty() || wav.channels != 1) {
+		fprintf(stderr, "Incompatible wav file.\n");
+	}
+	else {
+		setIR(wav.data);
+	}
+}
+
+void AConvolver::setIR(const std::vector<float>& newIR)
+{
+	impulseResponse = newIR;
+	size_t blocks = impulseResponse.size() / blockSize;
+	if (blocks % blockSize > 0) blocks++;
+	impulseResponse.resize(blocks * blockSize); // zero pad last block
+
+	if (bInitialized) loadIR();
 }
 
 void AConvolver::init(float sampleRate)
 {
 	ADSPBase::init(sampleRate);
+	loadIR();
+}
 
-	AWAVFile wav(filepath);
-	if (wav.data.empty() || wav.channels != 1) {
-		fprintf(stderr, "Incompatible wav file.\n");
-		return;
-	}
+void AConvolver::deinit()
+{
+	ADSPBase::deinit();
+	unloadIR();
+}
 
-	partitions = wav.data.size() / blockSize;
-	if (wav.data.size() % blockSize) partitions++;
-	wav.data.resize(partitions * blockSize); // zero pad last block
+void AConvolver::loadIR()
+{
+	unloadIR();
+
+	partitions = impulseResponse.size() / blockSize;
+	if (!partitions) return;
 
 	impulseResponseFFTs.reserve(partitions);
 	freqDelayLine.reserve(partitions);
@@ -44,7 +70,7 @@ void AConvolver::init(float sampleRate)
 	std::fill_n(fftIn + blockSize, blockSize, 0.f); // zero pad input
 
 	for (size_t i = 0; i < partitions; i++) {
-		std::copy_n(&wav.data[0] + blockSize * i, blockSize, fftIn);
+		std::copy_n(impulseResponse.data() + blockSize * i, blockSize, fftIn);
 		fftwf_execute(p);
 
 		// save IR FFT partition
@@ -71,7 +97,7 @@ void AConvolver::init(float sampleRate)
 	// Result of the real to complex FFT on the input stream
 	fftResult = reinterpret_cast<complex*>(fftwf_alloc_complex(N));
 	if (!assert(fftResult)) return;
-	
+
 	// Result and final output of the IFFT
 	outputBuffer = fftwf_alloc_real(N);
 	if (!assert(outputBuffer)) return;
@@ -99,10 +125,8 @@ void AConvolver::init(float sampleRate)
 	fdlPtr = 0;
 }
 
-void AConvolver::deinit()
+void AConvolver::unloadIR()
 {
-	ADSPBase::deinit();
-
 	partitions = 0;
 	for (complex* c : impulseResponseFFTs) fftwf_free(reinterpret_cast<fftwf_complex*>(c));
 	for (complex* c : freqDelayLine) fftwf_free(reinterpret_cast<fftwf_complex*>(c));
