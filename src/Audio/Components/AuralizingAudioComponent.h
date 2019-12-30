@@ -36,18 +36,20 @@ public:
 
 	AuralizingAudioComponent();
 
-	// Register a receiving component with this component. Called outside the audio thread.
-	// Returns a pointer to the created IndirectSend object.
-	IndirectSend* registerIndirectReceiver(OutputAudioComponent* receiver);
-
-	// Unregister a receiving component from this component. Called outside the audio thread.
-	void unregisterIndirectReceiver(const OutputAudioComponent* receiver);
+	virtual ~AuralizingAudioComponent();
 
 	// AudioComponent interface
 	virtual void transformUpdated() override;
 	virtual void init(float sampleRate, size_t channels, size_t bufferSize) override;
 	virtual void deinit() override;
 	virtual void preprocess() override;
+
+	// Register a receiving component with this component. Called outside the audio thread.
+	// Returns a pointer to the created IndirectSend object.
+	IndirectSend* registerIndirectReceiver(OutputAudioComponent* receiver);
+
+	// Unregister a receiving component from this component. Called outside the audio thread.
+	void unregisterIndirectReceiver(const OutputAudioComponent* receiver);
 
 protected:
 

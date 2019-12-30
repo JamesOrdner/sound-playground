@@ -17,13 +17,13 @@ int main(int argc, char* args[])
 	}
 
 	auto mic = std::make_shared<EObject>();
-	mic->addAudioComponent(std::make_shared<AMicrophone>());
+	mic->addAudioComponent(std::make_unique<AMicrophone>());
 	world.addObject(mic);
 
 	auto speaker = std::make_shared<EModel>("res/speaker_small.glb");
 	speaker->setPosition(mat::vec3{ -2, 0, 0 });
 	speaker->setRotation(mat::vec3{ 0, mat::pi * 0.5f, 0});
-	speaker->addAudioComponent(std::make_shared<ASpeaker>());
+	speaker->addAudioComponent(std::make_unique<ASpeaker>());
 	world.addObject(speaker);
 
 	//auto speaker2 = std::make_shared<EModel>("res/speaker_small.glb");

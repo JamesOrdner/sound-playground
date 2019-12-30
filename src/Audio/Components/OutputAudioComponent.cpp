@@ -6,21 +6,7 @@ OutputAudioComponent::OutputAudioComponent() :
 {
 }
 
-void OutputAudioComponent::registerIndirectSend(IndirectSend* send)
-{
-	indirectSends.remove(send); // don't allow duplicates
-	indirectSends.push_front(send);
-}
-
-void OutputAudioComponent::unregisterIndirectSend(const IndirectSend* receiver)
-{
-	for (auto it = indirectSends.cbegin(); it != indirectSends.cend(); it++) {
-		if (*it == receiver) {
-			indirectSends.erase(it);
-			return;
-		}
-	}
-}
+OutputAudioComponent::~OutputAudioComponent() = default;
 
 void OutputAudioComponent::init(float sampleRate, size_t channels, size_t bufferSize)
 {
@@ -39,6 +25,17 @@ void OutputAudioComponent::preprocess()
 {
 	AudioComponent::preprocess();
 	std::fill(outputBuffer.begin(), outputBuffer.end(), 0.f);
+}
+
+void OutputAudioComponent::registerIndirectSend(IndirectSend* send)
+{
+	indirectSends.remove(send); // don't allow duplicates
+	indirectSends.push_front(send);
+}
+
+void OutputAudioComponent::unregisterIndirectSend(IndirectSend* send)
+{
+	indirectSends.remove(send);
 }
 
 float* OutputAudioComponent::rawOutputBuffer()

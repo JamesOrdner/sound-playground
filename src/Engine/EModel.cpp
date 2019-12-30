@@ -7,6 +7,8 @@ EModel::EModel(const std::string& filepath) : bDirtyTransform(false)
 	this->filepath = filepath;
 }
 
+EModel::~EModel() = default;
+
 std::string EModel::getFilepath()
 {
 	return filepath;
@@ -96,16 +98,12 @@ void EModel::setScale(const mat::vec3& scale)
 void EModel::updatePhysics(float deltaTime)
 {
 	if (m_position != physicsPosition) {
-		if (AudioComponent* ac = audioComponent()) {
-			mat::vec3 dir = physicsPosition - m_position;
-			ac->updateVelocity(dir / deltaTime);
-		}
+		mat::vec3 dir = physicsPosition - m_position;
+		setVelocity(dir / deltaTime);
 		physicsPosition = m_position;
 	}
 	else {
-		if (AudioComponent* ac = audioComponent()) {
-			ac->updateVelocity(mat::vec3());
-		}
+		setVelocity(mat::vec3());
 	}
 }
 

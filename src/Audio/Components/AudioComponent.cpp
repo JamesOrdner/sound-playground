@@ -1,14 +1,16 @@
 #include "AudioComponent.h"
 #include "../DSP/ADelayLine.h"
+#include "../../Engine/EObject.h"
 
 AudioComponent::AudioComponent() :
 	bAcceptsInput(false),
 	bAcceptsOutput(false),
-	m_owner(nullptr),
-	bDirtyTransform(false),
-	sampleRate(0.f)
+	sampleRate(0.f),
+	owner(nullptr)
 {
 }
+
+AudioComponent::~AudioComponent() = default;
 
 void AudioComponent::init(float sampleRate, size_t channels, size_t bufferSize)
 {
@@ -17,24 +19,8 @@ void AudioComponent::init(float sampleRate, size_t channels, size_t bufferSize)
 	this->sampleRate = sampleRate;
 }
 
-const mat::vec3& AudioComponent::position() const
-{
-	return m_position;
-}
-
-const mat::vec3& AudioComponent::velocity() const
-{
-	return m_velocity;
-}
-
-const mat::vec3& AudioComponent::forward() const
-{
-	return m_forward;
-}
-
 void AudioComponent::transformUpdated()
 {
-	bDirtyTransform = true;
 	for (const auto& output : outputs) {
 		output->dest->otherTransformUpdated(*output, true);
 	}
@@ -43,27 +29,31 @@ void AudioComponent::transformUpdated()
 	}
 }
 
+const mat::vec3& AudioComponent::position() const
+{
+	return owner->position();
+}
+
+const mat::vec3& AudioComponent::velocity() const
+{
+	return owner->velocity();
+}
+
+const mat::vec3& AudioComponent::forward() const
+{
+	return owner->forward();
+}
+
 void AudioComponent::updateVelocity(const mat::vec3& velocity)
 {
-	m_velocity = velocity;
 	for (const auto& output : outputs) {
-		mat::vec3 relPos = mat::normal(output->dest->m_position - m_position);
-		mat::vec3 relVel = m_velocity - output->dest->m_velocity;
+		mat::vec3 relPos = mat::normal(output->dest->position() - position());
+		mat::vec3 relVel = velocity - output->dest->velocity();
 		output->velocity = mat::dot(relPos, relVel);
 	}
 	for (const auto& input : inputs) {
-		mat::vec3 relPos = mat::normal(m_position - input->dest->m_position);
-		mat::vec3 relVel = input->dest->m_velocity - m_velocity;
+		mat::vec3 relPos = mat::normal(position() - input->dest->position());
+		mat::vec3 relVel = input->dest->velocity() - velocity;
 		input->velocity = mat::dot(relPos, relVel);
 	}
-}
-
-size_t AudioComponent::pullCount()
-{
-	size_t shortest = SIZE_MAX;
-	for (const auto& input : inputs) {
-		size_t count = input->readable();
-		if (count < shortest) shortest = count;
-	}
-	return shortest;
 }

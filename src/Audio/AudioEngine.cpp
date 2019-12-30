@@ -2,13 +2,11 @@
 #include "DSP/ADelayLine.h"
 #include "Components/AudioComponent.h"
 #include "Components/GeneratingAudioComponent.h"
+#include "Components/AuralizingAudioComponent.h"
 #include "Components/OutputAudioComponent.h"
-#include "../Engine/EObject.h"
 #include <portaudio.h>
 #include <pa_win_wasapi.h>
 #include <stdio.h>
-
-#include "Components/ASpeaker.h"
 
 int pa_callback(
 	const void* input,
@@ -132,59 +130,44 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 		for (const auto& c : components) {
 			// process
 			remaining[i] -= c->process(remaining[0]);
-
-			if (std::dynamic_pointer_cast<ASpeaker>(c)) {
-				// update transforms
-				if (c->bDirtyTransform) {
-					c->m_position = c->m_owner->position();
-					c->m_forward = c->m_owner->forward();
-					c->bDirtyTransform = false;
-				}
-			}
-
-			if (remaining[i++] && std::dynamic_pointer_cast<OutputAudioComponent>(c)) done = false;
+			if (remaining[i++] && dynamic_cast<OutputAudioComponent*>(c)) done = false;
 			i %= remaining.size();
 		}
 	}
 
-	// output
+	// collect output
 	unsigned long len = frames * channels;
 	for (unsigned long i = 0; i < len; i++) buffer[i] = 0.f;
 	for (const auto& c : components) {
-		if (const auto& outputComponent = std::dynamic_pointer_cast<OutputAudioComponent>(c)) {
+		if (auto* outputComponent = dynamic_cast<OutputAudioComponent*>(c)) {
 			float* cOut = outputComponent->rawOutputBuffer();
 			for (unsigned long i = 0; i < len; i++) buffer[i] += cOut[i];
 		}
 	}
 }
 
-void AudioEngine::registerComponent(
-	const std::shared_ptr<AudioComponent>& component,
-	const EObject* owner)
+void AudioEngine::registerComponent(AudioComponent* component, const EObject* owner)
 {
-	component->m_owner = owner;
-	component->m_position = owner->position();
-	component->m_forward = owner->forward();
-
+	component->owner = owner;
 	if (audioStream) component->init(sampleRate, channels, bufferLength);
 
 	// Setup delay lines
 	const mat::vec3& thisPos = component->position();
-	for (const auto& compOther : components) {
+	for (AudioComponent* compOther : components) {
 		// outputs
 		if (component->bAcceptsOutput && compOther->bAcceptsInput) {
-			auto output = std::make_shared<ADelayLine>(component.get(), compOther.get());
+			auto output = std::make_shared<ADelayLine>(component, compOther);
 			output->init(sampleRate);
 			component->outputs.push_back(output);
 			compOther->inputs.push_back(output);
-			if (const auto& gComp = std::dynamic_pointer_cast<GeneratingAudioComponent>(component)) {
+			if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component)) {
 				output->genID = gComp->addConsumer();
 			}
 		}
 
 		// inputs
 		if (component->bAcceptsInput && compOther->bAcceptsOutput) {
-			auto input = std::make_shared<ADelayLine>(compOther.get(), component.get());
+			auto input = std::make_shared<ADelayLine>(compOther, component);
 			input->init(sampleRate);
 			compOther->outputs.push_back(input);
 			component->inputs.push_back(input);
@@ -192,20 +175,20 @@ void AudioEngine::registerComponent(
 	}
 
 	// If OutputAudioComponent, setup indirect connections to this object
-	if (const auto& oComp = std::dynamic_pointer_cast<OutputAudioComponent>(component)) {
-		for (const auto& compOther : components) {
-			if (auto aComp = std::dynamic_pointer_cast<AuralizingAudioComponent>(compOther)) {
-				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp.get());
+	if (auto* oComp = dynamic_cast<OutputAudioComponent*>(component)) {
+		for (AudioComponent* compOther : components) {
+			if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(compOther)) {
+				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
 				oComp->registerIndirectSend(sendPtr);
 			}
 		}
 	}
 
 	// If AuralizingAudioComponent, setup indirect connections from this object
-	if (const auto& aComp = std::dynamic_pointer_cast<AuralizingAudioComponent>(component)) {
-		for (const auto& compOther : components) {
-			if (auto oComp = std::dynamic_pointer_cast<OutputAudioComponent>(compOther)) {
-				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp.get());
+	if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(component)) {
+		for (AudioComponent* compOther : components) {
+			if (auto* oComp = dynamic_cast<OutputAudioComponent*>(compOther)) {
+				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
 				oComp->registerIndirectSend(sendPtr);
 			}
 		}
@@ -215,20 +198,19 @@ void AudioEngine::registerComponent(
 	components.push_back(component);
 }
 
-void AudioEngine::unregisterComponent(const std::shared_ptr<AudioComponent>& component)
+void AudioEngine::unregisterComponent(AudioComponent* component)
 {
-	component->deinit();
-	components.remove(component);
-
-	// Remove delay lines
 	for (const auto& input : component->inputs) {
 		input->source->outputs.remove(input);
 	}
 
 	for (const auto& output : component->outputs) {
 		output->dest->inputs.remove(output);
-		if (const auto& gComp = std::dynamic_pointer_cast<GeneratingAudioComponent>(component)) {
+		if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component)) {
 			gComp->removeConsumer(output->genID);
 		}
 	}
+
+	component->deinit();
+	components.remove(component);
 }

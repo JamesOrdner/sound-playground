@@ -6,6 +6,8 @@ AuralizingAudioComponent::AuralizingAudioComponent() :
 {
 }
 
+AuralizingAudioComponent::~AuralizingAudioComponent() = default;
+
 void AuralizingAudioComponent::transformUpdated()
 {
 	AudioComponent::transformUpdated();

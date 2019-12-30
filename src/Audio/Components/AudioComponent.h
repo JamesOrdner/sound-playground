@@ -17,20 +17,13 @@ public:
 
 	AudioComponent();
 
+	virtual ~AudioComponent();
+
 	// Initialize internal variables for current audio session
 	virtual void init(float sampleRate, size_t channels, size_t bufferSize);
 
 	// Clean up internals and delete any memory allocated in init()
 	virtual void deinit() {};
-
-	// Returns the world space position of the owning object
-	const mat::vec3& position() const;
-
-	// Returns the world space velocity of the owning object
-	const mat::vec3& velocity() const;
-
-	// Returns the world space forward vector of the owning object
-	const mat::vec3& forward() const;
 
 	// Called when the owning EObject transform changes. Does not run in the audio thread.
 	virtual void transformUpdated();
@@ -38,9 +31,6 @@ public:
 	// Called when a connected object updates its transform. Does not run in the audio thread.
 	// bInput == true if this is an input to the called AudioComponent, == false if output.
 	virtual void otherTransformUpdated(const ADelayLine& connection, bool bInput) {};
-
-	// Called when the velocity of the owning object changed. Does not run in the audio thread.
-	void updateVelocity(const mat::vec3& velocity);
 
 	// This optional function is called just before processing a full callback.
 	// It can be used to prep output buffers or other internals.
@@ -51,6 +41,18 @@ public:
 	// samples, which will often be less than n due to full output buffers or
 	// running out of input samples.
 	virtual size_t process(size_t n) = 0;
+
+	// Returns the world space position of the owning object
+	const mat::vec3& position() const;
+
+	// Returns the world space velocity of the owning object
+	const mat::vec3& velocity() const;
+
+	// Returns the world space forward vector of the owning object
+	const mat::vec3& forward() const;
+
+	// Called when the velocity of the owning object changed. Does not run in the audio thread.
+	void updateVelocity(const mat::vec3& velocity);
 
 protected:
 
@@ -69,23 +71,8 @@ protected:
 	// Outputs to other AudioComponents
 	std::list<std::shared_ptr<ADelayLine>> outputs;
 
-	// Returns the least number of currently available samples across all inputs
-	size_t pullCount();
-
 private:
 
 	// Pointer to the owning EObject
-	const EObject* m_owner;
-
-	// World space position of this object, updated periodically by AudioEngine
-	mat::vec3 m_position;
-
-	// World space velocity of this object, updated outside the audio thread
-	mat::vec3 m_velocity;
-
-	// World space forward vector of this object, updated periodically by AudioEngine
-	mat::vec3 m_forward;
-
-	// Marked true when the owning EObject's transform has been modified
-	bool bDirtyTransform;
+	const EObject* owner;
 };

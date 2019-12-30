@@ -29,12 +29,10 @@ public:
 	void process_float(float* buffer, unsigned long frames);
 
 	// Registers an audio component with the engine for processing
-	void registerComponent(
-		const std::shared_ptr<AudioComponent>& component,
-		const EObject* owner);
+	void registerComponent(AudioComponent* component, const EObject* owner);
 
 	// Removes an audio component from the engine
-	void unregisterComponent(const std::shared_ptr<AudioComponent>& component);
+	void unregisterComponent(AudioComponent* component);
 
 private:
 
@@ -54,5 +52,5 @@ private:
 	// Dependency is determined from the input buffers. Components with longer input buffers
 	// are considered less dependent, while components with shorter length input buffers
 	// are more dependent. Components with no input buffers are the least dependent.
-	std::list<std::shared_ptr<AudioComponent>> components;
+	std::list<AudioComponent*> components;
 };

@@ -13,19 +13,21 @@ public:
 
 	OutputAudioComponent();
 
-	// Register a receiving component with this component. Called outside the audio thread.
-	void registerIndirectSend(IndirectSend* send);
-
-	// Unregister a receiving component from this component. Called outside the audio thread.
-	void unregisterIndirectSend(const IndirectSend* receiver);
-
-	// Returns a pointer to the raw data of outputBuffer, which is filled during process()
-	float* rawOutputBuffer();
+	virtual ~OutputAudioComponent();
 
 	// AudioComponent interface
 	virtual void init(float sampleRate, size_t channels, size_t bufferSize) override;
 	virtual void transformUpdated() override;
 	virtual void preprocess() override;
+
+	// Register a receiving component with this component. Called outside the audio thread.
+	void registerIndirectSend(IndirectSend* send);
+
+	// Unregister a receiving component from this component. Called outside the audio thread.
+	void unregisterIndirectSend(IndirectSend* send);
+
+	// Returns a pointer to the raw data of outputBuffer, which is filled during process()
+	float* rawOutputBuffer();
 
 protected:
 

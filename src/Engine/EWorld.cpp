@@ -15,7 +15,7 @@ void EWorld::addObject(const std::shared_ptr<EObject>& object)
 	objects.push_back(object);
 
 	Engine& engine = Engine::instance();
-	if (const auto& audioComponent = object->audioComponentShared()) {
+	if (auto* audioComponent = object->audioComponent()) {
 		// Existing audio component will not be registered before adding to the world
 		engine.audio().registerComponent(audioComponent, object.get());
 	}
@@ -32,7 +32,7 @@ void EWorld::removeObject(const std::shared_ptr<EObject>& object)
 	objects.remove(object);
 
 	Engine& engine = Engine::instance();
-	if (const auto& audioComponent = object->audioComponentShared()) {
+	if (auto* audioComponent = object->audioComponent()) {
 		engine.audio().unregisterComponent(audioComponent);
 	}
 

@@ -12,7 +12,10 @@ class GMesh;
 class EModel : public EObject
 {
 public:
+
 	EModel(const std::string& filepath);
+
+	virtual ~EModel();
 
 	// Returns the path to the model file
 	std::string getFilepath();
