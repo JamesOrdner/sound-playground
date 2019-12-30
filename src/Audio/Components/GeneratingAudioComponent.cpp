@@ -1,7 +1,7 @@
 #include "GeneratingAudioComponent.h"
 
 // Hardcoded buffer capacity, may want to change this in the future
-constexpr size_t capacity = 512;
+constexpr size_t capacity = 16348;
 
 GeneratingAudioComponent::GeneratingAudioComponent() :
 	genBuffer(capacity),
@@ -89,6 +89,7 @@ size_t GeneratingAudioComponent::peekGenerated(unsigned int consumer, float* buf
 
 size_t GeneratingAudioComponent::seekGenerated(unsigned int consumer, size_t n)
 {
+	if (n == 0) return 0;
 	size_t readCount = readable(consumer);
 	if (readCount == 0) return 0;
 	if (n > readCount) n = readCount;

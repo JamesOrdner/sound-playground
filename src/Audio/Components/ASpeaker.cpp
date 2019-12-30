@@ -45,7 +45,8 @@ size_t ASpeaker::generateImpl(float* buffer, size_t count)
 {
 	for (size_t i = 0; i < count; i++) {
 		buffer[i] = sinf(t++ * 2.f * mat::pi * 500.f / sampleRate); // sin wave
-		// buffer[i] = static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f; // white noise
+		// buffer[i] = static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f; // white noise.
+		buffer[i] *= 0.3f;
 	}
 
 	return count;

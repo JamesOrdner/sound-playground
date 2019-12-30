@@ -138,7 +138,7 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 				size_t processed = aComp->indirectFramesProcessed();
 				if (processed < frames) {
 					aComp->processIndirect(frames - processed);
-					done &= aComp->indirectFramesProcessed() == frames;
+					done = done && aComp->indirectFramesProcessed() == frames;
 				}
 			}
 		}
@@ -150,7 +150,7 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 	for (const auto& c : components) {
 		if (auto* outputComponent = dynamic_cast<OutputAudioComponent*>(c)) {
 			float* cOut = outputComponent->rawOutputBuffer();
-			for (unsigned long i = 0; i < len; i++) buffer[i] += cOut[i] * 0.2f;
+			for (unsigned long i = 0; i < len; i++) buffer[i] += cOut[i];
 		}
 	}
 }
