@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioComponent.h"
+#include "GeneratingAudioComponent.h"
 #include "../DSP/AConvolver.h"
 #include <memory>
 
@@ -30,7 +31,7 @@ struct IndirectSend
 // Forward declarations
 class OutputAudioComponent;
 
-class AuralizingAudioComponent : public AudioComponent
+class AuralizingAudioComponent : public AudioComponent, public GeneratingAudioComponent
 {
 public:
 
@@ -44,17 +45,18 @@ public:
 	virtual void deinit() override;
 	virtual void preprocess() override;
 
+	// Process `n` output samples with auralization filters and send to indirect receivers
+	void processIndirect(size_t n);
+
+	// Return the number of indirect frames processed since the last preprocess() call
+	size_t indirectFramesProcessed();
+
 	// Register a receiving component with this component. Called outside the audio thread.
 	// Returns a pointer to the created IndirectSend object.
 	IndirectSend* registerIndirectReceiver(OutputAudioComponent* receiver);
 
 	// Unregister a receiving component from this component. Called outside the audio thread.
 	void unregisterIndirectReceiver(const OutputAudioComponent* receiver);
-
-protected:
-
-	// Process `n` output samples with auralization filters and send to indirect receivers
-	void processIndirect(float* componentOutput, size_t n);
 
 private:
 
@@ -66,4 +68,7 @@ private:
 
 	// Write offset within the current buffer, reset to 0 each preprocess() call
 	size_t indirectBufferOffset;
+
+	// Unique ID which associates the AuralizingAudioComponent with the GeneratingAudioComponent
+	unsigned int genID;
 };

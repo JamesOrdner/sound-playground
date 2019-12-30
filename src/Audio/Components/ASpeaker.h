@@ -1,6 +1,5 @@
 #pragma once
 
-#include "GeneratingAudioComponent.h"
 #include "AuralizingAudioComponent.h"
 
 #include <memory>
@@ -8,7 +7,7 @@
 // Forward declarations
 class AConvolver;
 
-class ASpeaker : public AuralizingAudioComponent, public GeneratingAudioComponent
+class ASpeaker : public AuralizingAudioComponent
 {
 public:
 

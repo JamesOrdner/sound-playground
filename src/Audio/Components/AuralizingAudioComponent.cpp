@@ -4,9 +4,13 @@
 AuralizingAudioComponent::AuralizingAudioComponent() :
 	indirectBufferOffset(0)
 {
+	genID = GeneratingAudioComponent::addConsumer();
 }
 
-AuralizingAudioComponent::~AuralizingAudioComponent() = default;
+AuralizingAudioComponent::~AuralizingAudioComponent()
+{
+	GeneratingAudioComponent::removeConsumer(genID);
+}
 
 void AuralizingAudioComponent::transformUpdated()
 {
@@ -42,18 +46,23 @@ void AuralizingAudioComponent::preprocess()
 	indirectBufferOffset = 0;
 }
 
+size_t AuralizingAudioComponent::indirectFramesProcessed()
+{
+	return indirectBufferOffset;
+}
+
 IndirectSend* AuralizingAudioComponent::registerIndirectReceiver(OutputAudioComponent* receiver)
 {
 	// Check for existing entry
-	for (auto it = indirectReceivers.cbegin(); it != indirectReceivers.cend(); it++) {
-		if ((*it)->receiver == receiver) return it->get();
+	for (auto& indirectReceiver : indirectReceivers) {
+		if (indirectReceiver->receiver == receiver) return indirectReceiver.get();
 	}
 
 	auto send = std::make_unique<IndirectSend>();
 	send->sender = this;
 	send->receiver = receiver;
 
-	for (int i = 0; i < 2; i++) { // TEMP
+	for (size_t i = 0; i < 2; i++) { // TEMP
 		std::vector<float> v(i * 100);
 		v.push_back(0.4f);
 		send->indirectIRs.push_back(v);
@@ -68,28 +77,28 @@ IndirectSend* AuralizingAudioComponent::registerIndirectReceiver(OutputAudioComp
 
 void AuralizingAudioComponent::unregisterIndirectReceiver(const OutputAudioComponent* receiver)
 {
-	for (auto it = indirectReceivers.cbegin(); it != indirectReceivers.cend(); it++) {
-		if ((*it)->receiver == receiver) {
-			indirectReceivers.erase(it);
+	for (auto& indirectReceiver : indirectReceivers) {
+		if (indirectReceiver->receiver == receiver) {
+			indirectReceivers.remove(indirectReceiver);
 			break;
 		}
 	}
 }
 
-void AuralizingAudioComponent::processIndirect(float* componentOutput, size_t n)
+void AuralizingAudioComponent::processIndirect(size_t n)
 {
-	//for (auto& send : indirectReceivers) {
-	//	size_t channels = send->convolvers.size();
-	//	float* dest = send->receiver->rawOutputBuffer() + indirectBufferOffset * channels;
-	//	if ((indirectBufferOffset + n) >= processIndirectBuffer.size()) {
-	//		// if end idx goes past end of dest buffer
-	//		exit(1);
-	//	}
-	//	for (size_t ch = 0; ch < channels; ch++) {
-	//		send->convolvers[ch].process(processIndirectBuffer.data(), componentOutput, n);
-	//		for (size_t i = 0; i < n; i++) dest[i * channels + ch] += processIndirectBuffer[i];
-	//	}
-	//}
+	size_t available = GeneratingAudioComponent::readable(genID);
+	if (available < n) GeneratingAudioComponent::generate(n - available);
+	n = GeneratingAudioComponent::readGenerated(genID, processIndirectBuffer.data(), n);
 
-	//indirectBufferOffset += n;
+	for (auto& send : indirectReceivers) {
+		size_t channels = send->convolvers.size();
+		float* dest = send->receiver->rawOutputBuffer() + indirectBufferOffset * channels;
+		for (size_t ch = 0; ch < channels; ch++) {
+			send->convolvers[ch].process(processIndirectBuffer.data(), processIndirectBuffer.data(), n);
+			for (size_t i = 0; i < n; i++) dest[i * channels + ch] += processIndirectBuffer[i];
+		}
+	}
+
+	indirectBufferOffset += n;
 }

@@ -9,6 +9,8 @@ class GeneratingAudioComponent
 public:
 
 	GeneratingAudioComponent();
+
+	virtual ~GeneratingAudioComponent();
 	
 	// Requests that the component generate `count` samples.
 	// Returns number of successfully generated samples.

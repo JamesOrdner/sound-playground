@@ -128,10 +128,19 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 		size_t i = 0;
 		done = true;
 		for (const auto& c : components) {
-			// process
+			// direct
 			remaining[i] -= c->process(remaining[0]);
 			if (remaining[i++] && dynamic_cast<OutputAudioComponent*>(c)) done = false;
 			i %= remaining.size();
+
+			// indirect
+			if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(c)) {
+				size_t processed = aComp->indirectFramesProcessed();
+				if (processed < frames) {
+					aComp->processIndirect(frames - processed);
+					done &= aComp->indirectFramesProcessed() == frames;
+				}
+			}
 		}
 	}
 
@@ -141,7 +150,7 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 	for (const auto& c : components) {
 		if (auto* outputComponent = dynamic_cast<OutputAudioComponent*>(c)) {
 			float* cOut = outputComponent->rawOutputBuffer();
-			for (unsigned long i = 0; i < len; i++) buffer[i] += cOut[i];
+			for (unsigned long i = 0; i < len; i++) buffer[i] += cOut[i] * 0.2f;
 		}
 	}
 }

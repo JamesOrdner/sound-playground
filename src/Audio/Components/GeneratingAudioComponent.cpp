@@ -11,6 +11,8 @@ GeneratingAudioComponent::GeneratingAudioComponent() :
 {
 }
 
+GeneratingAudioComponent::~GeneratingAudioComponent() = default;
+
 size_t GeneratingAudioComponent::generate(size_t count)
 {
 	if (capacity == size) return 0;
