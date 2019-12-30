@@ -8,6 +8,8 @@ class GProgram
 {
 public:
 
+	GProgram();
+
 	// Construct the shader with the name of the glsl shader file (.vert/.frag)
 	GProgram(std::string name);
 

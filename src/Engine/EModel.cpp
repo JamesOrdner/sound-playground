@@ -109,7 +109,7 @@ void EModel::updatePhysics(float deltaTime)
 	}
 }
 
-mat::mat4 EModel::transformMatrix()
+mat::mat4 EModel::transformMatrix() const
 {
 	return mat::transform(m_position, m_rotation, m_scale);
 }

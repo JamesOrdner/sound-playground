@@ -19,7 +19,7 @@ ReadWriteBuffer::ReadWriteBuffer() :
 
 void ReadWriteBuffer::init(size_t delayLength, size_t initialSize)
 {
-	buffer.empty();
+	buffer.clear();
 	buffer.resize(delayLength);
 	readPtr = 0;
 	writePtr = initialSize;
@@ -89,7 +89,7 @@ size_t ReadWriteBuffer::readable()
 	return size;
 }
 
-ADelayLine::ADelayLine(const std::weak_ptr<AudioComponent>& source, const std::weak_ptr<AudioComponent>& dest) :
+ADelayLine::ADelayLine(AudioComponent* source, AudioComponent* dest) :
 	velocity(0.f),
 	source(source),
 	dest(dest),
@@ -101,7 +101,7 @@ ADelayLine::ADelayLine(const std::weak_ptr<AudioComponent>& source, const std::w
 
 void ADelayLine::init(float sampleRate)
 {
-	float dist = mat::dist(source.lock()->position(), dest.lock()->position());
+	float dist = mat::dist(source->position(), dest->position());
 	float fMaxSampleDelay = sampleRate * maximumDistance * soundSpeed;
 	float fInitSampleDelay = sampleRate * dist * soundSpeed;
 	size_t maxSampleDelay = static_cast<size_t>(fMaxSampleDelay);

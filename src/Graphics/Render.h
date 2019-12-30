@@ -16,6 +16,7 @@ class Render
 public:
 
 	Render();
+	~Render();
 
 	// OpenGL attributes require setting before the creation of the SDL_Window
 	static void setAttributes();
@@ -44,10 +45,10 @@ private:
 	void* glContext;
 
 	// Pointer to the main shader program
-	std::shared_ptr<GProgram> program_main;
+	std::unique_ptr<GProgram> programMain;
 
 	// Pointer to the shadow shader program
-	std::shared_ptr<GProgram> program_shadow;
+	std::unique_ptr<GProgram> programShadow;
 
 	unsigned int shadowFBO;
 	unsigned int shadowTexture;

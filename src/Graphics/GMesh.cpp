@@ -183,30 +183,24 @@ GMesh::~GMesh()
 	}
 }
 
-void GMesh::registerModel(const std::shared_ptr<EModel>& model)
+void GMesh::registerModel(EModel* model)
 {
 	models.push_back(model);
 	reloadInstanceBuffers();
 }
 
-void GMesh::unregisterModel(const std::shared_ptr<EModel>& model)
+void GMesh::unregisterModel(EModel* model)
 {
-	for (auto it = models.cbegin(); it != models.cend(); it++) {
-		if (it->lock() == model) {
-			models.erase(it);
-			if (!models.empty()) reloadInstanceBuffers();
-			return;
-		}
-	}
+	models.remove(model);
+	if (!models.empty()) reloadInstanceBuffers();
 }
 
 void GMesh::reloadInstanceBuffers()
 {
 	std::vector<mat::mat4> transforms;
-	for (const auto& model : models) {
-		auto modelPtr = model.lock();
-		transforms.push_back(t(modelPtr->transformMatrix()));
-		modelPtr->transformUpdated();
+	for (EModel* model : models) {
+		transforms.push_back(t(model->transformMatrix()));
+		model->transformUpdated();
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_instanceTransforms);
 	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(mat::mat4), &transforms[0], GL_STATIC_DRAW);
@@ -217,11 +211,10 @@ void GMesh::updateInstanceTransforms()
 {
 	// Check for modified model transforms
 	size_t i = 0;
-	for (const auto& model : models) {
-		auto modelPtr = model.lock();
-		if (modelPtr->needsTransformUpdate()) {
-			mat::mat4 transform = t(modelPtr->transformMatrix());
-			modelPtr->transformUpdated();
+	for (EModel* model : models) {
+		if (model->needsTransformUpdate()) {
+			mat::mat4 transform = t(model->transformMatrix());
+			model->transformUpdated();
 
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_instanceTransforms);
 			glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(mat::mat4), sizeof(mat::mat4), transform.data);

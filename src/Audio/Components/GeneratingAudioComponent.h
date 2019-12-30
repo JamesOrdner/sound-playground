@@ -38,15 +38,6 @@ private:
 	// samples, returning the number of successfully generated samples.
 	virtual size_t generateImpl(float* buffer, size_t count) = 0;
 
-	// Stores generated samples for reading
-	std::vector<float> genBuffer;
-
-	// Index of the next write index
-	size_t writePtr;
-
-	// Number of valid samples in buffer
-	size_t size;
-
 	struct ConsumerData
 	{
 		size_t readPtr;
@@ -55,6 +46,15 @@ private:
 
 	// Maps consumers to their buffer read index
 	std::map<unsigned int, ConsumerData> consumers;
+
+	// Stores generated samples for reading
+	std::vector<float> genBuffer;
+
+	// Index of the next write index
+	size_t writePtr;
+
+	// Number of valid samples in buffer
+	size_t size;
 
 	// Simple consumer ID generator, increment each time a consumer is added
 	unsigned int nextConsumerID;

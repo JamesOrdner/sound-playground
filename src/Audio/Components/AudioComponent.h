@@ -74,8 +74,8 @@ protected:
 
 private:
 
-	// Weak pointer to the owning EObject
-	std::weak_ptr<EObject> m_owner;
+	// Pointer to the owning EObject
+	const EObject* m_owner;
 
 	// World space position of this object, updated periodically by AudioEngine
 	mat::vec3 m_position;

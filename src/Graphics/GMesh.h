@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <list>
-#include <memory>
 
 // Forward declarations
 class EModel;
@@ -22,10 +21,10 @@ public:
 	~GMesh();
 
 	// Register a model with this mesh
-	void registerModel(const std::shared_ptr<EModel>& model);
+	void registerModel(EModel* model);
 
 	// Unregisters a model from this mesh
-	void unregisterModel(const std::shared_ptr<EModel>& model);
+	void unregisterModel(EModel* model);
 
 	// Updates any instance transforms that are out of date. Should be called
 	// at the beginning of each frame, before any draw() calls.
@@ -51,7 +50,7 @@ private:
 	void loadRayMesh(const tinygltf::Model& model, const tinygltf::Node& node);
 
 	// An ordered list of weak pointers to all owning models sharing this mesh
-	std::list<std::weak_ptr<EModel>> models;
+	std::list<EModel*> models;
 
 	// The raycasting mesh. Each three vertices forms a triangle.
 	std::vector<mat::vec3> rayMeshBuffer;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <memory>
 
 class ReadWriteBuffer
 {
@@ -77,7 +76,7 @@ class ADelayLine
 {
 public:
 
-	ADelayLine(const std::weak_ptr<AudioComponent>& source, const std::weak_ptr<AudioComponent>& dest);
+	ADelayLine(AudioComponent* source, AudioComponent* dest);
 
 	// Relative velocity of distance between source and destination, in meters per second.
 	// Velocity is positive if distance is increasing, or negative if decreasing.
@@ -99,10 +98,10 @@ public:
 	size_t readable();
 
 	// Source audio component
-	std::weak_ptr<AudioComponent> source;
+	AudioComponent* const source;
 
 	// Destination audio component
-	std::weak_ptr<AudioComponent> dest;
+	AudioComponent* const dest;
 
 	// This is a unique ID which associates this delay line with a GeneratingAudioComponent
 	unsigned int genID;

@@ -14,7 +14,7 @@ void EObject::setPosition(const mat::vec3& position)
 	if (m_audioComponent) m_audioComponent->transformUpdated();
 }
 
-const mat::vec3& EObject::position()
+const mat::vec3& EObject::position() const
 {
 	return m_position;
 }
@@ -25,7 +25,7 @@ void EObject::setRotation(const mat::vec3& rotation)
 	if (m_audioComponent) m_audioComponent->transformUpdated();
 }
 
-const mat::vec3& EObject::rotation()
+const mat::vec3& EObject::rotation() const
 {
 	return m_rotation;
 }
@@ -42,12 +42,12 @@ void EObject::setScale(const mat::vec3& scale)
 	if (m_audioComponent) m_audioComponent->transformUpdated();
 }
 
-const mat::vec3& EObject::scale()
+const mat::vec3& EObject::scale() const
 {
 	return m_scale;
 }
 
-mat::vec3 EObject::forward()
+mat::vec3 EObject::forward() const
 {
 	return mat::rotate(mat::vec3{ 0.f, 0.f, 1.f }, m_rotation);
 }
@@ -62,15 +62,13 @@ std::shared_ptr<AudioComponent> EObject::audioComponentShared()
 	return m_audioComponent;
 }
 
-void EObject::addAudioComponent(
-	const std::shared_ptr<AudioComponent>& component,
-	const std::shared_ptr<EObject>& owner)
+void EObject::addAudioComponent(const std::shared_ptr<AudioComponent>& component)
 {
 	m_audioComponent = component;
 	if (bExistsInWorld) {
 		// Component should only be registered with audio engine if the object exists in a world
 		auto& engine = Engine::instance();
-		engine.audio().registerComponent(component, owner);
+		engine.audio().registerComponent(component, this);
 	}
 }
 

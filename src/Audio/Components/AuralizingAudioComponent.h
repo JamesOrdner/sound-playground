@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AudioComponent.h"
-#include "../DSP/ADelayLine.h"
 #include "../DSP/AConvolver.h"
 #include <memory>
 

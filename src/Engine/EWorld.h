@@ -21,7 +21,7 @@ public:
 	void removeObject(const std::shared_ptr<EObject>& object);
 
 	// Perform a raycast. Returns hit model on success.
-	std::shared_ptr<EModel> raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc);
+	EModel* raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc);
 
 	// Called once per frame
 	void tick(float deltaTime);

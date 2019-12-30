@@ -20,7 +20,7 @@ public:
 private:
 
 	// Calculate the stereo gain of a given source (hardcoded X+ to the right)
-	void calcStereoGain(const AudioComponent& source, float& gainL, float& gainR);
+	void calcStereoGain(const AudioComponent* source, float& gainL, float& gainR);
 
 	// Left channel gain in a stereo setup. Right channel gain is calculated as 1 - gainL.
 	AInterpParameter gainL;

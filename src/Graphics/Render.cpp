@@ -15,6 +15,8 @@ Render::Render() :
 {
 }
 
+Render::~Render() = default;
+
 void Render::setAttributes()
 {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -47,9 +49,9 @@ bool Render::init(SDL_Window* window)
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	program_main = std::make_shared<GProgram>("main");
-	program_main->setMatrixUniform("viewProj", projectionViewMatrix(window));
-	program_main->setPreDrawRoutine([window] {
+	programMain = std::make_unique<GProgram>("main");
+	programMain->setMatrixUniform("viewProj", projectionViewMatrix(window));
+	programMain->setPreDrawRoutine([window] {
 		int width, height;
 		SDL_GL_GetDrawableSize(window, &width, &height);
 		glViewport(0, 0, width, height);
@@ -58,7 +60,7 @@ bool Render::init(SDL_Window* window)
 
 	if (!initShadow()) {
 		printf("Failed to initialize shadow program.\n");
-		program_main.reset();
+		programMain.reset();
 		SDL_GL_DeleteContext(glContext);
 		glContext = nullptr;
 		return false;
@@ -73,8 +75,8 @@ bool Render::init(SDL_Window* window)
 void Render::deinit()
 {
 	// programs
-	program_main.reset();
-	program_shadow.reset();
+	programMain.reset();
+	programShadow.reset();
 
 	// framebuffers
 	glDeleteFramebuffers(1, &shadowFBO);
@@ -93,12 +95,12 @@ void Render::draw(SDL_Window* window, const std::map<std::string, std::weak_ptr<
 	for (const auto& mesh : meshes) mesh.second.lock()->updateInstanceTransforms();
 
 	// Render shadow buffer
-	program_shadow->use();
+	programShadow->use();
 	for (const auto& mesh : meshes) mesh.second.lock()->draw();
-	program_shadow->release();
+	programShadow->release();
 
 	// Render main program
-	program_main->use();
+	programMain->use();
 	for (const auto& mesh : meshes) mesh.second.lock()->draw();
 
 	SDL_GL_SwapWindow(window);
@@ -146,21 +148,21 @@ bool Render::initShadow()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glPolygonOffset(2.f, 2.f);
 
-	program_shadow = std::make_shared<GProgram>("shadow");
-	program_shadow->setFramebuffer(shadowFBO);
-	program_shadow->setPreDrawRoutine([shadowMap_x, shadowMap_y] {
+	programShadow = std::make_unique<GProgram>("shadow");
+	programShadow->setFramebuffer(shadowFBO);
+	programShadow->setPreDrawRoutine([shadowMap_x, shadowMap_y] {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, shadowMap_x, shadowMap_y);
 		glEnable(GL_POLYGON_OFFSET_FILL);
 		});
-	program_shadow->setReleaseRoutine([] {
+	programShadow->setReleaseRoutine([] {
 		glDisable(GL_POLYGON_OFFSET_FILL);
 		});
 
 	mat::mat4 view = lookAt(mat::vec3{ 2.f, 3.f, -0.5f }, mat::vec3{ 0.f, 0.f, 0.f });
 	mat::mat4 proj = mat::ortho(-3.f, 3.f, -3.f, 3.f, -10.f, 10.f);
 	mat::mat4 projectionViewMatrix = proj * view;
-	program_shadow->setMatrixUniform("mvp", projectionViewMatrix);
+	programShadow->setMatrixUniform("mvp", projectionViewMatrix);
 
 	mat::mat4 biasMatrix{
 		{ 0.5, 0.0, 0.0, 0.5 },
@@ -169,7 +171,7 @@ bool Render::initShadow()
 		{ 0.0, 0.0, 0.0, 1.0 }
 	};
 	mat::mat4 depthBiasMVP = biasMatrix * projectionViewMatrix;
-	program_main->setMatrixUniform("shadowMVP", depthBiasMVP);
+	programMain->setMatrixUniform("shadowMVP", depthBiasMVP);
 
 	return true;
 }

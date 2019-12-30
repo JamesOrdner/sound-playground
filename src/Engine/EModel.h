@@ -30,7 +30,7 @@ public:
 	float raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc);
 
 	// Returns the world transform matrix for this model
-	mat::mat4 transformMatrix();
+	mat::mat4 transformMatrix() const;
 
 	// Returns true if transform has been modified and needs render update
 	bool needsTransformUpdate();

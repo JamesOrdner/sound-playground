@@ -4,7 +4,6 @@
 #include <memory>
 
 // Forward declarations
-typedef unsigned __int32 SDL_AudioDeviceID;
 class AudioComponent;
 class EObject;
 
@@ -32,7 +31,7 @@ public:
 	// Registers an audio component with the engine for processing
 	void registerComponent(
 		const std::shared_ptr<AudioComponent>& component,
-		const std::shared_ptr<EObject>& owner);
+		const EObject* owner);
 
 	// Removes an audio component from the engine
 	void unregisterComponent(const std::shared_ptr<AudioComponent>& component);

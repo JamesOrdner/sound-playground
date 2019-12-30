@@ -32,10 +32,10 @@ public:
 	void run();
 
 	// Return the object at screen coordinates
-	std::shared_ptr<EModel> raycastScreen(int x, int y);
+	EModel* raycastScreen(int x, int y);
 	
 	// Return the object at screen coordinates, as well as the hit location
-	std::shared_ptr<EModel> raycastScreen(int x, int y, mat::vec3& hitLoc);
+	EModel* raycastScreen(int x, int y, mat::vec3& hitLoc);
 
 private:
 	Engine();

@@ -136,9 +136,8 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 			if (std::dynamic_pointer_cast<ASpeaker>(c)) {
 				// update transforms
 				if (c->bDirtyTransform) {
-					auto ptr = c->m_owner.lock();
-					c->m_position = ptr->position();
-					c->m_forward = ptr->forward();
+					c->m_position = c->m_owner->position();
+					c->m_forward = c->m_owner->forward();
 					c->bDirtyTransform = false;
 				}
 			}
@@ -161,7 +160,7 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 
 void AudioEngine::registerComponent(
 	const std::shared_ptr<AudioComponent>& component,
-	const std::shared_ptr<EObject>& owner)
+	const EObject* owner)
 {
 	component->m_owner = owner;
 	component->m_position = owner->position();
@@ -174,7 +173,7 @@ void AudioEngine::registerComponent(
 	for (const auto& compOther : components) {
 		// outputs
 		if (component->bAcceptsOutput && compOther->bAcceptsInput) {
-			auto output = std::make_shared<ADelayLine>(component, compOther);
+			auto output = std::make_shared<ADelayLine>(component.get(), compOther.get());
 			output->init(sampleRate);
 			component->outputs.push_back(output);
 			compOther->inputs.push_back(output);
@@ -185,7 +184,7 @@ void AudioEngine::registerComponent(
 
 		// inputs
 		if (component->bAcceptsInput && compOther->bAcceptsOutput) {
-			auto input = std::make_shared<ADelayLine>(compOther, component);
+			auto input = std::make_shared<ADelayLine>(compOther.get(), component.get());
 			input->init(sampleRate);
 			compOther->outputs.push_back(input);
 			component->inputs.push_back(input);
@@ -223,11 +222,11 @@ void AudioEngine::unregisterComponent(const std::shared_ptr<AudioComponent>& com
 
 	// Remove delay lines
 	for (const auto& input : component->inputs) {
-		input->source.lock()->outputs.remove(input);
+		input->source->outputs.remove(input);
 	}
 
 	for (const auto& output : component->outputs) {
-		output->dest.lock()->inputs.remove(output);
+		output->dest->inputs.remove(output);
 		if (const auto& gComp = std::dynamic_pointer_cast<GeneratingAudioComponent>(component)) {
 			gComp->removeConsumer(output->genID);
 		}

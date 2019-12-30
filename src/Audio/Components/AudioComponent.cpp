@@ -1,10 +1,10 @@
 #include "AudioComponent.h"
-#include "../../Engine/EObject.h"
 #include "../DSP/ADelayLine.h"
 
 AudioComponent::AudioComponent() :
 	bAcceptsInput(false),
 	bAcceptsOutput(false),
+	m_owner(nullptr),
 	bDirtyTransform(false),
 	sampleRate(0.f)
 {
@@ -36,12 +36,10 @@ void AudioComponent::transformUpdated()
 {
 	bDirtyTransform = true;
 	for (const auto& output : outputs) {
-		auto ptr = output->dest.lock();
-		ptr->otherTransformUpdated(*output, true);
+		output->dest->otherTransformUpdated(*output, true);
 	}
 	for (const auto& input : inputs) {
-		auto ptr = input->dest.lock();
-		ptr->otherTransformUpdated(*input, false);
+		input->dest->otherTransformUpdated(*input, false);
 	}
 }
 
@@ -49,15 +47,13 @@ void AudioComponent::updateVelocity(const mat::vec3& velocity)
 {
 	m_velocity = velocity;
 	for (const auto& output : outputs) {
-		auto ptr = output->dest.lock();
-		mat::vec3 relPos = mat::normal(ptr->m_position - m_position);
-		mat::vec3 relVel = m_velocity - ptr->m_velocity;
+		mat::vec3 relPos = mat::normal(output->dest->m_position - m_position);
+		mat::vec3 relVel = m_velocity - output->dest->m_velocity;
 		output->velocity = mat::dot(relPos, relVel);
 	}
 	for (const auto& input : inputs) {
-		auto ptr = input->dest.lock();
-		mat::vec3 relPos = mat::normal(m_position - ptr->m_position);
-		mat::vec3 relVel = ptr->m_velocity - m_velocity;
+		mat::vec3 relPos = mat::normal(m_position - input->dest->m_position);
+		mat::vec3 relVel = input->dest->m_velocity - m_velocity;
 		input->velocity = mat::dot(relPos, relVel);
 	}
 }

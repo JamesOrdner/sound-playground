@@ -17,7 +17,7 @@ void EWorld::addObject(const std::shared_ptr<EObject>& object)
 	Engine& engine = Engine::instance();
 	if (const auto& audioComponent = object->audioComponentShared()) {
 		// Existing audio component will not be registered before adding to the world
-		engine.audio().registerComponent(audioComponent, object);
+		engine.audio().registerComponent(audioComponent, object.get());
 	}
 
 	if (const auto& model = std::dynamic_pointer_cast<EModel>(object)) {
@@ -41,10 +41,10 @@ void EWorld::removeObject(const std::shared_ptr<EObject>& object)
 	}
 }
 
-std::shared_ptr<EModel> EWorld::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc)
+EModel* EWorld::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc)
 {
 	float shortest = FLT_MAX;
-	std::shared_ptr<EModel> hitObject;
+	EModel* hitObject = nullptr;
 	for (const auto& object : objects) {
 		const auto& model = std::dynamic_pointer_cast<EModel>(object);
 		if (!model) continue;
@@ -54,7 +54,7 @@ std::shared_ptr<EModel> EWorld::raycast(const mat::vec3& origin, const mat::vec3
 			if (!hitObject || l < shortest) {
 				shortest = l;
 				hitLoc = hit;
-				hitObject = model;
+				hitObject = model.get();
 			}
 		}
 	}

@@ -23,13 +23,13 @@ public:
 	virtual void setPosition(const mat::vec3& position);
 
 	// Returns the world space position of the object
-	const mat::vec3& position();
+	const mat::vec3& position() const;
 
 	// Sets the world space rotation of the object
 	virtual void setRotation(const mat::vec3& rotation);
 
 	// Returns the world space rotation of the object
-	const mat::vec3& rotation();
+	const mat::vec3& rotation() const;
 
 	// Sets the uniform scale of the object
 	virtual void setScale(float scale);
@@ -38,10 +38,10 @@ public:
 	virtual void setScale(const mat::vec3& scale);
 
 	// Returns the object's scale
-	const mat::vec3& scale();
+	const mat::vec3& scale() const;
 
 	// Returns a normalized vector in the direction the object is facing
-	mat::vec3 forward();
+	mat::vec3 forward() const;
 
 	// Returns the object's audio component, if present
 	AudioComponent* audioComponent();
@@ -50,9 +50,7 @@ public:
 	std::shared_ptr<AudioComponent> audioComponentShared();
 
 	// Registers an audio component with this object, replacing any existing component
-	void addAudioComponent(
-		const std::shared_ptr<AudioComponent>& component,
-		const std::shared_ptr<EObject>& owner);
+	void addAudioComponent(const std::shared_ptr<AudioComponent>& component);
 
 	// Removes the audio component from this object
 	void removeAudioComponent();

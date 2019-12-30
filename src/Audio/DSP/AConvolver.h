@@ -12,7 +12,6 @@ public:
 
 	AConvolver();
 	AConvolver(std::string impulseResponseFilepath);
-	~AConvolver() {};
 
 	// Set the impulse response of the convolver. Sample rate is assumed to be that of the session.
 	void setIR(const std::vector<float>& newIR);

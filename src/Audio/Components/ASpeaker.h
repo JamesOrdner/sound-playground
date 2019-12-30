@@ -2,11 +2,13 @@
 
 #include "GeneratingAudioComponent.h"
 #include "AuralizingAudioComponent.h"
-#include "../DSP/AConvolver.h"
+
 #include <memory>
 
-class ASpeaker :
-	public AuralizingAudioComponent, public GeneratingAudioComponent
+// Forward declarations
+class AConvolver;
+
+class ASpeaker : public AuralizingAudioComponent, public GeneratingAudioComponent
 {
 public:
 
@@ -24,12 +26,6 @@ private:
 
 	// Buffer required for process()
 	std::vector<float> workingBuffer;
-
-	// Previous sample, saved for simple directional lpf
-	float prev;
-
-	// Calculate the simple gain for a given destination
-	float calcGain(const mat::vec3& dest);
 
 	// GeneratingAudioComponent interface
 	size_t generateImpl(float* buffer, size_t count) override;

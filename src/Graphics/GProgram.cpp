@@ -3,9 +3,14 @@
 #include <stdio.h>
 #include <fstream>
 
-GProgram::GProgram(std::string name) :
+GProgram::GProgram() :
+	program(0),
 	fbo(0),
 	bUseFramebuffer(false)
+{
+}
+
+GProgram::GProgram(std::string name) : GProgram()
 {
 	char err[512];
 	GLsizei errLen;

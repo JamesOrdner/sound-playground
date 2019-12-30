@@ -43,7 +43,7 @@ void Engine::run()
 			case SDL_MOUSEMOTION:
 				SDL_GetMouseState(&x, &y);
 				mat::vec3 hitLoc;
-				if (auto hitObject = raycastScreen(x, y, hitLoc)) {
+				if (EModel* hitObject = raycastScreen(x, y, hitLoc)) {
 					activeModel->setPosition(hitLoc);
 				}
 			}
@@ -59,12 +59,12 @@ void Engine::run()
 	}
 }
 
-std::shared_ptr<EModel> Engine::raycastScreen(int x, int y) {
+EModel* Engine::raycastScreen(int x, int y) {
 	mat::vec3 hitLoc;
 	return raycastScreen(x, y, hitLoc);
 }
 
-std::shared_ptr<EModel> Engine::raycastScreen(int x, int y, mat::vec3& hitLoc)
+EModel* Engine::raycastScreen(int x, int y, mat::vec3& hitLoc)
 {
 	using namespace mat;
 
@@ -90,14 +90,14 @@ void Engine::registerModel(const std::shared_ptr<EModel>& model)
 	// Assign mesh to model and save model reference
 	auto mesh = makeMesh(model->getFilepath());
 	model->registerWithMesh(mesh); // transfer mesh ownership to model
-	mesh->registerModel(model); // add weak pointer to model in mesh model list
+	mesh->registerModel(model.get()); // add weak pointer to model in mesh model list
 
 	activeModel = model;
 }
 
 void Engine::unregisterModel(const std::shared_ptr<EModel>& model)
 {
-	model->getMesh()->unregisterModel(model);
+	model->getMesh()->unregisterModel(model.get());
 	model->unregister();
 
 	// Remove mesh from map if no more models reference this mesh

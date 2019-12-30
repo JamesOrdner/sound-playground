@@ -27,7 +27,7 @@ void AMicrophone::transformUpdated()
 {
 	OutputAudioComponent::transformUpdated();
 	float gL, gR;
-	calcStereoGain(*inputs.front()->source.lock(), gL, gR);
+	calcStereoGain(inputs.front()->source, gL, gR);
 	gainL.target = gL;
 }
 
@@ -35,7 +35,7 @@ void AMicrophone::otherTransformUpdated(const ADelayLine& connection, bool bInpu
 {
 	OutputAudioComponent::otherTransformUpdated(connection, bInput);
 	float gL, gR;
-	calcStereoGain(*connection.source.lock(), gL, gR);
+	calcStereoGain(connection.source, gL, gR);
 	gainL.target = gL;
 }
 
@@ -65,9 +65,9 @@ size_t AMicrophone::process(size_t n)
 	return n;
 }
 
-void AMicrophone::calcStereoGain(const AudioComponent& source, float& gainL, float& gainR)
+void AMicrophone::calcStereoGain(const AudioComponent* source, float& gainL, float& gainR)
 {
-	mat::vec3 dir = source.position() - position();
+	mat::vec3 dir = source->position() - position();
 	float angle = atanf(dir.x / fabsf(dir.z)) * 0.5f + 0.25f * mat::pi;
 	gainL = cosf(angle);
 	gainR = sinf(angle);

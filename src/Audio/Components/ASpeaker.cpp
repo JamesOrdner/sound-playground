@@ -1,9 +1,8 @@
 #include "ASpeaker.h"
-#include "../../Engine/EObject.h"
 #include "../DSP/ADelayLine.h"
+#include "../DSP/AConvolver.h"
 
-ASpeaker::ASpeaker() :
-	prev(0.f)
+ASpeaker::ASpeaker()
 {
 	bAcceptsInput = false;
 	bAcceptsOutput = true;
@@ -39,13 +38,6 @@ size_t ASpeaker::process(size_t n)
 	}
 	
 	return n;
-}
-
-float ASpeaker::calcGain(const mat::vec3& dest)
-{
-	using namespace mat;
-	vec3 dir = normal(dest - position());
-	return dot(dir, forward()) * 0.5f + 0.5f;
 }
 
 size_t t = 0;
