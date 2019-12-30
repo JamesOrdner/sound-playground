@@ -173,6 +173,7 @@
   <ItemGroup>
     <ClCompile Include="src\Audio\Auralization\Auralizer.cpp" />
     <ClCompile Include="src\Audio\Components\AuralizingAudioComponent.cpp" />
+    <ClCompile Include="src\Audio\Components\GeneratingAudioComponent.cpp" />
     <ClCompile Include="src\Audio\DSP\AConvolver.cpp" />
     <ClCompile Include="src\Audio\DSP\ADelayLine.cpp" />
     <ClCompile Include="src\Audio\AWAVFile.cpp" />
@@ -196,6 +197,7 @@
   <ItemGroup>
     <ClInclude Include="src\Audio\Auralization\Auralizer.h" />
     <ClInclude Include="src\Audio\Components\AuralizingAudioComponent.h" />
+    <ClInclude Include="src\Audio\Components\GeneratingAudioComponent.h" />
     <ClInclude Include="src\Audio\DSP\AConvolver.h" />
     <ClInclude Include="src\Audio\DSP\ADelayLine.h" />
     <ClInclude Include="src\Audio\AWAVFile.h" />

@@ -1,6 +1,7 @@
 #include "AudioEngine.h"
 #include "DSP/ADelayLine.h"
 #include "Components/AudioComponent.h"
+#include "Components/GeneratingAudioComponent.h"
 #include "Components/OutputAudioComponent.h"
 #include "../Engine/EObject.h"
 #include <portaudio.h>
@@ -177,6 +178,9 @@ void AudioEngine::registerComponent(
 			output->init(sampleRate);
 			component->outputs.push_back(output);
 			compOther->inputs.push_back(output);
+			if (const auto& gComp = std::dynamic_pointer_cast<GeneratingAudioComponent>(component)) {
+				output->genID = gComp->addConsumer();
+			}
 		}
 
 		// inputs
@@ -224,5 +228,8 @@ void AudioEngine::unregisterComponent(const std::shared_ptr<AudioComponent>& com
 
 	for (const auto& output : component->outputs) {
 		output->dest.lock()->inputs.remove(output);
+		if (const auto& gComp = std::dynamic_pointer_cast<GeneratingAudioComponent>(component)) {
+			gComp->removeConsumer(output->genID);
+		}
 	}
 }

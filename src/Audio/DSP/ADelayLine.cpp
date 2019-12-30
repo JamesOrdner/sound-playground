@@ -93,6 +93,7 @@ ADelayLine::ADelayLine(const std::weak_ptr<AudioComponent>& source, const std::w
 	velocity(0.f),
 	source(source),
 	dest(dest),
+	genID(0),
 	b{},
 	sampleInterpOffset(0.f)
 {

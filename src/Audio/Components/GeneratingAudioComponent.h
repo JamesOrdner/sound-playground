@@ -4,31 +4,39 @@
 #include <vector>
 #include <map>
 
-class GeneratingAudioComponent : public AudioComponent
+class GeneratingAudioComponent
 {
 public:
 
 	GeneratingAudioComponent();
-
+	
 	// Requests that the component generate `count` samples.
 	// Returns number of successfully generated samples.
 	size_t generate(size_t count);
 
-protected:
+	// Generate and return a unique consumer ID
+	unsigned int addConsumer();
 
-	void addConsumer(void* consumer);
-	void removeConsumer(void* consumer);
+	// Remove a consumer from this generator
+	void removeConsumer(unsigned int consumer);
 
-	size_t readGenerated(void* consumer, float* buffer, size_t n);
-	size_t peekGenerated(void* consumer, float* buffer, size_t n);
-	size_t seekGenerated(void* consumer, size_t n);
-	size_t readable(void* consumer);
+	// Read `n` samples into a consumer's buffer and move the read pointer
+	size_t readGenerated(unsigned int consumer, float* buffer, size_t n);
+
+	// Read `n` samples into a consumer's buffer without moving the read pointer
+	size_t peekGenerated(unsigned int consumer, float* buffer, size_t n);
+
+	// Move the consumer's read pointer by `n` samples
+	size_t seekGenerated(unsigned int consumer, size_t n);
+
+	// The number of samples available for this consumer to read
+	size_t readable(unsigned int consumer);
 
 private:
 
-	// This function will fill the provided buffer with `count` generated
-	// samples, and return the number of successfully generated samples.
-	virtual size_t generate(float* buffer, size_t count) = 0;
+	// This function should fill the provided buffer with `count` generated
+	// samples, returning the number of successfully generated samples.
+	virtual size_t generateImpl(float* buffer, size_t count) = 0;
 
 	// Stores generated samples for reading
 	std::vector<float> genBuffer;
@@ -46,7 +54,10 @@ private:
 	};
 
 	// Maps consumers to their buffer read index
-	std::map<void*, ConsumerData> consumers;
+	std::map<unsigned int, ConsumerData> consumers;
+
+	// Simple consumer ID generator, increment each time a consumer is added
+	unsigned int nextConsumerID;
 
 	// Iterate through all consumers and set the size of the buffer to the largest
 	// number of pending unread samples

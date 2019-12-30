@@ -1,10 +1,12 @@
 #pragma once
 
+#include "GeneratingAudioComponent.h"
 #include "AuralizingAudioComponent.h"
 #include "../DSP/AConvolver.h"
 #include <memory>
 
-class ASpeaker : public AuralizingAudioComponent
+class ASpeaker :
+	public AuralizingAudioComponent, public GeneratingAudioComponent
 {
 public:
 
@@ -20,9 +22,15 @@ private:
 	// Convolves the speaker signal with the speaker IR
 	std::unique_ptr<AConvolver> convolver;
 
+	// Buffer required for process()
+	std::vector<float> workingBuffer;
+
 	// Previous sample, saved for simple directional lpf
 	float prev;
 
 	// Calculate the simple gain for a given destination
 	float calcGain(const mat::vec3& dest);
+
+	// GeneratingAudioComponent interface
+	size_t generateImpl(float* buffer, size_t count) override;
 };

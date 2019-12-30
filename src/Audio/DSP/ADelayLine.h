@@ -104,6 +104,9 @@ public:
 	// Destination audio component
 	std::weak_ptr<AudioComponent> dest;
 
+	// This is a unique ID which associates this delay line with a GeneratingAudioComponent
+	unsigned int genID;
+
 private:
 
 	ReadWriteBuffer buffer;

@@ -6,7 +6,8 @@ constexpr size_t capacity = 512;
 GeneratingAudioComponent::GeneratingAudioComponent() :
 	genBuffer(capacity),
 	writePtr(0),
-	size(0)
+	size(0),
+	nextConsumerID(0)
 {
 }
 
@@ -19,17 +20,17 @@ size_t GeneratingAudioComponent::generate(size_t count)
 	size_t genCount;
 	if (writePtr + count > capacity) {
 		size_t nEnd = capacity - writePtr;
-		genCount = generate(genBuffer.data() + writePtr, nEnd);
+		genCount = generateImpl(genBuffer.data() + writePtr, nEnd);
 		if (genCount < nEnd) {
 			writePtr += genCount;
 		}
 		else {
-			writePtr = generate(genBuffer.data(), count - nEnd);
+			writePtr = generateImpl(genBuffer.data(), count - nEnd);
 			genCount += writePtr;
 		}
 	}
 	else {
-		genCount = generate(genBuffer.data() + writePtr, count);
+		genCount = generateImpl(genBuffer.data() + writePtr, count);
 		writePtr += genCount;
 		if (writePtr == capacity) writePtr = 0;
 	}
@@ -39,29 +40,32 @@ size_t GeneratingAudioComponent::generate(size_t count)
 		for (auto& c : consumers) c.second.readable = true;
 	}
 
+	size += genCount;
 	return genCount;
 }
 
-void GeneratingAudioComponent::addConsumer(void* consumer)
+unsigned int GeneratingAudioComponent::addConsumer()
 {
 	ConsumerData cData;
 	cData.readPtr = writePtr;
 	cData.readable = false;
-	consumers[consumer] = cData;
+	consumers[nextConsumerID] = cData;
+	return nextConsumerID++;
 }
 
-void GeneratingAudioComponent::removeConsumer(void* consumer)
+void GeneratingAudioComponent::removeConsumer(unsigned int consumer)
 {
 	consumers.erase(consumer);
+	updateSize();
 }
 
-size_t GeneratingAudioComponent::readGenerated(void* consumer, float* buffer, size_t n)
+size_t GeneratingAudioComponent::readGenerated(unsigned int consumer, float* buffer, size_t n)
 {
 	size_t readCount = peekGenerated(consumer, buffer, n);
 	return seekGenerated(consumer, readCount);
 }
 
-size_t GeneratingAudioComponent::peekGenerated(void* consumer, float* buffer, size_t n)
+size_t GeneratingAudioComponent::peekGenerated(unsigned int consumer, float* buffer, size_t n)
 {
 	size_t readCount = readable(consumer);
 	if (readCount == 0) return 0;
@@ -81,7 +85,7 @@ size_t GeneratingAudioComponent::peekGenerated(void* consumer, float* buffer, si
 	return n;
 }
 
-size_t GeneratingAudioComponent::seekGenerated(void* consumer, size_t n)
+size_t GeneratingAudioComponent::seekGenerated(unsigned int consumer, size_t n)
 {
 	size_t readCount = readable(consumer);
 	if (readCount == 0) return 0;
@@ -90,7 +94,7 @@ size_t GeneratingAudioComponent::seekGenerated(void* consumer, size_t n)
 	ConsumerData& cData = consumers.at(consumer);
 	cData.readPtr += n;
 	if (cData.readPtr >= capacity) cData.readPtr -= capacity;
-	if (cData.readPtr = writePtr) cData.readable = false;
+	if (cData.readPtr == writePtr) cData.readable = false;
 	
 	// If this consumer had the largest pending sample count, we
 	// may be able to update (i.e. decrease) the overall buffer size
@@ -99,7 +103,7 @@ size_t GeneratingAudioComponent::seekGenerated(void* consumer, size_t n)
 	return n;
 }
 
-size_t GeneratingAudioComponent::readable(void* consumer)
+size_t GeneratingAudioComponent::readable(unsigned int consumer)
 {
 	ConsumerData& cData = consumers.at(consumer);
 	if (!cData.readable) return 0;
@@ -114,7 +118,7 @@ size_t GeneratingAudioComponent::readable(void* consumer)
 void GeneratingAudioComponent::updateSize()
 {
 	size = 0;
-	for (auto& c : consumers) {
+	for (const auto& c : consumers) {
 		size_t cSize = readable(c.first);
 		if (cSize > size) size = cSize;
 	}
