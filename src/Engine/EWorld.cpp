@@ -2,6 +2,7 @@
 #include "EObject.h"
 #include "EModel.h"
 #include "Engine.h"
+#include "../Audio/AudioEngine.h"
 
 EWorld::EWorld() :
 	physicsUpdateMinInterval(0.05f),
@@ -39,6 +40,11 @@ void EWorld::removeObject(const std::shared_ptr<EObject>& object)
 	if (const auto& model = std::dynamic_pointer_cast<EModel>(object)) {
 		Engine::instance().unregisterModel(model);
 	}
+}
+
+const std::list<std::shared_ptr<EObject>>& EWorld::allObjects() const
+{
+	return objects;
 }
 
 EModel* EWorld::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc)

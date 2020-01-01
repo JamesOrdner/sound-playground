@@ -187,6 +187,8 @@
     <ClCompile Include="src\Audio\Components\OutputAudioComponent.cpp" />
     <ClCompile Include="src\Audio\Components\AMicrophone.cpp" />
     <ClCompile Include="src\Audio\Components\ASpeaker.cpp" />
+    <ClCompile Include="src\Engine\EInput.cpp" />
+    <ClCompile Include="src\Engine\EInputComponent.cpp" />
     <ClCompile Include="src\Engine\EModel.cpp" />
     <ClCompile Include="src\Engine\EObject.cpp" />
     <ClCompile Include="src\Engine\EWorld.cpp" />
@@ -198,6 +200,7 @@
     <ClCompile Include="src\Graphics\matrix.cpp" />
     <ClCompile Include="src\Graphics\Render.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\UI\UIComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Audio\Auralization\Auralizer.h" />
@@ -212,6 +215,8 @@
     <ClInclude Include="src\Audio\Components\OutputAudioComponent.h" />
     <ClInclude Include="src\Audio\Components\AMicrophone.h" />
     <ClInclude Include="src\Audio\Components\ASpeaker.h" />
+    <ClInclude Include="src\Engine\EInput.h" />
+    <ClInclude Include="src\Engine\EInputComponent.h" />
     <ClInclude Include="src\Engine\EModel.h" />
     <ClInclude Include="src\Engine\EObject.h" />
     <ClInclude Include="src\Engine\EWorld.h" />
@@ -221,6 +226,8 @@
     <ClInclude Include="src\Graphics\GProgram.h" />
     <ClInclude Include="src\Graphics\Matrix.h" />
     <ClInclude Include="src\Graphics\Render.h" />
+    <ClInclude Include="src\UI\UIComponent.h" />
+    <ClInclude Include="src\UI\UITypes.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\main.frag" />

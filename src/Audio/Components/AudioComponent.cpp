@@ -46,7 +46,7 @@ const mat::vec3& AudioComponent::velocity() const
 	return owner->velocity();
 }
 
-const mat::vec3& AudioComponent::forward() const
+mat::vec3 AudioComponent::forward() const
 {
 	return owner->forward();
 }

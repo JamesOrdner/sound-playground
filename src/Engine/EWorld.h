@@ -20,6 +20,9 @@ public:
 	// Remove an object from the world
 	void removeObject(const std::shared_ptr<EObject>& object);
 
+	// Return a reference to the "global" list of objects
+	const std::list<std::shared_ptr<EObject>>& allObjects() const;
+
 	// Perform a raycast. Returns hit model on success.
 	EModel* raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc);
 

@@ -1,13 +1,81 @@
 #include "Engine.h"
+#include "../Audio/AudioEngine.h"
+#include "../Graphics/Render.h"
 #include "../Graphics/Matrix.h"
 #include "../Graphics/GMesh.h"
 #include "EModel.h"
+#include "EInput.h"
 #include <SDL.h>
 
 Engine& Engine::instance()
 {
 	static Engine instance;
 	return instance;
+}
+
+Engine::Engine() :
+	lastFrameTime(0.f),
+	m_world(new EWorld),
+	input(new EInput),
+	renderer(new Render),
+	audioEngine(new AudioEngine)
+
+{
+	if (init()) {
+		audioEngine->start();
+		bInitialized = true;
+	}
+	else {
+		bInitialized = false;
+	}
+}
+
+Engine::~Engine()
+{
+	deinit();
+}
+
+bool Engine::init()
+{
+	// Initialize SDL
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+		printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
+		return false;
+	}
+
+	// Attributes must be set before the window is created
+	renderer->setAttributes();
+
+	// Create window
+	window = SDL_CreateWindow("Sound Playground", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+		1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+
+	if (!window) {
+		printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
+		return false;
+	}
+
+	if (!renderer->init(window)) {
+		printf("Warning: Renderer failed to initialize!\n");
+		return false;
+	}
+
+	if (!audioEngine->init()) {
+		printf("Warning: AudioEngine failed to initialize!\n");
+		return false;
+	}
+
+	return true;
+}
+
+void Engine::deinit()
+{
+	bInitialized = false;
+	audioEngine->deinit();
+	renderer->deinit();
+	SDL_DestroyWindow(window);
+	window = nullptr;
+	SDL_Quit();
 }
 
 EWorld& Engine::world()
@@ -17,7 +85,7 @@ EWorld& Engine::world()
 
 AudioEngine& Engine::audio()
 {
-	return audioEngine;
+	return *audioEngine;
 }
 
 void Engine::run()
@@ -47,42 +115,17 @@ void Engine::run()
 					activeModel->setPosition(hitLoc);
 				}
 			}
+
+			if (event.type != SDL_QUIT) input->handleInput(event);
 		}
 
 		m_world->tick(lastFrameTime);
-
-		renderer.draw(window, meshes);
+		renderer->draw(window, meshes);
 		
 		Uint32 newSdlTime = SDL_GetTicks();
 		lastFrameTime = static_cast<float>(newSdlTime - sdlTime) * 0.001f;
 		sdlTime = newSdlTime;
 	}
-}
-
-EModel* Engine::raycastScreen(int x, int y) {
-	mat::vec3 hitLoc;
-	return raycastScreen(x, y, hitLoc);
-}
-
-EModel* Engine::raycastScreen(int x, int y, mat::vec3& hitLoc)
-{
-	using namespace mat;
-
-	int width, height;
-	SDL_GL_GetDrawableSize(window, &width, &height);
-
-	vec4 screen_orig{
-		static_cast<float>(x - width / 2) / (width / 2),
-		static_cast<float>(height / 2 - y) / (height / 2),
-		-1.f, 
-		1.f 
-	};
-	vec3 world_orig(renderer.screenToWorldMatrix() * screen_orig);
-
-	vec4 screen_dir{ 0.f, 0.f, 1.f, 0.f };
-	vec3 world_dir(renderer.screenToWorldMatrix() * screen_dir);
-
-	return m_world->raycast(world_orig, world_dir, hitLoc);
 }
 
 void Engine::registerModel(const std::shared_ptr<EModel>& model)
@@ -118,63 +161,28 @@ std::shared_ptr<GMesh> Engine::makeMesh(const std::string& filepath)
 	}
 }
 
-Engine::Engine() :
-	lastFrameTime(0.f)
-{
-	if (init()) {
-		m_world = std::make_unique<EWorld>();
-		audioEngine.start();
-		bInitialized = true;
-	}
-	else {
-		bInitialized = false;
-	}
+EModel* Engine::raycastScreen(int x, int y) {
+	mat::vec3 hitLoc;
+	return raycastScreen(x, y, hitLoc);
 }
 
-Engine::~Engine()
+EModel* Engine::raycastScreen(int x, int y, mat::vec3& hitLoc)
 {
-	deinit();
-}
+	using namespace mat;
 
-bool Engine::init()
-{
-	// Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
-		printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
-		return false;
-	}
+	int width, height;
+	SDL_GL_GetDrawableSize(window, &width, &height);
 
-	// Attributes must be set before the window is created
-	renderer.setAttributes();
+	vec4 screen_orig{
+		static_cast<float>(x - width / 2) / (width / 2),
+		static_cast<float>(height / 2 - y) / (height / 2),
+		-1.f,
+		1.f
+	};
+	vec3 world_orig(renderer->screenToWorldMatrix()* screen_orig);
 
-	// Create window
-	window = SDL_CreateWindow("Sound Playground", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+	vec4 screen_dir{ 0.f, 0.f, 1.f, 0.f };
+	vec3 world_dir(renderer->screenToWorldMatrix()* screen_dir);
 
-	if (!window) {
-		printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
-		return false;
-	}
-
-	if (!renderer.init(window)) {
-		printf("Warning: Renderer failed to initialize!\n");
-		return false;
-	}
-
-	if (!audioEngine.init()) {
-		printf("Warning: AudioEngine failed to initialize!\n");
-		return false;
-	}
-	
-	return true;
-}
-
-void Engine::deinit()
-{
-	bInitialized = false;
-	audioEngine.deinit();
-	renderer.deinit();
-	SDL_DestroyWindow(window);
-	window = nullptr;
-	SDL_Quit();
+	return m_world->raycast(world_orig, world_dir, hitLoc);
 }

@@ -49,7 +49,7 @@ public:
 	const mat::vec3& velocity() const;
 
 	// Returns the world space forward vector of the owning object
-	const mat::vec3& forward() const;
+	mat::vec3 forward() const;
 
 	// Called when the velocity of the owning object changed. Does not run in the audio thread.
 	void updateVelocity(const mat::vec3& velocity);

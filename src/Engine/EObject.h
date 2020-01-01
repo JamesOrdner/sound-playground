@@ -5,6 +5,8 @@
 #include <memory>
 
 // Forward declarations
+class EInputComponent;
+class UIComponent;
 class AudioComponent;
 
 class EObject
@@ -15,7 +17,7 @@ public:
 
 	virtual ~EObject();
 
-	// Name used to identify this mesh
+	// Name used to identify this object
 	std::string name;
 
 	// This is only true when the object is registered with a world
@@ -36,6 +38,12 @@ public:
 
 	// Returns the object's audio component, if present
 	AudioComponent* audioComponent();
+
+	// Returns the object's input component, if present
+	EInputComponent* inputComponent();
+
+	// Returns the object's UI component, if present
+	UIComponent* uiComponent();
 
 	// Registers an audio component with this object, replacing any existing component
 	void addAudioComponent(std::unique_ptr<AudioComponent> component);
@@ -59,6 +67,12 @@ protected:
 
 	// World space scale
 	mat::vec3 m_scale;
+
+	// Object's input component (optional)
+	std::unique_ptr<EInputComponent> m_inputComponent;
+
+	// Object's UI component (optional)
+	std::unique_ptr<UIComponent> m_uiComponent;
 
 private:
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../Audio/AudioEngine.h"
-#include "../Graphics/Render.h"
 #include "EWorld.h"
 #include <string>
 #include <map>
@@ -10,12 +8,16 @@
 
 // Forward declarations
 struct SDL_Window;
+class AudioEngine;
 class EModel;
 class GMesh;
+class EInput;
+class Render;
 
 class Engine
 {
 public:
+
 	static Engine& instance();
 
 	// Deleted functions prevent singleton duplication
@@ -31,13 +33,8 @@ public:
 	// Main runloop
 	void run();
 
-	// Return the object at screen coordinates
-	EModel* raycastScreen(int x, int y);
-	
-	// Return the object at screen coordinates, as well as the hit location
-	EModel* raycastScreen(int x, int y, mat::vec3& hitLoc);
-
 private:
+
 	Engine();
 	~Engine();
 
@@ -61,6 +58,9 @@ private:
 	// Returns a pointer to an existing mesh at the filepath, or creates a new one
 	std::shared_ptr<GMesh> makeMesh(const std::string& filepath);
 
+	// EInput handles all user input
+	std::unique_ptr<EInput> input;
+
 	// The world, containing all objects
 	std::unique_ptr<EWorld> m_world;
 
@@ -73,12 +73,18 @@ private:
 
 	/** Graphics */
 
-	Render renderer;
+	std::unique_ptr<Render> renderer;
 
 	/** Audio */
 
-	AudioEngine audioEngine;
+	std::unique_ptr<AudioEngine> audioEngine;
 
 	////// TEMPORARY DEBUG
 	std::shared_ptr<EModel> activeModel;
+
+	// Return the object at screen coordinates
+	EModel* raycastScreen(int x, int y);
+
+	// Return the object at screen coordinates, as well as the hit location
+	EModel* raycastScreen(int x, int y, mat::vec3& hitLoc);
 };

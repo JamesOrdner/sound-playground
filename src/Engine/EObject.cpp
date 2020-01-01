@@ -1,6 +1,9 @@
 #include "EObject.h"
 #include "Engine.h"
+#include "../Audio/AudioEngine.h"
 #include "../Audio/Components/AudioComponent.h"
+#include "EInputComponent.h"
+#include "../UI/UIComponent.h"
 
 EObject::EObject() :
 	bExistsInWorld(false),
@@ -68,6 +71,16 @@ mat::vec3 EObject::forward() const
 AudioComponent* EObject::audioComponent()
 {
 	return m_audioComponent.get();
+}
+
+EInputComponent* EObject::inputComponent()
+{
+	return m_inputComponent.get();
+}
+
+UIComponent* EObject::uiComponent()
+{
+	return m_uiComponent.get();
 }
 
 void EObject::addAudioComponent(std::unique_ptr<AudioComponent> component)
