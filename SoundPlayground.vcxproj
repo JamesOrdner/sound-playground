@@ -175,10 +175,10 @@
     <ClCompile Include="src\Audio\Components\AuralizingAudioComponent.cpp" />
     <ClCompile Include="src\Audio\Components\GeneratingAudioComponent.cpp" />
     <ClCompile Include="src\Audio\DSP\AConvolver.cpp">
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MaxSpeed</Optimization>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</BasicRuntimeChecks>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MaxSpeed</Optimization>
     </ClCompile>
     <ClCompile Include="src\Audio\DSP\ADelayLine.cpp" />
     <ClCompile Include="src\Audio\AWAVFile.cpp" />

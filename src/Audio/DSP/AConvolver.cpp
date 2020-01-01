@@ -22,23 +22,28 @@ AConvolver::AConvolver() :
 
 AConvolver::AConvolver(std::string impulseResponseFilepath) : AConvolver()
 {
-	AWAVFile wav(impulseResponseFilepath);
-	if (wav.data.empty() || wav.channels != 1) {
-		fprintf(stderr, "Incompatible wav file.\n");
-	}
-	else {
-		setIR(wav.data);
-	}
+	setIR(impulseResponseFilepath);
 }
 
 void AConvolver::setIR(const std::vector<float>& newIR)
 {
 	impulseResponse = newIR;
 	size_t blocks = impulseResponse.size() / blockSize;
-	if (blocks % blockSize > 0) blocks++;
+	if (impulseResponse.size() % blockSize) blocks++;
 	impulseResponse.resize(blocks * blockSize); // zero pad last block
 
 	if (bInitialized) loadIR();
+}
+
+void AConvolver::setIR(std::string filepath)
+{
+	AWAVFile wav(filepath);
+	if (wav.data.empty() || wav.channels != 1) {
+		fprintf(stderr, "Incompatible wav file.\n");
+	}
+	else {
+		setIR(wav.data);
+	}
 }
 
 void AConvolver::init(float sampleRate)

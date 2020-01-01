@@ -64,10 +64,11 @@ IndirectSend* AuralizingAudioComponent::registerIndirectReceiver(OutputAudioComp
 
 	for (size_t i = 0; i < 2; i++) { // TEMP
 		std::vector<float> v(i * 100);
-		v.push_back(0.4f);
+		v.push_back(0.3f);
 		send->indirectIRs.push_back(v);
-		send->convolvers.emplace_back();
-		send->convolvers.back().setIR(v);
+		AConvolver& convolver = send->convolvers.emplace_back();
+		convolver.setIR(v);
+		if (bInitialized) convolver.init(sampleRate);
 	}
 
 	IndirectSend* sendPtr = send.get();

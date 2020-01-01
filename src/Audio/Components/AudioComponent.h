@@ -23,7 +23,7 @@ public:
 	virtual void init(float sampleRate, size_t channels, size_t bufferSize);
 
 	// Clean up internals and delete any memory allocated in init()
-	virtual void deinit() {};
+	virtual void deinit();
 
 	// Called when the owning EObject transform changes. Does not run in the audio thread.
 	virtual void transformUpdated();
@@ -64,6 +64,9 @@ protected:
 
 	// Sample rate of the current session
 	float sampleRate;
+
+	// True after init() has been called, false after deinit()
+	bool bInitialized;
 
 	// Inputs from other AudioComponents
 	std::list<std::shared_ptr<ADelayLine>> inputs;

@@ -16,6 +16,9 @@ public:
 	// Set the impulse response of the convolver. Sample rate is assumed to be that of the session.
 	void setIR(const std::vector<float>& newIR);
 
+	// Set the impulse response of the convolver from a filepath
+	void setIR(std::string filepath);
+
 	// ADSPBase interface
 	void init(float sampleRate) override;
 	void deinit() override;

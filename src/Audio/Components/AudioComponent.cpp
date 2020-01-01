@@ -6,6 +6,7 @@ AudioComponent::AudioComponent() :
 	bAcceptsInput(false),
 	bAcceptsOutput(false),
 	sampleRate(0.f),
+	bInitialized(false),
 	owner(nullptr)
 {
 }
@@ -17,6 +18,12 @@ void AudioComponent::init(float sampleRate, size_t channels, size_t bufferSize)
 	for (const auto& input : inputs) input->init(sampleRate);
 	for (const auto& output : outputs) output->init(sampleRate);
 	this->sampleRate = sampleRate;
+	bInitialized = true;
+}
+
+void AudioComponent::deinit()
+{
+	bInitialized = false;
 }
 
 void AudioComponent::transformUpdated()
