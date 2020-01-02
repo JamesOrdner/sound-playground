@@ -89,6 +89,18 @@ void Render::deinit()
 	glContext = nullptr;
 }
 
+void Render::setCamera(SDL_Window* window, const mat::vec3& position, const mat::vec3& focus)
+{
+	int width, height;
+	SDL_GL_GetDrawableSize(window, &width, &height);
+	float aspectRatio = static_cast<float>(height) / static_cast<float>(width);
+	mat::mat4 view = lookAt(position, focus);
+	mat::mat4 proj = mat::perspective(-0.05f, 0.05f, -0.05f * aspectRatio, 0.05f * aspectRatio, 0.1f, 15.f);
+	mat::mat4 projView = proj * view;
+	programMain->setMatrixUniform("viewProj", projView);
+	invProjectionViewMatrix = mat::inverse(projView);
+}
+
 void Render::draw(SDL_Window* window, const std::map<std::string, std::weak_ptr<GMesh>>& meshes)
 {
 	// Synchronize transform data

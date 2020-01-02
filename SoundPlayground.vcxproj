@@ -187,6 +187,7 @@
     <ClCompile Include="src\Audio\Components\OutputAudioComponent.cpp" />
     <ClCompile Include="src\Audio\Components\AMicrophone.cpp" />
     <ClCompile Include="src\Audio\Components\ASpeaker.cpp" />
+    <ClCompile Include="src\Engine\ECamera.cpp" />
     <ClCompile Include="src\Engine\EInput.cpp" />
     <ClCompile Include="src\Engine\EInputComponent.cpp" />
     <ClCompile Include="src\Engine\EModel.cpp" />
@@ -215,6 +216,7 @@
     <ClInclude Include="src\Audio\Components\OutputAudioComponent.h" />
     <ClInclude Include="src\Audio\Components\AMicrophone.h" />
     <ClInclude Include="src\Audio\Components\ASpeaker.h" />
+    <ClInclude Include="src\Engine\ECamera.h" />
     <ClInclude Include="src\Engine\EInput.h" />
     <ClInclude Include="src\Engine\EInputComponent.h" />
     <ClInclude Include="src\Engine\EModel.h" />

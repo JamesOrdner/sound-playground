@@ -7,6 +7,7 @@
 // Forward declarations
 class EObject;
 class EModel;
+class ECamera;
 
 class EWorld
 {
@@ -23,6 +24,8 @@ public:
 	// Return a reference to the "global" list of objects
 	const std::list<std::shared_ptr<EObject>>& allObjects() const;
 
+	const ECamera* worldCamera() const;
+
 	// Perform a raycast. Returns hit model on success.
 	EModel* raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc);
 
@@ -33,6 +36,9 @@ private:
 
 	// All objects in this world
 	std::list<std::shared_ptr<EObject>> objects;
+
+	// Primary player camera
+	std::shared_ptr<ECamera> camera;
 
 	// Physics updates are run at most this frequently (seconds)
 	float physicsUpdateMinInterval;

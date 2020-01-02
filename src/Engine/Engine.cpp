@@ -4,6 +4,7 @@
 #include "../Graphics/Matrix.h"
 #include "../Graphics/GMesh.h"
 #include "EModel.h"
+#include "ECamera.h"
 #include "EInput.h"
 #include <SDL.h>
 
@@ -108,18 +109,22 @@ void Engine::run()
 					printf("%f %f\n", loc.x, loc.z);
 				}
 				break;
-			case SDL_MOUSEMOTION:
-				SDL_GetMouseState(&x, &y);
-				mat::vec3 hitLoc;
-				if (EModel* hitObject = raycastScreen(x, y, hitLoc)) {
-					activeModel->setPosition(hitLoc);
-				}
+			//case SDL_MOUSEMOTION:
+			//	SDL_GetMouseState(&x, &y);
+			//	mat::vec3 hitLoc;
+			//	if (EModel* hitObject = raycastScreen(x, y, hitLoc)) {
+			//		activeModel->setPosition(hitLoc);
+			//	}
 			}
 
 			if (event.type != SDL_QUIT) input->handleInput(event);
 		}
 
 		m_world->tick(lastFrameTime);
+
+		// Render
+		const ECamera* camera = m_world->worldCamera();
+		renderer->setCamera(window, camera->cameraPosition(), camera->cameraFocus());
 		renderer->draw(window, meshes);
 		
 		Uint32 newSdlTime = SDL_GetTicks();

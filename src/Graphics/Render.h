@@ -27,6 +27,9 @@ public:
 	// Deinitialize memory and delete the OpenGL context
 	void deinit();
 
+	// Set the camera position and focus, which sets the projection matrix
+	void setCamera(SDL_Window* window, const mat::vec3& position, const mat::vec3& focus);
+
 	// Draw a frame
 	void draw(SDL_Window* window, const std::map<std::string, std::weak_ptr<GMesh>>& meshes);
 

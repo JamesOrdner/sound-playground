@@ -2,12 +2,15 @@
 #include "EObject.h"
 #include "EModel.h"
 #include "Engine.h"
+#include "ECamera.h"
 #include "../Audio/AudioEngine.h"
 
 EWorld::EWorld() :
+	camera(new ECamera),
 	physicsUpdateMinInterval(0.05f),
 	physicsDeltaTime(0.f)
 {
+	objects.push_back(camera);
 }
 
 void EWorld::addObject(const std::shared_ptr<EObject>& object)
@@ -47,6 +50,11 @@ const std::list<std::shared_ptr<EObject>>& EWorld::allObjects() const
 	return objects;
 }
 
+const ECamera* EWorld::worldCamera() const
+{
+	return camera.get();
+}
+
 EModel* EWorld::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc)
 {
 	float shortest = FLT_MAX;
@@ -74,4 +82,6 @@ void EWorld::tick(float deltaTime)
 		for (const auto& object : objects) object->updatePhysics(physicsDeltaTime);
 		physicsDeltaTime = 0.f;
 	}
+
+	for (const auto& object : objects) object->tick(deltaTime);
 }

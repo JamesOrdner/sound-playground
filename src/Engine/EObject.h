@@ -51,6 +51,9 @@ public:
 	// Removes the audio component from this object
 	void removeAudioComponent();
 
+	// Called once per frame
+	virtual void tick(float deltaTime) {};
+
 	// Called periodically, usually at a lower rate than the frame rate
 	virtual void updatePhysics(float deltaTime) {};
 
