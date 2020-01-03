@@ -64,4 +64,3 @@ private:
 	// This map is built dynamically each time glGetUniformLocation is called
 	std::map<std::string, unsigned int> uniformLocations;
 };
-

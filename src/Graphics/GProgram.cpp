@@ -100,5 +100,7 @@ unsigned int GProgram::getUniformLocation(std::string name)
 {
 	auto it = uniformLocations.find(name);
 	if (it != uniformLocations.end()) return it->second;
-	uniformLocations[name] = glGetUniformLocation(program, name.c_str());
+	unsigned int location = glGetUniformLocation(program, name.c_str());
+	uniformLocations[name] = location;
+	return location;
 }
