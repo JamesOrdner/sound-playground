@@ -70,13 +70,13 @@ void GProgram::setReleaseRoutine(const std::function<void()>& f)
 
 void GProgram::setMat3Uniform(std::string name, const mat::mat3& matrix)
 {
-	GLuint id = glGetUniformLocation(program, name.c_str());
+	GLuint id = getUniformLocation(name);
 	glProgramUniformMatrix3fv(program, id, 1, true, *matrix.data);
 }
 
 void GProgram::setMat4Uniform(std::string name, const mat::mat4& matrix)
 {
-	GLuint id = glGetUniformLocation(program, name.c_str());
+	GLuint id = getUniformLocation(name);
 	glProgramUniformMatrix4fv(program, id, 1, true, *matrix.data);
 }
 
@@ -94,4 +94,11 @@ std::string GProgram::loadTextFile(std::string filepath)
 	while (getline(file, line)) out.append(line + '\n');
 	file.close();
 	return out;
+}
+
+unsigned int GProgram::getUniformLocation(std::string name)
+{
+	auto it = uniformLocations.find(name);
+	if (it != uniformLocations.end()) return it->second;
+	uniformLocations[name] = glGetUniformLocation(program, name.c_str());
 }

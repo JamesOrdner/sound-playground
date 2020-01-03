@@ -3,6 +3,7 @@
 #include "Matrix.h"
 #include <string>
 #include <functional>
+#include <map>
 
 class GProgram
 {
@@ -42,6 +43,9 @@ private:
 	// Read the contents of a text file at the specified path into a string
 	std::string loadTextFile(std::string filepath);
 
+	// Return the GLuint location of a glsl uniform
+	unsigned int getUniformLocation(std::string name);
+
 	// Shader program
 	unsigned int program;
 
@@ -56,5 +60,8 @@ private:
 
 	// Routine called when program is released
 	std::function<void()> releaseRoutine;
+
+	// This map is built dynamically each time glGetUniformLocation is called
+	std::map<std::string, unsigned int> uniformLocations;
 };
 
