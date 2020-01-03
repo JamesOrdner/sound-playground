@@ -3,6 +3,8 @@
 #include "../Graphics/Render.h"
 #include "../Graphics/Matrix.h"
 #include "../Graphics/GMesh.h"
+#include "../UI/UIManager.h"
+#include "../UI/UIObject.h"
 #include "EModel.h"
 #include "ECamera.h"
 #include "EInput.h"
@@ -19,6 +21,7 @@ Engine::Engine() :
 	m_world(new EWorld),
 	input(new EInput),
 	renderer(new Render),
+	uiManager(new UIManager),
 	audioEngine(new AudioEngine)
 
 {
@@ -97,39 +100,42 @@ void Engine::run()
 	while (!quit) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
-			int x, y;
-			switch (event.type) {
-			case SDL_QUIT:
+			if (event.type == SDL_QUIT) {
 				quit = true;
 				break;
-			case SDL_MOUSEBUTTONDOWN:
-				SDL_GetMouseState(&x, &y);
-				if (auto hitObject = raycastScreen(x, y)) {
-					const mat::vec3& loc = hitObject->position();
-					printf("%f %f\n", loc.x, loc.z);
-				}
-				break;
-			//case SDL_MOUSEMOTION:
-			//	SDL_GetMouseState(&x, &y);
-			//	mat::vec3 hitLoc;
-			//	if (EModel* hitObject = raycastScreen(x, y, hitLoc)) {
-			//		activeModel->setPosition(hitLoc);
-			//	}
 			}
+			else {
+				// UI input
+				int width, height;
+				SDL_GL_GetDrawableSize(window, &width, &height);
+				bool bConsumed = uiManager->handeInput(event, width, height);
 
-			if (event.type != SDL_QUIT) input->handleInput(event);
+				// Other input if not consumed by UI
+				if (!bConsumed) input->handleInput(event);
+				
+				// TEMP DEBUG
+				if (!bConsumed && event.type == SDL_MOUSEBUTTONDOWN) {
+					int x, y;
+					SDL_GetMouseState(&x, &y);
+					if (auto hitObject = raycastScreen(x, y)) {
+						const mat::vec3& loc = hitObject->position();
+						printf("%f %f\n", loc.x, loc.z);
+					}
+				}
+			}
 		}
 
+		Uint32 newSdlTime = SDL_GetTicks();
+		lastFrameTime = static_cast<float>(newSdlTime - sdlTime) * 0.001f;
 		m_world->tick(lastFrameTime);
+		sdlTime = newSdlTime;
 
 		// Render
 		const ECamera* camera = m_world->worldCamera();
 		renderer->setCamera(window, camera->cameraPosition(), camera->cameraFocus());
-		renderer->draw(window, meshes);
-		
-		Uint32 newSdlTime = SDL_GetTicks();
-		lastFrameTime = static_cast<float>(newSdlTime - sdlTime) * 0.001f;
-		sdlTime = newSdlTime;
+		renderer->draw(meshes);
+		renderer->drawUI(*uiManager->root);
+		renderer->show(window);
 	}
 }
 

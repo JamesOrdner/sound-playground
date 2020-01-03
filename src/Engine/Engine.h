@@ -9,6 +9,7 @@
 // Forward declarations
 struct SDL_Window;
 class AudioEngine;
+class UIManager;
 class EModel;
 class GMesh;
 class EInput;
@@ -74,6 +75,7 @@ private:
 	/** Graphics */
 
 	std::unique_ptr<Render> renderer;
+	std::unique_ptr<UIManager> uiManager;
 
 	/** Audio */
 

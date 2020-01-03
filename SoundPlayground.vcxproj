@@ -72,19 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>lib\fftw;lib\tinygltf;lib\gl3w\include;lib\SDL2\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>lib\stb\include;lib\fftw;lib\tinygltf;lib\gl3w\include;lib\SDL2\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>lib\fftw;lib\tinygltf;lib\gl3w\include;lib\SDL2\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>lib\stb\include;lib\fftw;lib\tinygltf;lib\gl3w\include;lib\SDL2\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>lib\fftw;lib\tinygltf;lib\gl3w\include;lib\SDL2\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>lib\stb\include;lib\fftw;lib\tinygltf;lib\gl3w\include;lib\SDL2\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>lib\fftw;lib\tinygltf;lib\gl3w\include;lib\SDL2\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>lib\stb\include;lib\fftw;lib\tinygltf;lib\gl3w\include;lib\SDL2\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -198,10 +198,13 @@
     <ClCompile Include="src\Audio\AudioEngine.cpp" />
     <ClCompile Include="src\engine\Engine.cpp" />
     <ClCompile Include="src\Graphics\GProgram.cpp" />
+    <ClCompile Include="src\Graphics\GTexture.cpp" />
     <ClCompile Include="src\Graphics\matrix.cpp" />
     <ClCompile Include="src\Graphics\Render.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\UI\UIComponent.cpp" />
+    <ClCompile Include="src\UI\UIManager.cpp" />
+    <ClCompile Include="src\UI\UIObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Audio\Auralization\Auralizer.h" />
@@ -226,10 +229,13 @@
     <ClInclude Include="src\Audio\AudioEngine.h" />
     <ClInclude Include="src\engine\Engine.h" />
     <ClInclude Include="src\Graphics\GProgram.h" />
+    <ClInclude Include="src\Graphics\GTexture.h" />
     <ClInclude Include="src\Graphics\Matrix.h" />
     <ClInclude Include="src\Graphics\Render.h" />
     <ClInclude Include="src\UI\UIComponent.h" />
+    <ClInclude Include="src\UI\UIManager.h" />
     <ClInclude Include="src\UI\UITypes.h" />
+    <ClInclude Include="src\UI\UIObject.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\main.frag" />

@@ -321,6 +321,7 @@ namespace mat // Matrix
 		}
 	};
 
+	typedef Matrix<float, 3, 3> mat3;
 	typedef Matrix<float, 4, 4> mat4;
 
 	/** Matrix Functions */

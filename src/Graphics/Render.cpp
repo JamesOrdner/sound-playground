@@ -1,6 +1,8 @@
 #include "Render.h"
 #include "GProgram.h"
 #include "GMesh.h"
+#include "GTexture.h"
+#include "../UI/UIObject.h"
 #include <SDL.h>
 #include <GL/gl3w.h>
 #include <stdio.h>
@@ -46,11 +48,11 @@ bool Render::init(SDL_Window* window)
 	}
 
 	glEnable(GL_MULTISAMPLE);
-	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	programMain = std::make_unique<GProgram>("main");
-	programMain->setMatrixUniform("viewProj", projectionViewMatrix(window));
+	programMain->setMat4Uniform("viewProj", projectionViewMatrix(window));
 	programMain->setPreDrawRoutine([window] {
 		int width, height;
 		SDL_GL_GetDrawableSize(window, &width, &height);
@@ -65,6 +67,17 @@ bool Render::init(SDL_Window* window)
 		glContext = nullptr;
 		return false;
 	}
+
+	if (!initUI()) {
+		printf("Failed to initialize UI program.\n");
+		programMain.reset();
+		programShadow.reset();
+		SDL_GL_DeleteContext(glContext);
+		glContext = nullptr;
+		return false;
+	}
+
+	uiTexture = std::make_unique<GTexture>("testTex");
 
 	mat::mat4 pv = projectionViewMatrix(window);
 	invProjectionViewMatrix = mat::inverse(pv);
@@ -83,6 +96,9 @@ void Render::deinit()
 
 	// textures
 	glDeleteTextures(1, &shadowTexture);
+	
+	// ui
+	glDeleteVertexArrays(1, &uiVAO);
 
 	// context
 	SDL_GL_DeleteContext(glContext);
@@ -97,12 +113,15 @@ void Render::setCamera(SDL_Window* window, const mat::vec3& position, const mat:
 	mat::mat4 view = lookAt(position, focus);
 	mat::mat4 proj = mat::perspective(-0.05f, 0.05f, -0.05f * aspectRatio, 0.05f * aspectRatio, 0.1f, 15.f);
 	mat::mat4 projView = proj * view;
-	programMain->setMatrixUniform("viewProj", projView);
+	programMain->setMat4Uniform("viewProj", projView);
 	invProjectionViewMatrix = mat::inverse(projView);
 }
 
-void Render::draw(SDL_Window* window, const std::map<std::string, std::weak_ptr<GMesh>>& meshes)
+void Render::draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes)
 {
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
 	// Synchronize transform data
 	for (const auto& mesh : meshes) mesh.second.lock()->updateInstanceTransforms();
 
@@ -114,7 +133,46 @@ void Render::draw(SDL_Window* window, const std::map<std::string, std::weak_ptr<
 	// Render main program
 	programMain->use();
 	for (const auto& mesh : meshes) mesh.second.lock()->draw();
+}
 
+void Render::drawUI(const UIObject& rootObject)
+{
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBindVertexArray(uiVAO);
+	glBindTexture(GL_TEXTURE_2D, uiTexture->id());
+	programUI->use();
+
+	drawUIRecursive(rootObject, 1.f, 1.f, 0.f, 0.f);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Render::drawUIRecursive(const UIObject& object, float p_xScale, float p_yScale, float p_xTrans, float p_yTrans)
+{
+	float xScale = (object.x1 - object.x0) / 2.f;
+	float yScale = (object.y1 - object.y0) / 2.f;
+	float xTrans = object.x0 + xScale + p_xTrans;
+	float yTrans = object.y0 + yScale + p_yTrans;
+	xScale *= p_xScale;
+	yScale *= p_yScale;
+
+	mat::mat3 transform{
+		{ xScale,      0, xTrans },
+		{      0, yScale, yTrans },
+		{      0,      0,      1 }
+	};
+
+	programUI->setMat3Uniform("transform", transform);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	for (const auto& child : object.subobjects) {
+		drawUIRecursive(child, xScale, yScale, xTrans, yTrans);
+	}
+}
+
+void Render::show(SDL_Window* window)
+{
 	SDL_GL_SwapWindow(window);
 }
 
@@ -162,10 +220,11 @@ bool Render::initShadow()
 
 	programShadow = std::make_unique<GProgram>("shadow");
 	programShadow->setFramebuffer(shadowFBO);
-	programShadow->setPreDrawRoutine([shadowMap_x, shadowMap_y] {
+	programShadow->setPreDrawRoutine([shadowMap_x, shadowMap_y, shadowTexture = shadowTexture] {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, shadowMap_x, shadowMap_y);
 		glEnable(GL_POLYGON_OFFSET_FILL);
+		glBindTexture(GL_TEXTURE_2D, shadowTexture);
 		});
 	programShadow->setReleaseRoutine([] {
 		glDisable(GL_POLYGON_OFFSET_FILL);
@@ -174,7 +233,7 @@ bool Render::initShadow()
 	mat::mat4 view = lookAt(mat::vec3{ 2.f, 3.f, -0.5f }, mat::vec3{ 0.f, 0.f, 0.f });
 	mat::mat4 proj = mat::ortho(-3.f, 3.f, -3.f, 3.f, -10.f, 10.f);
 	mat::mat4 projectionViewMatrix = proj * view;
-	programShadow->setMatrixUniform("mvp", projectionViewMatrix);
+	programShadow->setMat4Uniform("mvp", projectionViewMatrix);
 
 	mat::mat4 biasMatrix{
 		{ 0.5, 0.0, 0.0, 0.5 },
@@ -183,7 +242,54 @@ bool Render::initShadow()
 		{ 0.0, 0.0, 0.0, 1.0 }
 	};
 	mat::mat4 depthBiasMVP = biasMatrix * projectionViewMatrix;
-	programMain->setMatrixUniform("shadowMVP", depthBiasMVP);
+	programMain->setMat4Uniform("shadowMVP", depthBiasMVP);
+
+	return true;
+}
+
+bool Render::initUI()
+{
+	static const GLfloat g_vertex_data[] = {
+		-1.f, -1.f, // LL
+		-1.f,  1.f, // UL
+		 1.f,  1.f, // UR
+		-1.f, -1.f, // LL
+		 1.f, -1.f, // LR
+		 1.f,  1.f, // UR
+	};
+
+	static const GLfloat g_texcoord_data[] = {
+		0.f, 0.f, // LL
+		0.f, 1.f, // UL
+		1.f, 1.f, // UR
+		0.f, 0.f, // LL
+		1.f, 0.f, // LR
+		1.f, 1.f, // UR
+	};
+
+	glGenVertexArrays(1, &uiVAO);
+	glBindVertexArray(uiVAO);
+
+	GLuint vbo;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glEnableVertexAttribArray(0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_data), g_vertex_data, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	GLuint vbo_texcoord;
+	glGenBuffers(1, &vbo_texcoord);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_texcoord);
+	glEnableVertexAttribArray(1);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_texcoord_data), g_texcoord_data, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	
+	glBindVertexArray(0);
+
+	glDeleteBuffers(1, &vbo);
+	glDeleteBuffers(1, &vbo_texcoord);
+
+	programUI = std::make_unique<GProgram>("ui");
 
 	return true;
 }

@@ -8,8 +8,10 @@
 
 // Forward declarations
 struct SDL_Window;
+struct UIObject;
 class GProgram;
 class GMesh;
+class GTexture;
 
 class Render
 {
@@ -31,18 +33,18 @@ public:
 	void setCamera(SDL_Window* window, const mat::vec3& position, const mat::vec3& focus);
 
 	// Draw a frame
-	void draw(SDL_Window* window, const std::map<std::string, std::weak_ptr<GMesh>>& meshes);
+	void draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes);
+
+	// Draws the UI on the existing frame
+	void drawUI(const UIObject& rootObject);
+
+	// Swaps the backbuffer to the window
+	void show(SDL_Window* window);
 
 	// Returns the inverse projection view matrix
 	const mat::mat4& screenToWorldMatrix();
 
 private:
-
-	// Calculate the projection view matrix
-	mat::mat4 projectionViewMatrix(SDL_Window* window);
-
-	// Setup shadow program and buffers. Returns success
-	bool initShadow();
 
 	// Pointer to the OpenGL context
 	void* glContext;
@@ -56,7 +58,26 @@ private:
 	unsigned int shadowFBO;
 	unsigned int shadowTexture;
 
+	// Pointer to the UI shader program
+	std::unique_ptr<GProgram> programUI;
+
+	unsigned int uiVAO;
+
+	// Pointer to the UI texture sheet
+	std::unique_ptr<GTexture> uiTexture;
+
 	// Transforms screen space to world space
 	mat::mat4 invProjectionViewMatrix;
+
+	// Setup shadow program and buffers. Returns success
+	bool initShadow();
+
+	// Setup UI program and buffers. Returns success
+	bool initUI();
+
+	// Calculate the projection view matrix
+	mat::mat4 projectionViewMatrix(SDL_Window* window);
+
+	void drawUIRecursive(const UIObject& object, float p_xScale, float p_yScale, float p_xTrans, float p_yTrans);
 };
 

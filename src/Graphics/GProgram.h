@@ -29,7 +29,10 @@ public:
 	void setReleaseRoutine(const std::function<void()>& f);
 
 	// Set a matrix uniform with the given name to the given value
-	void setMatrixUniform(std::string name, const mat::mat4& matrix);
+	void setMat3Uniform(std::string name, const mat::mat3& matrix);
+
+	// Set a matrix uniform with the given name to the given value
+	void setMat4Uniform(std::string name, const mat::mat4& matrix);
 
 	// Store the framebuffer that this program renders to, and bind the framebuffer when in use
 	void setFramebuffer(unsigned int framebuffer);
