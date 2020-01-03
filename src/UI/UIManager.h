@@ -1,10 +1,10 @@
 #pragma once
 
+#include "../Graphics/Matrix.h"
 #include <memory>
 
 // Forward declarations
 struct UIObject;
-struct UICoord;
 union SDL_Event;
 
 class UIManager
@@ -27,12 +27,13 @@ private:
 
 	void setupMenuBar();
 
-	// Returns the object at screen coordinates (x, y) [-1, 1]
-	UIObject* objectAt(const UICoord& location);
+	// Returns the object at location, provided in normalized screen space [-1, 1]
+	UIObject* objectAt(const mat::vec2& location, const mat::vec2& screenBounds);
 
 	UIObject* objectAtRecursive(
 		UIObject& object,
-		const UICoord& location,
-		const UICoord& p_trans,
-		const UICoord& p_scale);
+		const mat::vec2& location,
+		const mat::vec2& parentCoords,
+		float parentScale,
+		const mat::vec2& screenBounds);
 };

@@ -175,7 +175,7 @@ void Render::drawUIRecursive(
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	for (const auto& child : object.subobjects) {
-		drawUIRecursive(child, translation, object.scale, screenBounds);
+		drawUIRecursive(child, translation, parentScale * object.scale, screenBounds);
 	}
 }
 

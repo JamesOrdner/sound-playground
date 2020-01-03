@@ -32,7 +32,7 @@ union UIValue
 struct UIData
 {
 	// The callback to be called when the value is changed from the UI
-	std::function<void(float)> callback;
+	std::function<void(UIValue)> callback;
 
 	// UI text label for this view
 	std::string label;
