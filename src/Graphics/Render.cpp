@@ -13,7 +13,8 @@ constexpr int glMinorVersion = 6;
 Render::Render() :
 	glContext(nullptr),
 	shadowFBO(0),
-	shadowTexture(0)
+	shadowTexture(0),
+	uiVAO(0)
 {
 }
 
@@ -135,7 +136,7 @@ void Render::draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes)
 	for (const auto& mesh : meshes) mesh.second.lock()->draw();
 }
 
-void Render::drawUI(const UIObject& rootObject)
+void Render::drawUI(SDL_Window* window, const UIObject& rootObject)
 {
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -143,31 +144,38 @@ void Render::drawUI(const UIObject& rootObject)
 	glBindTexture(GL_TEXTURE_2D, uiTexture->id());
 	programUI->use();
 
-	drawUIRecursive(rootObject, 1.f, 1.f, 0.f, 0.f);
+	int x, y;
+	SDL_GL_GetDrawableSize(window, &x, &y);
+	mat::vec2 parentCoords{ 0, 0 };
+	mat::vec2 screenBounds{ static_cast<float>(x), static_cast<float>(y) };
+	
+	drawUIRecursive(rootObject, parentCoords, 1.f, screenBounds);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Render::drawUIRecursive(const UIObject& object, float p_xScale, float p_yScale, float p_xTrans, float p_yTrans)
+void Render::drawUIRecursive(
+	const UIObject& object,
+	const mat::vec2& parentCoords,
+	float parentScale,
+	const mat::vec2& screenBounds)
 {
-	float xScale = (object.x1 - object.x0) / 2.f;
-	float yScale = (object.y1 - object.y0) / 2.f;
-	float xTrans = object.x0 + xScale + p_xTrans;
-	float yTrans = object.y0 + yScale + p_yTrans;
-	xScale *= p_xScale;
-	yScale *= p_yScale;
+	mat::vec2 scale = object.bounds / screenBounds * parentScale * object.scale;
+
+	// TEMP: Assume object.anchor == UIAnchor::Center
+	mat::vec2 translation = parentCoords + object.position;
 
 	mat::mat3 transform{
-		{ xScale,      0, xTrans },
-		{      0, yScale, yTrans },
-		{      0,      0,      1 }
+		{ scale.x,       0, translation.x },
+		{       0, scale.y, translation.y },
+		{       0,       0,             1 }
 	};
 
 	programUI->setMat3Uniform("transform", transform);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	for (const auto& child : object.subobjects) {
-		drawUIRecursive(child, xScale, yScale, xTrans, yTrans);
+		drawUIRecursive(child, translation, object.scale, screenBounds);
 	}
 }
 

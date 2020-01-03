@@ -7,5 +7,5 @@ class UIComponent
 {
 public:
 
-	std::vector<UIViewData> views;
+	std::vector<UIData> views;
 };

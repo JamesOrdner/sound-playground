@@ -4,6 +4,7 @@
 
 // Forward declarations
 struct UIObject;
+struct UICoord;
 union SDL_Event;
 
 class UIManager
@@ -24,19 +25,14 @@ public:
 
 private:
 
-	struct ScreenCoord
-	{
-		float x, y;
-	};
-
 	void setupMenuBar();
 
 	// Returns the object at screen coordinates (x, y) [-1, 1]
-	UIObject* objectAt(ScreenCoord location);
+	UIObject* objectAt(const UICoord& location);
 
 	UIObject* objectAtRecursive(
 		UIObject& object,
-		const ScreenCoord& location,
-		ScreenCoord p_trans,
-		ScreenCoord p_scale);
+		const UICoord& location,
+		const UICoord& p_trans,
+		const UICoord& p_scale);
 };

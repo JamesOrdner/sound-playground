@@ -134,7 +134,7 @@ void Engine::run()
 		const ECamera* camera = m_world->worldCamera();
 		renderer->setCamera(window, camera->cameraPosition(), camera->cameraFocus());
 		renderer->draw(meshes);
-		renderer->drawUI(*uiManager->root);
+		renderer->drawUI(window, *uiManager->root);
 		renderer->show(window);
 	}
 }

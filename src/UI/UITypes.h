@@ -4,26 +4,39 @@
 #include <string>
 #include <functional>
 
-enum class UIViewType
+enum class UIAnchor
 {
-	button,
-	slider
+	Center,
+	Top,
+	Bottom,
+	Left,
+	Right,
+	TopLeft,
+	TopRight,
+	BottomLeft,
+	BottomRight
 };
 
-union UIViewValue
+enum class UIType
+{
+	Button,
+	Slider
+};
+
+union UIValue
 {
 	SDL_Keycode keycode;
 	float floatVal;
 };
 
-struct UIViewData
+struct UIData
 {
 	// The callback to be called when the value is changed from the UI
 	std::function<void(float)> callback;
 
-	// UI text descriptor for this view
+	// UI text label for this view
 	std::string label;
 
-	UIViewType type;
-	UIViewValue value;
+	UIType type;
+	UIValue value;
 };

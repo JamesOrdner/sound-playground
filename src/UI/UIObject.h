@@ -1,21 +1,33 @@
 #pragma once
 
+#include "UITypes.h"
+#include "../Graphics/Matrix.h"
 #include <string>
 #include <vector>
 #include <functional>
 
 struct UIObject
 {
+	UIObject();
+
 	std::string name;
+
+	UIValue value;
 
 	// Subobjects inherit the transform of the parent object
 	std::vector<UIObject> subobjects;
 
-	// Lower left corner [-1, 1]
-	float x0, y0;
+	// Anchor point of the object
+	UIAnchor anchor;
 
-	// Upper right corner [-1, 1]
-	float x1, y1;
+	// Relative [-1, 1] position of the anchor point of the object
+	mat::vec2 position;
+
+	// Absoule size of the object in pixels
+	mat::vec2 bounds;
+
+	// Scale of the object and all subobjects, useful for highDPI screens
+	float scale;
 
 	std::function<void()> callback;
 

@@ -36,6 +36,34 @@ namespace mat // Matrix
 	/** Vector Specializations */
 
 	template<typename T>
+	struct Vector<T, 2> {
+		union {
+			float data[2];
+			struct { T x, y; };
+		};
+
+		explicit constexpr Vector() : data{} {}
+
+		explicit Vector(float* data) : data{} {
+			for (int i = 0; i < 2; i++) this->data[i] = data[i];
+		}
+
+		explicit constexpr Vector(T fill) : data{} {
+			for (int i = 0; i < 2; i++) data[i] = fill;
+		}
+
+		explicit constexpr Vector(std::initializer_list<T> l) : data{} {
+			const T* lp = l.begin();
+			for (int i = 0; i < 2; i++) data[i] = lp[i];
+		}
+
+		constexpr T operator[](int i) const {
+			return data[i];
+		}
+
+	};
+
+	template<typename T>
 	struct Vector<T, 3> {
 		union {
 			float data[3];
@@ -106,6 +134,7 @@ namespace mat // Matrix
 	
 	/** Vector Typedefs */
 
+	typedef Vector<float, 2> vec2;
 	typedef Vector<float, 3> vec3;
 	typedef Vector<float, 4> vec4;
 

@@ -36,7 +36,7 @@ public:
 	void draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes);
 
 	// Draws the UI on the existing frame
-	void drawUI(const UIObject& rootObject);
+	void drawUI(SDL_Window* window, const UIObject& rootObject);
 
 	// Swaps the backbuffer to the window
 	void show(SDL_Window* window);
@@ -78,6 +78,10 @@ private:
 	// Calculate the projection view matrix
 	mat::mat4 projectionViewMatrix(SDL_Window* window);
 
-	void drawUIRecursive(const UIObject& object, float p_xScale, float p_yScale, float p_xTrans, float p_yTrans);
+	void drawUIRecursive(
+		const UIObject& object,
+		const mat::vec2& parentCoords,
+		float parentScale,
+		const mat::vec2& screenBounds);
 };
 
