@@ -161,9 +161,8 @@ void Render::drawUIRecursive(
 	const mat::vec2& screenBounds)
 {
 	mat::vec2 scale = object.bounds / screenBounds * parentScale * object.scale;
-
-	// TEMP: Assume object.anchor == UIAnchor::Center
 	mat::vec2 translation = parentCoords + object.position;
+	translation -= object.anchorPosition() * scale;
 
 	mat::mat3 transform{
 		{ scale.x,       0, translation.x },

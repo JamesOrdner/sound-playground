@@ -155,6 +155,16 @@ namespace mat // Matrix
 	}
 
 	template <typename T, int size>
+	constexpr void operator+=(Vector<T, size>& lhs, const T& rhs) {
+		for (int i = 0; i < size; i++) lhs.data[i] += rhs;
+	}
+
+	template <typename T, int size>
+	constexpr void operator+=(Vector<T, size>& lhs, const Vector<T, size>& rhs) {
+		for (int i = 0; i < size; i++) lhs.data[i] += rhs.data[i];
+	}
+
+	template <typename T, int size>
 	constexpr Vector<T, size> operator-(const Vector<T, size>& rhs) {
 		Vector<T, size> v;
 		for (int i = 0; i < size; i++) v.data[i] = -rhs.data[i];
@@ -166,6 +176,16 @@ namespace mat // Matrix
 		Vector<T, size> v;
 		for (int i = 0; i < size; i++) v.data[i] = lhs.data[i] - rhs;
 		return v;
+	}
+
+	template <typename T, int size>
+	constexpr void operator-=(Vector<T, size>& lhs, const T& rhs) {
+		for (int i = 0; i < size; i++) lhs.data[i] -= rhs;
+	}
+
+	template <typename T, int size>
+	constexpr void operator-=(Vector<T, size>& lhs, const Vector<T, size>& rhs) {
+		for (int i = 0; i < size; i++) lhs.data[i] -= rhs.data[i];
 	}
 
 	template <typename T, int size>
@@ -190,6 +210,16 @@ namespace mat // Matrix
 	}
 
 	template <typename T, int size>
+	constexpr void operator*=(Vector<T, size>& lhs, const T& rhs) {
+		for (int i = 0; i < size; i++) lhs.data[i] *= rhs;
+	}
+
+	template <typename T, int size>
+	constexpr void operator*=(Vector<T, size>& lhs, const Vector<T, size>& rhs) {
+		for (int i = 0; i < size; i++) lhs.data[i] *= rhs.data[i];
+	}
+
+	template <typename T, int size>
 	constexpr Vector<T, size> operator/(const Vector<T, size>& lhs, const T& rhs) {
 		Vector<T, size> v;
 		for (int i = 0; i < size; i++) v.data[i] = lhs.data[i] / rhs;
@@ -201,6 +231,16 @@ namespace mat // Matrix
 		Vector<T, size> v;
 		for (int i = 0; i < size; i++) v.data[i] = lhs.data[i] / rhs.data[i];
 		return v;
+	}
+
+	template <typename T, int size>
+	constexpr void operator/=(Vector<T, size>& lhs, const T& rhs) {
+		for (int i = 0; i < size; i++) lhs.data[i] /= rhs;
+	}
+
+	template <typename T, int size>
+	constexpr void operator/=(Vector<T, size>& lhs, const Vector<T, size>& rhs) {
+		for (int i = 0; i < size; i++) lhs.data[i] /= rhs.data[i];
 	}
 
 	template <typename T, int size>

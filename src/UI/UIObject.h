@@ -32,4 +32,7 @@ struct UIObject
 	std::function<void()> callback;
 
 	bool bAcceptsInput;
+
+	// Returns the relative anchor position in normalized device coordinates [-1, 1]
+	mat::vec2 anchorPosition() const;
 };

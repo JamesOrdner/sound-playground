@@ -63,9 +63,8 @@ UIObject* UIManager::objectAtRecursive(
 	const mat::vec2& screenBounds)
 {
 	mat::vec2 scale = object.bounds / screenBounds * parentScale * object.scale;
-
-	// TEMP: Assume object.anchor == UIAnchor::Center
 	mat::vec2 coords = parentCoords + object.position;
+	coords -= object.anchorPosition() * scale;
 
 	for (auto it = object.subobjects.rbegin(); it != object.subobjects.rend(); it++) {
 		UIObject* obj = objectAtRecursive(*it, location, coords, parentScale * object.scale, screenBounds);
