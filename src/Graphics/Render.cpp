@@ -12,9 +12,7 @@ constexpr int glMinorVersion = 6;
 
 Render::Render() :
 	glContext(nullptr),
-	shadowFBO(0),
-	shadowTexture(0),
-	uiVAO(0)
+	gObjects{}
 {
 }
 
@@ -52,32 +50,29 @@ bool Render::init(SDL_Window* window)
 	glDepthFunc(GL_LESS);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	programMain = std::make_unique<GProgram>("main");
-	programMain->setPreDrawRoutine([window] {
-		int width, height;
-		SDL_GL_GetDrawableSize(window, &width, &height);
-		glViewport(0, 0, width, height);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		});
-
-	if (!initShadow()) {
-		printf("Failed to initialize shadow program.\n");
-		programMain.reset();
-		SDL_GL_DeleteContext(glContext);
-		glContext = nullptr;
+	if (!initRectVAO()) {
+		printf("Failed to initialize rectVAO.\n");
+		deinit();
 		return false;
 	}
+
+	if (!initDeferredPipeline()) {
+		printf("Failed to initialize deferred pipeline.\n");
+		deinit();
+		return false;
+	}
+
+	//if (!initShadow()) {
+	//	printf("Failed to initialize shadow program.\n");
+	//	deinit();
+	//	return false;
+	//}
 
 	if (!initUI()) {
 		printf("Failed to initialize UI program.\n");
-		programMain.reset();
-		programShadow.reset();
-		SDL_GL_DeleteContext(glContext);
-		glContext = nullptr;
+		deinit();
 		return false;
 	}
-
-	uiTexture = std::make_unique<GTexture>("testTex");
 
 	return true;
 }
@@ -85,69 +80,67 @@ bool Render::init(SDL_Window* window)
 void Render::deinit()
 {
 	// programs
-	programMain.reset();
-	programShadow.reset();
+	mainProgram.reset();
+	shadowProgram.reset();
 
-	// framebuffers
-	glDeleteFramebuffers(1, &shadowFBO);
-
-	// textures
-	glDeleteTextures(1, &shadowTexture);
-	
-	// ui
-	glDeleteVertexArrays(1, &uiVAO);
+	gObjects.deinit();
 
 	// context
-	SDL_GL_DeleteContext(glContext);
+	if (glContext) SDL_GL_DeleteContext(glContext);
 	glContext = nullptr;
 }
 
-void Render::setCamera(SDL_Window* window, const mat::vec3& position, const mat::vec3& focus)
+void Render::GObjects::deinit()
 {
-	int width, height;
-	SDL_GL_GetDrawableSize(window, &width, &height);
-	float aspectRatio = static_cast<float>(height) / static_cast<float>(width);
+	if (shadowFBO) glDeleteFramebuffers(1, &shadowFBO);
+	if (shadowTexture) glDeleteTextures(1, &shadowTexture);
+	if (rectVAO) glDeleteVertexArrays(1, &rectVAO);
+	if (gbuffer) glDeleteFramebuffers(1, &gbuffer);
+	if (gbufferTextures[0]) glDeleteTextures(3, gbufferTextures);
+
+	shadowFBO = 0;
+	shadowTexture = 0;
+	rectVAO = 0;
+	gbuffer = 0;
+	gbufferTextures[0] = gbufferTextures[1] = gbufferTextures[2] = 0;
+}
+
+void Render::setCamera(const mat::vec3& position, const mat::vec3& focus)
+{
+	float aspectRatio = 720.f / 1280.f;
 	mat::mat4 view = lookAt(position, focus);
 	mat::mat4 proj = mat::perspective(-0.05f, 0.05f, -0.05f * aspectRatio, 0.05f * aspectRatio, 0.1f, 15.f);
 	mat::mat4 projView = proj * view;
-	programMain->setMat4Uniform("viewProj", projView);
+	gbuffersProgram->setMat4Uniform("viewProj", projView);
 	invProjectionViewMatrix = mat::inverse(projView);
 }
 
 void Render::draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes)
 {
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
-
 	// Synchronize transform data
 	for (const auto& mesh : meshes) mesh.second.lock()->updateInstanceTransforms();
 
-	// Render shadow buffer
-	programShadow->use();
-	for (const auto& mesh : meshes) mesh.second.lock()->draw();
-	programShadow->release();
+	//// shadow buffer
+	//shadowProgram->use();
+	//for (const auto& mesh : meshes) mesh.second.lock()->draw();
+	//shadowProgram->release();
 
-	// Render main program
-	programMain->use();
+	// gbuffers
+	gbuffersProgram->use();
 	for (const auto& mesh : meshes) mesh.second.lock()->draw();
+	gbuffersProgram->release();
+
+	// composite
+	compositeProgram->use();
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	compositeProgram->release();
 }
 
-void Render::drawUI(SDL_Window* window, const UIObject& rootObject)
+void Render::drawUI(const UIObject& rootObject)
 {
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBindVertexArray(uiVAO);
-	glBindTexture(GL_TEXTURE_2D, uiTexture->id());
-	programUI->use();
-
-	int x, y;
-	SDL_GL_GetDrawableSize(window, &x, &y);
-	mat::vec2 parentCoords{ 0, 0 };
-	mat::vec2 screenBounds{ static_cast<float>(x), static_cast<float>(y) };
-	
-	drawUIRecursive(rootObject, parentCoords, 1.f, screenBounds);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
+	uiProgram->use();
+	drawUIRecursive(rootObject, mat::vec2{ 0, 0 }, 1.f, mat::vec2{ 1280, 720 });
+	uiProgram->release();
 }
 
 void Render::drawUIRecursive(
@@ -166,7 +159,7 @@ void Render::drawUIRecursive(
 		{       0,       0,             1 }
 	};
 
-	programUI->setMat3Uniform("transform", transform);
+	uiProgram->setMat3Uniform("transform", transform);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	for (const auto& child : object.subobjects) {
@@ -184,63 +177,7 @@ const mat::mat4& Render::screenToWorldMatrix()
 	return invProjectionViewMatrix;
 }
 
-bool Render::initShadow()
-{
-	constexpr int shadowMap_x = 2048;
-	constexpr int shadowMap_y = 2048;
-
-	glGenFramebuffers(1, &shadowFBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-
-	glGenTextures(1, &shadowTexture);
-	glBindTexture(GL_TEXTURE_2D, shadowTexture);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32, shadowMap_x, shadowMap_y);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowTexture, 0);
-	glBindTextureUnit(0, shadowTexture);
-
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		glDeleteFramebuffers(1, &shadowFBO);
-		glDeleteTextures(1, &shadowTexture);
-		return false;
-	}
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glPolygonOffset(2.f, 2.f);
-
-	programShadow = std::make_unique<GProgram>("shadow");
-	programShadow->setFramebuffer(shadowFBO);
-	programShadow->setPreDrawRoutine([shadowMap_x, shadowMap_y, shadowTexture = shadowTexture] {
-		glClear(GL_DEPTH_BUFFER_BIT);
-		glViewport(0, 0, shadowMap_x, shadowMap_y);
-		glEnable(GL_POLYGON_OFFSET_FILL);
-		glBindTexture(GL_TEXTURE_2D, shadowTexture);
-		});
-	programShadow->setReleaseRoutine([] {
-		glDisable(GL_POLYGON_OFFSET_FILL);
-		});
-
-	mat::mat4 view = lookAt(mat::vec3{ 2.f, 3.f, -0.5f }, mat::vec3{ 0.f, 0.f, 0.f });
-	mat::mat4 proj = mat::ortho(-3.f, 3.f, -3.f, 3.f, -10.f, 10.f);
-	mat::mat4 projectionViewMatrix = proj * view;
-	programShadow->setMat4Uniform("mvp", projectionViewMatrix);
-
-	mat::mat4 biasMatrix{
-		{ 0.5, 0.0, 0.0, 0.5 },
-		{ 0.0, 0.5, 0.0, 0.5 },
-		{ 0.0, 0.0, 0.5, 0.5 },
-		{ 0.0, 0.0, 0.0, 1.0 }
-	};
-	mat::mat4 depthBiasMVP = biasMatrix * projectionViewMatrix;
-	programMain->setMat4Uniform("shadowMVP", depthBiasMVP);
-
-	return true;
-}
-
-bool Render::initUI()
+bool Render::initRectVAO()
 {
 	static const GLfloat g_vertex_data[] = {
 		-1.f, -1.f, // LL
@@ -260,8 +197,8 @@ bool Render::initUI()
 		1.f, 1.f, // UR
 	};
 
-	glGenVertexArrays(1, &uiVAO);
-	glBindVertexArray(uiVAO);
+	glGenVertexArrays(1, &gObjects.rectVAO);
+	glBindVertexArray(gObjects.rectVAO);
 
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
@@ -276,13 +213,145 @@ bool Render::initUI()
 	glEnableVertexAttribArray(1);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_texcoord_data), g_texcoord_data, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	
+
 	glBindVertexArray(0);
 
 	glDeleteBuffers(1, &vbo);
 	glDeleteBuffers(1, &vbo_texcoord);
 
-	programUI = std::make_unique<GProgram>("ui");
+	return true;
+}
+
+bool Render::initDeferredPipeline()
+{
+	glGenFramebuffers(1, &gObjects.gbuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gObjects.gbuffer);
+
+	glGenTextures(3, gObjects.gbufferTextures);
+
+	glBindTexture(GL_TEXTURE_2D, gObjects.gbufferTextures[0]);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32UI, 1280, 720);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gObjects.gbufferTextures[0], 0);
+
+	glBindTexture(GL_TEXTURE_2D, gObjects.gbufferTextures[1]);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 1280, 720);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, gObjects.gbufferTextures[1], 0);
+
+	glBindTexture(GL_TEXTURE_2D, gObjects.gbufferTextures[2]);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, 1280, 720);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT , gObjects.gbufferTextures[2], 0);
+
+	GLuint drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, drawBuffers);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		return false;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	
+	gbuffersProgram = std::make_unique<GProgram>("gbuffers");
+	gbuffersProgram->setFramebuffer(gObjects.gbuffer);
+	gbuffersProgram->setPreDrawRoutine([this] {
+		glViewport(0, 0, 1280, 720);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		}
+	);
+
+	compositeProgram = std::make_unique<GProgram>("composite");
+	compositeProgram->setPreDrawRoutine([this] {
+		glViewport(0, 0, 1280, 720);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glBindVertexArray(gObjects.rectVAO);
+		glBindTextures(0, 2, gObjects.gbufferTextures);
+		}
+	);
+	compositeProgram->setReleaseRoutine([] {
+		glBindVertexArray(0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		}
+	);
+
+	return true;
+}
+
+bool Render::initShadow()
+{
+	constexpr int shadowMap_x = 2048;
+	constexpr int shadowMap_y = 2048;
+
+	glGenFramebuffers(1, &gObjects.shadowFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, gObjects.shadowFBO);
+
+	glGenTextures(1, &gObjects.shadowTexture);
+	glBindTexture(GL_TEXTURE_2D, gObjects.shadowTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32, shadowMap_x, shadowMap_y);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, gObjects.shadowTexture, 0);
+	glBindTextureUnit(0, gObjects.shadowTexture);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		return false;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	shadowProgram = std::make_unique<GProgram>("shadow");
+	shadowProgram->setFramebuffer(gObjects.shadowFBO);
+	shadowProgram->setPreDrawRoutine([shadowMap_x, shadowMap_y] {
+		glViewport(0, 0, shadowMap_x, shadowMap_y);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_POLYGON_OFFSET_FILL);
+		glPolygonOffset(2.f, 2.f);
+		}
+	);
+	shadowProgram->setReleaseRoutine([] {
+		glDisable(GL_POLYGON_OFFSET_FILL);
+		}
+	);
+
+	mat::mat4 view = lookAt(mat::vec3{ 2.f, 3.f, -0.5f }, mat::vec3{ 0.f, 0.f, 0.f });
+	mat::mat4 proj = mat::ortho(-3.f, 3.f, -3.f, 3.f, -10.f, 10.f);
+	mat::mat4 projectionViewMatrix = proj * view;
+	shadowProgram->setMat4Uniform("mvp", projectionViewMatrix);
+
+	mat::mat4 biasMatrix{
+		{ 0.5, 0.0, 0.0, 0.5 },
+		{ 0.0, 0.5, 0.0, 0.5 },
+		{ 0.0, 0.0, 0.5, 0.5 },
+		{ 0.0, 0.0, 0.0, 1.0 }
+	};
+	mat::mat4 depthBiasMVP = biasMatrix * projectionViewMatrix;
+	mainProgram->setMat4Uniform("shadowMVP", depthBiasMVP);
+
+	return true;
+}
+
+bool Render::initUI()
+{
+	uiTexture = std::make_unique<GTexture>("testTex");
+	uiProgram = std::make_unique<GProgram>("ui");
+	uiProgram->setPreDrawRoutine([this] {
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBindVertexArray(gObjects.rectVAO);
+		glBindTexture(GL_TEXTURE_2D, uiTexture->id());
+		}
+	);
+	uiProgram->setReleaseRoutine([] {
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		}
+	);
 
 	return true;
 }

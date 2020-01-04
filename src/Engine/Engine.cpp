@@ -64,10 +64,10 @@ bool Engine::init()
 		return false;
 	}
 
-	if (!audioEngine->init()) {
-		printf("Warning: AudioEngine failed to initialize!\n");
-		return false;
-	}
+	//if (!audioEngine->init()) {
+	//	printf("Warning: AudioEngine failed to initialize!\n");
+	//	return false;
+	//}
 
 	return true;
 }
@@ -132,9 +132,9 @@ void Engine::run()
 
 		// Render
 		const ECamera* camera = m_world->worldCamera();
-		renderer->setCamera(window, camera->cameraPosition(), camera->cameraFocus());
+		renderer->setCamera(camera->cameraPosition(), camera->cameraFocus());
 		renderer->draw(meshes);
-		renderer->drawUI(window, *uiManager->root);
+		renderer->drawUI(*uiManager->root);
 		renderer->show(window);
 	}
 }

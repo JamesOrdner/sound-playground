@@ -35,6 +35,9 @@ public:
 	// Set a matrix uniform with the given name to the given value
 	void setMat4Uniform(std::string name, const mat::mat4& matrix);
 
+	// Return the GLuint location of a glsl uniform
+	unsigned int getUniformLocation(std::string name);
+
 	// Store the framebuffer that this program renders to, and bind the framebuffer when in use
 	void setFramebuffer(unsigned int framebuffer);
 
@@ -42,9 +45,6 @@ private:
 
 	// Read the contents of a text file at the specified path into a string
 	std::string loadTextFile(std::string filepath);
-
-	// Return the GLuint location of a glsl uniform
-	unsigned int getUniformLocation(std::string name);
 
 	// Shader program
 	unsigned int program;

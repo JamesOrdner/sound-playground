@@ -26,17 +26,17 @@ public:
 	// Initialize renderer for use with the SDL_Window
 	bool init(SDL_Window* window);
 
-	// Deinitialize memory and delete the OpenGL context
+	// Deinitialize memory and delete the OpenGL context (safe to call multiple times)
 	void deinit();
 
 	// Set the camera position and focus, which sets the projection matrix
-	void setCamera(SDL_Window* window, const mat::vec3& position, const mat::vec3& focus);
+	void setCamera(const mat::vec3& position, const mat::vec3& focus);
 
 	// Draw a frame
 	void draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes);
 
 	// Draws the UI on the existing frame
-	void drawUI(SDL_Window* window, const UIObject& rootObject);
+	void drawUI(const UIObject& rootObject);
 
 	// Swaps the backbuffer to the window
 	void show(SDL_Window* window);
@@ -46,34 +46,41 @@ public:
 
 private:
 
-	// Pointer to the OpenGL context
+	struct GObjects
+	{
+		typedef unsigned int GLuint;
+
+		GLuint shadowFBO;
+		GLuint shadowTexture;
+		GLuint rectVAO;
+		GLuint gbuffer;
+		GLuint gbufferTextures[3];
+
+		void deinit();
+	};
+
+	GObjects gObjects;
+
 	void* glContext;
-
-	// Pointer to the main shader program
-	std::unique_ptr<GProgram> programMain;
-
-	// Pointer to the shadow shader program
-	std::unique_ptr<GProgram> programShadow;
-
-	unsigned int shadowFBO;
-	unsigned int shadowTexture;
-
-	// Pointer to the UI shader program
-	std::unique_ptr<GProgram> programUI;
-
-	unsigned int uiVAO;
-
-	// Pointer to the UI texture sheet
-	std::unique_ptr<GTexture> uiTexture;
 
 	// Transforms screen space to world space
 	mat::mat4 invProjectionViewMatrix;
 
-	// Setup shadow program and buffers. Returns success
-	bool initShadow();
+	std::unique_ptr<GProgram> mainProgram;
 
-	// Setup UI program and buffers. Returns success
+	// rectVAO is used for deferred composite and UI rendering
+	bool initRectVAO();
+
+	bool initDeferredPipeline();
+	std::unique_ptr<GProgram> gbuffersProgram;
+	std::unique_ptr<GProgram> compositeProgram;
+
+	bool initShadow();
+	std::unique_ptr<GProgram> shadowProgram;
+
 	bool initUI();
+	std::unique_ptr<GProgram> uiProgram;
+	std::unique_ptr<GTexture> uiTexture;
 
 	void drawUIRecursive(
 		const UIObject& object,
@@ -81,4 +88,3 @@ private:
 		float parentScale,
 		const mat::vec2& screenBounds);
 };
-
