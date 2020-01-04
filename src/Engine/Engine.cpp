@@ -179,21 +179,18 @@ EModel* Engine::raycastScreen(int x, int y) {
 
 EModel* Engine::raycastScreen(int x, int y, mat::vec3& hitLoc)
 {
-	using namespace mat;
-
 	int width, height;
 	SDL_GL_GetDrawableSize(window, &width, &height);
 
-	vec4 screen_orig{
+	mat::vec4 rayEndScreen{
 		static_cast<float>(x - width / 2) / (width / 2),
 		static_cast<float>(height / 2 - y) / (height / 2),
-		-1.f,
-		1.f
-	};
-	vec3 world_orig(renderer->screenToWorldMatrix()* screen_orig);
+		1.f,
+		1.f };
+	mat::vec4 rayEndWorld(renderer->screenToWorldMatrix() * rayEndScreen);
+	mat::vec3 rayEndWorldNormalized = mat::vec3(rayEndWorld) / rayEndWorld.w;
 
-	vec4 screen_dir{ 0.f, 0.f, 1.f, 0.f };
-	vec3 world_dir(renderer->screenToWorldMatrix()* screen_dir);
+	const mat::vec3& rayStartWorld = m_world->worldCamera()->cameraPosition();
 
-	return m_world->raycast(world_orig, world_dir, hitLoc);
+	return m_world->raycast(rayStartWorld, rayEndWorldNormalized - rayStartWorld, hitLoc);
 }

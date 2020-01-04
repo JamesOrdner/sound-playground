@@ -40,7 +40,7 @@ void UIManager::setupMenuBar()
 	root = std::make_unique<UIObject>();
 	root->anchor = UIAnchor::Bottom;
 	root->position = mat::vec2{ 0.f, -1.f };
-	root->bounds = mat::vec2{ 512, 512 };
+	root->bounds = mat::vec2{ 512, 128 };
 	root->bAcceptsInput = true;
 	root->callback = [] { printf("Big button pressed.\n"); };
 

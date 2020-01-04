@@ -75,9 +75,6 @@ private:
 	// Setup UI program and buffers. Returns success
 	bool initUI();
 
-	// Calculate the projection view matrix
-	mat::mat4 projectionViewMatrix(SDL_Window* window);
-
 	void drawUIRecursive(
 		const UIObject& object,
 		const mat::vec2& parentCoords,

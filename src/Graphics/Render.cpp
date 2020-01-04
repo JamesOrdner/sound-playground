@@ -53,7 +53,6 @@ bool Render::init(SDL_Window* window)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	programMain = std::make_unique<GProgram>("main");
-	programMain->setMat4Uniform("viewProj", projectionViewMatrix(window));
 	programMain->setPreDrawRoutine([window] {
 		int width, height;
 		SDL_GL_GetDrawableSize(window, &width, &height);
@@ -79,9 +78,6 @@ bool Render::init(SDL_Window* window)
 	}
 
 	uiTexture = std::make_unique<GTexture>("testTex");
-
-	mat::mat4 pv = projectionViewMatrix(window);
-	invProjectionViewMatrix = mat::inverse(pv);
 
 	return true;
 }
@@ -186,16 +182,6 @@ void Render::show(SDL_Window* window)
 const mat::mat4& Render::screenToWorldMatrix()
 {
 	return invProjectionViewMatrix;
-}
-
-mat::mat4 Render::projectionViewMatrix(SDL_Window* window)
-{
-	int width, height;
-	SDL_GL_GetDrawableSize(window, &width, &height);
-	float aspectRatio = static_cast<float>(height) / static_cast<float>(width);
-	mat::mat4 view = lookAt(mat::vec3{ 0.f, 10.f, 4.f }, mat::vec3{ 0.f, 0.f, 0.f });
-	mat::mat4 proj = mat::ortho(-3.5f, 3.5f, -3.5f * aspectRatio, 3.5f * aspectRatio, -50.f, 0.f);
-	return proj * view;
 }
 
 bool Render::initShadow()
