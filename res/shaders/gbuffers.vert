@@ -7,15 +7,18 @@ layout(location = 3) in  mat4 instanceTransform;
 
 layout(location = 0) out vec3 wsCoords;
 layout(location = 1) out vec3 outNormal;
-// layout(location = 2) out vec3 outTexCoord;
+layout(location = 2) out vec3 outTexCoord;
+layout(location = 3) out vec4 shadowCoord;
 
 uniform mat4 viewProj;
+uniform mat4 shadowViewProj;
 
 void main()
 {
 	wsCoords = vec3(instanceTransform * vec4(position, 1.0));
-	outNormal = normal;
-	// outTexCoord = texCoord;
+	outNormal = vec3(instanceTransform * vec4(normal, 0));;
+	outTexCoord = texCoord;
+	shadowCoord = shadowViewProj * vec4(wsCoords, 1.0);
 
 	gl_Position = viewProj * vec4(wsCoords, 1.0);
 }

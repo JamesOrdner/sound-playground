@@ -62,11 +62,11 @@ bool Render::init(SDL_Window* window)
 		return false;
 	}
 
-	//if (!initShadow()) {
-	//	printf("Failed to initialize shadow program.\n");
-	//	deinit();
-	//	return false;
-	//}
+	if (!initShadow()) {
+		printf("Failed to initialize shadow program.\n");
+		deinit();
+		return false;
+	}
 
 	if (!initUI()) {
 		printf("Failed to initialize UI program.\n");
@@ -120,10 +120,10 @@ void Render::draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes)
 	// Synchronize transform data
 	for (const auto& mesh : meshes) mesh.second.lock()->updateInstanceTransforms();
 
-	//// shadow buffer
-	//shadowProgram->use();
-	//for (const auto& mesh : meshes) mesh.second.lock()->draw();
-	//shadowProgram->release();
+	// shadow
+	shadowProgram->use();
+	for (const auto& mesh : meshes) mesh.second.lock()->draw();
+	shadowProgram->release();
 
 	// gbuffers
 	gbuffersProgram->use();
@@ -260,6 +260,11 @@ bool Render::initDeferredPipeline()
 		glViewport(0, 0, 1280, 720);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
+		glBindTexture(GL_TEXTURE_2D, gObjects.shadowTexture);
+		}
+	);
+	gbuffersProgram->setReleaseRoutine([] {
+		glBindTexture(GL_TEXTURE_2D, 0);
 		}
 	);
 
@@ -296,7 +301,7 @@ bool Render::initShadow()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, gObjects.shadowTexture, 0);
-	glBindTextureUnit(0, gObjects.shadowTexture);
+	// glBindTextureUnit(0, gObjects.shadowTexture);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		return false;
@@ -321,7 +326,7 @@ bool Render::initShadow()
 	mat::mat4 view = lookAt(mat::vec3{ 2.f, 3.f, -0.5f }, mat::vec3{ 0.f, 0.f, 0.f });
 	mat::mat4 proj = mat::ortho(-3.f, 3.f, -3.f, 3.f, -10.f, 10.f);
 	mat::mat4 projectionViewMatrix = proj * view;
-	shadowProgram->setMat4Uniform("mvp", projectionViewMatrix);
+	shadowProgram->setMat4Uniform("viewProj", projectionViewMatrix);
 
 	mat::mat4 biasMatrix{
 		{ 0.5, 0.0, 0.0, 0.5 },
@@ -330,7 +335,7 @@ bool Render::initShadow()
 		{ 0.0, 0.0, 0.0, 1.0 }
 	};
 	mat::mat4 depthBiasMVP = biasMatrix * projectionViewMatrix;
-	mainProgram->setMat4Uniform("shadowMVP", depthBiasMVP);
+	gbuffersProgram->setMat4Uniform("shadowViewProj", depthBiasMVP);
 
 	return true;
 }
