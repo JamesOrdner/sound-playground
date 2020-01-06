@@ -166,11 +166,13 @@ void Render::drawUIRecursive(
 	uiProgram->setUniform("transform", transform);
 
 	mat::vec4 texCoords = object.textureCoords();
-	mat::vec2 texMapping0{ texCoords[0], texCoords[1] };
-	mat::vec2 texMapping1{ texCoords[2], texCoords[3] };
-	texMapping0 /= uiTexture->textureSize();
-	texMapping1 /= uiTexture->textureSize();
-	mat::vec4 texMapping{ texMapping0.x, texMapping0.y, texMapping1.x, texMapping1.y };
+	const mat::vec2& texSize = uiTexture->textureSize();
+	mat::vec4 texMapping{
+		texCoords[0] / texSize.x,
+		(texSize.y - texCoords[1] - texCoords[3]) / texSize.y,
+		(texCoords[0] + texCoords[2]) / texSize.x,
+		(texSize.y - texCoords[1]) / texSize.y,
+	};
 	uiProgram->setUniform("uiTexCoord", texMapping);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -180,7 +182,7 @@ void Render::drawUIRecursive(
 	}
 }
 
-void Render::show(SDL_Window* window)
+void Render::swap(SDL_Window* window)
 {
 	SDL_GL_SwapWindow(window);
 }

@@ -39,7 +39,7 @@ public:
 	void drawUI(const UIObject& rootObject, const mat::vec2& virtualScreenBounds);
 
 	// Swaps the backbuffer to the window
-	void show(SDL_Window* window);
+	void swap(SDL_Window* window);
 
 	// Returns the inverse projection view matrix
 	const mat::mat4& screenToWorldMatrix();

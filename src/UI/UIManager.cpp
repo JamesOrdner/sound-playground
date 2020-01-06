@@ -55,22 +55,25 @@ void UIManager::setupMenuBar()
 	menuBar.anchor = UIAnchor::Bottom;
 	menuBar.bounds = mat::vec2{ 768, 100 };
 	menuBar.bAcceptsInput = true;
-	menuBar.callback = [] { printf("Big button pressed.\n"); };
-	menuBar.textureCoords = []() { return mat::vec4{ 0, 924, 768, 1024 }; };
+	menuBar.textureCoords = []() { return mat::vec4{ 0, 0, 768, 100 }; };
 
-	UIObject& child = menuBar.subobjects.emplace_back();
-	child.anchor = UIAnchor::Left;
-	child.bounds = mat::vec2{ 80, 80 };
-	child.position = mat::vec2{ 10, 0 };
-	child.bAcceptsInput = true;
-	child.callback = [] { printf("Little button pressed.\n"); };
-	child.textureCoords = [&state = child.state]() {
+	UIObject& speakerButton = menuBar.subobjects.emplace_back();
+	speakerButton.anchor = UIAnchor::Left;
+	speakerButton.bounds = mat::vec2{ 80, 80 };
+	speakerButton.position = mat::vec2{ 10, 0 };
+	speakerButton.bAcceptsInput = true;
+	speakerButton.callback = [] { printf("Little button pressed.\n"); };
+	speakerButton.textureCoords = [&state = speakerButton.state]() {
 		switch (state) {
-		case UIObjectState::Neutral: return mat::vec4{ 0, 844, 80, 924 };
-		case UIObjectState::Hovered: return mat::vec4{ 81, 844, 161, 924 };
-		case UIObjectState::Selected: return mat::vec4{ 0, 844, 80, 924 };
+		case UIObjectState::Hovered:  return mat::vec4{ 81, 101, 80, 80 };
+		default:                      return mat::vec4{  0, 101, 80, 80 };
 		}
 	};
+
+	UIObject& speaker = speakerButton.subobjects.emplace_back();
+	speaker.anchor = UIAnchor::Center;
+	speaker.bounds = mat::vec2{ 60, 60 };
+	speaker.textureCoords = []() { return mat::vec4{ 162, 101, 60, 60 }; };
 }
 
 UIObject* UIManager::objectAt(const mat::vec2& location)

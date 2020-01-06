@@ -123,7 +123,7 @@ void Engine::run()
 		renderer->setCamera(camera->cameraPosition(), camera->cameraFocus());
 		renderer->draw(meshes);
 		renderer->drawUI(*uiManager->root, uiManager->screenBounds);
-		renderer->show(window);
+		renderer->swap(window);
 	}
 }
 
