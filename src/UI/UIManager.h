@@ -5,6 +5,7 @@
 
 // Forward declarations
 struct UIObject;
+struct SDL_Window;
 union SDL_Event;
 
 class UIManager
@@ -16,7 +17,11 @@ public:
 	~UIManager();
 
 	// Handles input events. Returns true if the UI consumed the input.
-	bool handeInput(const SDL_Event& event, int screenWidth, int screenHeight);
+	bool handeInput(const SDL_Event& event, SDL_Window* window);
+
+	// Virtual screen bounds. All UI elements are arranged to this virtual resolution.
+	// Scaling to the actual screen resolution is handled automatically during rendering.
+	static mat::vec2 screenBounds;
 
 	// This is the root of all drawn UIObjects. UIObjects are drawn in the order that they appear in the
 	// UIObjects::subobjects array, and all of a UIObject's subobjects are drawn before the next UIObject in
@@ -27,13 +32,12 @@ private:
 
 	void setupMenuBar();
 
-	// Returns the object at location, provided in normalized screen space [-1, 1]
-	UIObject* objectAt(const mat::vec2& location, const mat::vec2& screenBounds);
+	// Returns the object at location, provided as a virtual screen coordinate
+	UIObject* objectAt(const mat::vec2& location);
 
 	UIObject* objectAtRecursive(
 		UIObject& object,
 		const mat::vec2& location,
-		const mat::vec2& parentCoords,
-		float parentScale,
-		const mat::vec2& screenBounds);
+		const mat::vec2& parentCenterAbs,
+		const mat::vec2& parentBoundsAbs);
 };

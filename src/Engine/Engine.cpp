@@ -106,9 +106,7 @@ void Engine::run()
 			}
 			else {
 				// UI input
-				int width, height;
-				SDL_GL_GetDrawableSize(window, &width, &height);
-				bool bConsumed = uiManager->handeInput(event, width, height);
+				bool bConsumed = uiManager->handeInput(event, window);
 
 				// Other input if not consumed by UI
 				if (!bConsumed) input->handleInput(event);
@@ -124,7 +122,7 @@ void Engine::run()
 		const ECamera* camera = m_world->worldCamera();
 		renderer->setCamera(camera->cameraPosition(), camera->cameraFocus());
 		renderer->draw(meshes);
-		renderer->drawUI(*uiManager->root);
+		renderer->drawUI(*uiManager->root, uiManager->screenBounds);
 		renderer->show(window);
 	}
 }

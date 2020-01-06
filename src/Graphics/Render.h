@@ -35,8 +35,8 @@ public:
 	// Draw a frame
 	void draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes);
 
-	// Draws the UI on the existing frame
-	void drawUI(const UIObject& rootObject);
+	// Draws the UI on the existing frame, provided the virtual UI screen dimensions
+	void drawUI(const UIObject& rootObject, const mat::vec2& virtualScreenBounds);
 
 	// Swaps the backbuffer to the window
 	void show(SDL_Window* window);
@@ -84,7 +84,7 @@ private:
 
 	void drawUIRecursive(
 		const UIObject& object,
-		const mat::vec2& parentCoords,
-		float parentScale,
+		const mat::vec2& parentCenterAbs,
+		const mat::vec2& parentBoundsAbs,
 		const mat::vec2& screenBounds);
 };

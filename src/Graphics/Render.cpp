@@ -136,22 +136,28 @@ void Render::draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes)
 	compositeProgram->release();
 }
 
-void Render::drawUI(const UIObject& rootObject)
+void Render::drawUI(const UIObject& rootObject, const mat::vec2& virtualScreenBounds)
 {
 	uiProgram->use();
-	drawUIRecursive(rootObject, mat::vec2{ 0, 0 }, 1.f, mat::vec2{ 1280, 720 });
+	drawUIRecursive(
+		rootObject,
+		virtualScreenBounds / 2.f,
+		virtualScreenBounds,
+		virtualScreenBounds);
 	uiProgram->release();
 }
 
 void Render::drawUIRecursive(
 	const UIObject& object,
-	const mat::vec2& parentCoords,
-	float parentScale,
+	const mat::vec2& parentCenterAbs,
+	const mat::vec2& parentBoundsAbs,
 	const mat::vec2& screenBounds)
 {
-	mat::vec2 scale = object.bounds / screenBounds * parentScale * object.scale;
-	mat::vec2 translation = parentCoords + object.position;
-	translation -= object.anchorPosition() * scale;
+	mat::vec2 anchorOffset = (parentBoundsAbs - object.bounds) / 2.f * object.anchorPosition();
+	mat::vec2 center = parentCenterAbs + anchorOffset + object.position; // virtual pixels
+
+	mat::vec2 translation = center / screenBounds * 2.f - 1.f; // NDC
+	mat::vec2 scale = object.bounds / screenBounds; // NDC
 	mat::mat3 transform{
 		{ scale.x,       0, translation.x },
 		{       0, scale.y, translation.y },
@@ -169,7 +175,7 @@ void Render::drawUIRecursive(
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	for (const auto& child : object.subobjects) {
-		drawUIRecursive(child, translation, parentScale * object.scale, screenBounds);
+		drawUIRecursive(child, center, object.bounds, screenBounds);
 	}
 }
 

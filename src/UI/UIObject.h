@@ -17,10 +17,11 @@ struct UIObject
 	// Subobjects inherit the transform of the parent object
 	std::vector<UIObject> subobjects;
 
-	// Anchor point of the object
+	// Anchor point of the object. This affects both what is considered the "center" point
+	// of the object, as well as where the object is positioned relative to the parent.
 	UIAnchor anchor;
 
-	// Relative [-1, 1] position of the anchor point of the object
+	// Position offset of the anchor point of the object, in pixels
 	mat::vec2 position;
 
 	// Absoule size of the object in pixels
@@ -28,9 +29,6 @@ struct UIObject
 
 	// UV coordinates of this object to the UI texture, in pixels { x0, y0, x1, y1 } 
 	mat::vec4 textureCoords;
-
-	// Scale of the object and all subobjects, useful for highDPI screens
-	float scale;
 
 	std::function<void()> callback;
 
