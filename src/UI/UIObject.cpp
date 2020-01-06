@@ -2,8 +2,10 @@
 
 UIObject::UIObject() :
 	anchor(UIAnchor::Center),
-	bAcceptsInput(false)
+	bAcceptsInput(false),
+	state(UIObjectState::Neutral)
 {
+	textureCoords = []() { return mat::vec4(); };
 	value.floatVal = 0.f;
 }
 

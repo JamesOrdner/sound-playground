@@ -29,6 +29,8 @@ union UIValue
 	float floatVal;
 };
 
+// UIData is a data container used to expose UObject properties to the UI. It contains only
+// the data relevant to UObjects. Drawing and event handling are all managed by UIManager.
 struct UIData
 {
 	// The callback to be called when the value is changed from the UI

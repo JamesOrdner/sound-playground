@@ -30,6 +30,11 @@ public:
 
 private:
 
+	// Currently hovered object. Objects must accept input to become hovered.
+	UIObject* hoveredObject;
+
+	mat::vec2 virtualMousePosition(SDL_Window* window);
+
 	void setupMenuBar();
 
 	// Returns the object at location, provided as a virtual screen coordinate

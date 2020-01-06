@@ -165,8 +165,9 @@ void Render::drawUIRecursive(
 	};
 	uiProgram->setUniform("transform", transform);
 
-	mat::vec2 texMapping0{ object.textureCoords[0], object.textureCoords[1] };
-	mat::vec2 texMapping1{ object.textureCoords[2], object.textureCoords[3] };
+	mat::vec4 texCoords = object.textureCoords();
+	mat::vec2 texMapping0{ texCoords[0], texCoords[1] };
+	mat::vec2 texMapping1{ texCoords[2], texCoords[3] };
 	texMapping0 /= uiTexture->textureSize();
 	texMapping1 /= uiTexture->textureSize();
 	mat::vec4 texMapping{ texMapping0.x, texMapping0.y, texMapping1.x, texMapping1.y };
