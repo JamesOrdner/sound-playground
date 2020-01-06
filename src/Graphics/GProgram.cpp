@@ -68,13 +68,19 @@ void GProgram::setReleaseRoutine(const std::function<void()>& f)
 	releaseRoutine = f;
 }
 
-void GProgram::setMat3Uniform(std::string name, const mat::mat3& matrix)
+void GProgram::setUniform(std::string name, const mat::vec4& vector)
+{
+	GLuint id = getUniformLocation(name);
+	glProgramUniform4fv(program, id, 1, vector.data);
+}
+
+void GProgram::setUniform(std::string name, const mat::mat3& matrix)
 {
 	GLuint id = getUniformLocation(name);
 	glProgramUniformMatrix3fv(program, id, 1, true, *matrix.data);
 }
 
-void GProgram::setMat4Uniform(std::string name, const mat::mat4& matrix)
+void GProgram::setUniform(std::string name, const mat::mat4& matrix)
 {
 	GLuint id = getUniformLocation(name);
 	glProgramUniformMatrix4fv(program, id, 1, true, *matrix.data);

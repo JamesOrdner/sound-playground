@@ -29,11 +29,9 @@ public:
 	// Provide a function that will be called when release() is called
 	void setReleaseRoutine(const std::function<void()>& f);
 
-	// Set a matrix uniform with the given name to the given value
-	void setMat3Uniform(std::string name, const mat::mat3& matrix);
-
-	// Set a matrix uniform with the given name to the given value
-	void setMat4Uniform(std::string name, const mat::mat4& matrix);
+	void setUniform(std::string name, const mat::vec4& vector);
+	void setUniform(std::string name, const mat::mat3& matrix);
+	void setUniform(std::string name, const mat::mat4& matrix);
 
 	// Return the GLuint location of a glsl uniform
 	unsigned int getUniformLocation(std::string name);

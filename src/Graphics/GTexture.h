@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Matrix.h"
 #include <string>
 
 class GTexture
@@ -14,7 +15,12 @@ public:
 	// Returns the opengl texture id
 	unsigned int id() const;
 
+	// Returns the size of the texture, in pixels
+	const mat::vec2& textureSize() const;
+
 private:
 
 	unsigned int textureID;
+
+	mat::vec2 size;
 };

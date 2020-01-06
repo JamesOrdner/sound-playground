@@ -39,5 +39,5 @@ void main()
 //		color = vec4(vec3(lit + ambient), 1);
 //	}
 	
-	color = vec4(vec3(lit), 1);
+	color = vec4(vec3(gColor * lit), 1);
 }

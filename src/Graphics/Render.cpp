@@ -111,7 +111,7 @@ void Render::setCamera(const mat::vec3& position, const mat::vec3& focus)
 	mat::mat4 view = lookAt(position, focus);
 	mat::mat4 proj = mat::perspective(-0.05f, 0.05f, -0.05f * aspectRatio, 0.05f * aspectRatio, 0.1f, 15.f);
 	mat::mat4 projView = proj * view;
-	gbuffersProgram->setMat4Uniform("viewProj", projView);
+	gbuffersProgram->setUniform("viewProj", projView);
 	invProjectionViewMatrix = mat::inverse(projView);
 }
 
@@ -152,14 +152,20 @@ void Render::drawUIRecursive(
 	mat::vec2 scale = object.bounds / screenBounds * parentScale * object.scale;
 	mat::vec2 translation = parentCoords + object.position;
 	translation -= object.anchorPosition() * scale;
-
 	mat::mat3 transform{
 		{ scale.x,       0, translation.x },
 		{       0, scale.y, translation.y },
 		{       0,       0,             1 }
 	};
+	uiProgram->setUniform("transform", transform);
 
-	uiProgram->setMat3Uniform("transform", transform);
+	mat::vec2 texMapping0{ object.textureCoords[0], object.textureCoords[1] };
+	mat::vec2 texMapping1{ object.textureCoords[2], object.textureCoords[3] };
+	texMapping0 /= uiTexture->textureSize();
+	texMapping1 /= uiTexture->textureSize();
+	mat::vec4 texMapping{ texMapping0.x, texMapping0.y, texMapping1.x, texMapping1.y };
+	uiProgram->setUniform("uiTexCoord", texMapping);
+
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	for (const auto& child : object.subobjects) {
@@ -301,7 +307,6 @@ bool Render::initShadow()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, gObjects.shadowTexture, 0);
-	// glBindTextureUnit(0, gObjects.shadowTexture);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		return false;
@@ -326,7 +331,7 @@ bool Render::initShadow()
 	mat::mat4 view = lookAt(mat::vec3{ 2.f, 3.f, -0.5f }, mat::vec3{ 0.f, 0.f, 0.f });
 	mat::mat4 proj = mat::ortho(-3.f, 3.f, -3.f, 3.f, -10.f, 10.f);
 	mat::mat4 projectionViewMatrix = proj * view;
-	shadowProgram->setMat4Uniform("viewProj", projectionViewMatrix);
+	shadowProgram->setUniform("viewProj", projectionViewMatrix);
 
 	mat::mat4 biasMatrix{
 		{ 0.5, 0.0, 0.0, 0.5 },
@@ -335,14 +340,14 @@ bool Render::initShadow()
 		{ 0.0, 0.0, 0.0, 1.0 }
 	};
 	mat::mat4 depthBiasMVP = biasMatrix * projectionViewMatrix;
-	gbuffersProgram->setMat4Uniform("shadowViewProj", depthBiasMVP);
+	gbuffersProgram->setUniform("shadowViewProj", depthBiasMVP);
 
 	return true;
 }
 
 bool Render::initUI()
 {
-	uiTexture = std::make_unique<GTexture>("testTex");
+	uiTexture = std::make_unique<GTexture>("ui");
 	uiProgram = std::make_unique<GProgram>("ui");
 	uiProgram->setPreDrawRoutine([this] {
 		glDisable(GL_DEPTH_TEST);

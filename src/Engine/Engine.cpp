@@ -112,16 +112,6 @@ void Engine::run()
 
 				// Other input if not consumed by UI
 				if (!bConsumed) input->handleInput(event);
-				
-				// TEMP DEBUG
-				if (!bConsumed && event.type == SDL_MOUSEBUTTONDOWN) {
-					int x, y;
-					SDL_GetMouseState(&x, &y);
-					if (auto hitObject = raycastScreen(x, y)) {
-						const mat::vec3& loc = hitObject->position();
-						printf("%f %f\n", loc.x, loc.z);
-					}
-				}
 			}
 		}
 

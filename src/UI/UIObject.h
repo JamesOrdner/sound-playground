@@ -26,6 +26,9 @@ struct UIObject
 	// Absoule size of the object in pixels
 	mat::vec2 bounds;
 
+	// UV coordinates of this object to the UI texture, in pixels { x0, y0, x1, y1 } 
+	mat::vec4 textureCoords;
+
 	// Scale of the object and all subobjects, useful for highDPI screens
 	float scale;
 

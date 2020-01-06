@@ -40,12 +40,14 @@ void UIManager::setupMenuBar()
 	root = std::make_unique<UIObject>();
 	root->anchor = UIAnchor::Bottom;
 	root->position = mat::vec2{ 0.f, -1.f };
-	root->bounds = mat::vec2{ 512, 128 };
+	root->bounds = mat::vec2{ 768, 100 };
+	root->textureCoords = mat::vec4{ 0, 924, 768, 1024 };
 	root->bAcceptsInput = true;
 	root->callback = [] { printf("Big button pressed.\n"); };
 
 	UIObject& child = root->subobjects.emplace_back();
-	child.bounds = mat::vec2{ 90, 90 };
+	child.bounds = mat::vec2{ 80, 80 };
+	child.textureCoords = mat::vec4{ 0, 844, 80, 924 };
 	child.bAcceptsInput = true;
 	child.callback = [] { printf("Little button pressed.\n"); };
 }

@@ -12,6 +12,9 @@ GTexture::GTexture(std::string texture)
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 	if (!data) printf("ERROR: Failed to load texture %s.\n", texture.c_str());
 
+	size.x = static_cast<float>(width);
+	size.y = static_cast<float>(height);
+
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -29,4 +32,9 @@ GTexture::~GTexture()
 unsigned int GTexture::id() const
 {
 	return textureID;
+}
+
+const mat::vec2& GTexture::textureSize() const
+{
+	return size;
 }
