@@ -20,10 +20,8 @@ Render::~Render() = default;
 
 void Render::setAttributes()
 {
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glMajorVersion);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glMinorVersion);
 }
 
 bool Render::init(SDL_Window* window)
@@ -46,7 +44,6 @@ bool Render::init(SDL_Window* window)
 		return false;
 	}
 
-	glEnable(GL_MULTISAMPLE);
 	glDepthFunc(GL_LESS);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -212,59 +209,50 @@ bool Render::initRectVAO()
 		1.f, 1.f, // UR
 	};
 
-	GLuint vbo;
+	GLuint vbo[2];
 	glCreateVertexArrays(1, &gObjects.rectVAO);
+	glCreateBuffers(2, vbo);
 
-	glCreateBuffers(1, &vbo);
-	glNamedBufferStorage(vbo, sizeof(g_vertex_data), g_vertex_data, 0);
-	glVertexArrayVertexBuffer(gObjects.rectVAO, 0, vbo, 0, sizeof(mat::vec2));
+	glNamedBufferStorage(vbo[0], sizeof(g_vertex_data), g_vertex_data, 0);
+	glVertexArrayVertexBuffer(gObjects.rectVAO, 0, vbo[0], 0, sizeof(mat::vec2));
 	glVertexArrayAttribFormat(gObjects.rectVAO, 0, 2, GL_FLOAT, GL_FALSE, 0);
 	glEnableVertexArrayAttrib(gObjects.rectVAO, 0);
 	glVertexArrayAttribBinding(gObjects.rectVAO, 0, 0);
-	glDeleteBuffers(1, &vbo);
 
-	glCreateBuffers(1, &vbo);
-	glNamedBufferStorage(vbo, sizeof(g_texcoord_data), g_texcoord_data, 0);
-	glVertexArrayVertexBuffer(gObjects.rectVAO, 1, vbo, 0, sizeof(mat::vec2));
+	glNamedBufferStorage(vbo[1], sizeof(g_texcoord_data), g_texcoord_data, 0);
+	glVertexArrayVertexBuffer(gObjects.rectVAO, 1, vbo[1], 0, sizeof(mat::vec2));
 	glVertexArrayAttribFormat(gObjects.rectVAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
 	glEnableVertexArrayAttrib(gObjects.rectVAO, 1);
 	glVertexArrayAttribBinding(gObjects.rectVAO, 1, 1);
-	glDeleteBuffers(1, &vbo);
-
+	
+	glDeleteBuffers(2, vbo);
 	return true;
 }
 
 bool Render::initDeferredPipeline()
 {
-	glGenFramebuffers(1, &gObjects.gbuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, gObjects.gbuffer);
+	glCreateFramebuffers(1, &gObjects.gbuffer);
+	glCreateTextures(GL_TEXTURE_2D, 3, gObjects.gbufferTextures);
 
-	glGenTextures(3, gObjects.gbufferTextures);
+	glTextureParameteri(gObjects.gbufferTextures[0], GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTextureParameteri(gObjects.gbufferTextures[0], GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTextureStorage2D(gObjects.gbufferTextures[0], 1, GL_RGBA32UI, 1280, 720);
+	glNamedFramebufferTexture(gObjects.gbuffer, GL_COLOR_ATTACHMENT0, gObjects.gbufferTextures[0], 0);
 
-	glBindTexture(GL_TEXTURE_2D, gObjects.gbufferTextures[0]);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32UI, 1280, 720);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gObjects.gbufferTextures[0], 0);
+	glTextureParameteri(gObjects.gbufferTextures[1], GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTextureParameteri(gObjects.gbufferTextures[1], GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTextureStorage2D(gObjects.gbufferTextures[1], 1, GL_RGBA32F, 1280, 720);
+	glNamedFramebufferTexture(gObjects.gbuffer, GL_COLOR_ATTACHMENT1, gObjects.gbufferTextures[1], 0);
 
-	glBindTexture(GL_TEXTURE_2D, gObjects.gbufferTextures[1]);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 1280, 720);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, gObjects.gbufferTextures[1], 0);
-
-	glBindTexture(GL_TEXTURE_2D, gObjects.gbufferTextures[2]);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, 1280, 720);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT , gObjects.gbufferTextures[2], 0);
+	glTextureStorage2D(gObjects.gbufferTextures[2], 1, GL_DEPTH_COMPONENT32F, 1280, 720);
+	glNamedFramebufferTexture(gObjects.gbuffer, GL_DEPTH_ATTACHMENT , gObjects.gbufferTextures[2], 0);
 
 	GLuint drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-	glDrawBuffers(2, drawBuffers);
-
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+	glNamedFramebufferDrawBuffers(gObjects.gbuffer, 2, drawBuffers);
+	
+	if (glCheckNamedFramebufferStatus(gObjects.gbuffer, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		return false;
 	}
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	gbuffersProgram = std::make_unique<GProgram>("gbuffers");
 	gbuffersProgram->setFramebuffer(gObjects.gbuffer);
@@ -272,7 +260,7 @@ bool Render::initDeferredPipeline()
 		glViewport(0, 0, 1280, 720);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
-		glBindTexture(GL_TEXTURE_2D, gObjects.shadowTexture);
+		glBindTextures(0, 1, &gObjects.shadowTexture);
 		}
 	);
 	gbuffersProgram->setReleaseRoutine([] {
@@ -302,23 +290,19 @@ bool Render::initShadow()
 	constexpr int shadowMap_x = 2048;
 	constexpr int shadowMap_y = 2048;
 
-	glGenFramebuffers(1, &gObjects.shadowFBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, gObjects.shadowFBO);
+	glCreateFramebuffers(1, &gObjects.shadowFBO);
 
-	glGenTextures(1, &gObjects.shadowTexture);
-	glBindTexture(GL_TEXTURE_2D, gObjects.shadowTexture);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32, shadowMap_x, shadowMap_y);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, gObjects.shadowTexture, 0);
+	glCreateTextures(GL_TEXTURE_2D, 1, &gObjects.shadowTexture);
+	glTextureStorage2D(gObjects.shadowTexture, 1, GL_DEPTH_COMPONENT32, shadowMap_x, shadowMap_y);
+	glTextureParameteri(gObjects.shadowTexture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTextureParameteri(gObjects.shadowTexture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureParameteri(gObjects.shadowTexture, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	glTextureParameteri(gObjects.shadowTexture, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glNamedFramebufferTexture(gObjects.shadowFBO, GL_DEPTH_ATTACHMENT, gObjects.shadowTexture, 0);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+	if (glCheckNamedFramebufferStatus(gObjects.shadowFBO, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		return false;
 	}
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	shadowProgram = std::make_unique<GProgram>("shadow");
 	shadowProgram->setFramebuffer(gObjects.shadowFBO);

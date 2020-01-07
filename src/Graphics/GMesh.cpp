@@ -208,14 +208,11 @@ void GMesh::reloadInstanceBuffers()
 		transforms.push_back(t(model->transformMatrix()));
 		model->transformUpdated();
 	}
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_instanceTransforms);
-	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(mat::mat4), transforms.data(), GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_selected);
+	glNamedBufferData(vbo_instanceTransforms, models.size() * sizeof(mat::mat4), transforms.data(), GL_STATIC_DRAW);
+
 	std::vector<float> selected(models.size(), 0.f);
-	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(float), selected.data(), GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glNamedBufferData(vbo_selected, models.size() * sizeof(float), selected.data(), GL_STATIC_DRAW);
 }
 
 void GMesh::updateInstanceTransforms()
@@ -226,10 +223,7 @@ void GMesh::updateInstanceTransforms()
 		if (model->needsTransformUpdate()) {
 			mat::mat4 transform = t(model->transformMatrix());
 			model->transformUpdated();
-
-			glBindBuffer(GL_ARRAY_BUFFER, vbo_instanceTransforms);
-			glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(mat::mat4), sizeof(mat::mat4), transform.data);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glNamedBufferSubData(vbo_instanceTransforms, i * sizeof(mat::mat4), sizeof(mat::mat4), transform.data);
 		}
 		i++;
 	}

@@ -6,7 +6,7 @@ layout(location = 2) in vec3 texCoord;
 layout(location = 3) in vec4 shadowCoord;
 layout(location = 4) in float selected;
 
-layout (binding = 0) uniform sampler2DShadow shadowTex;
+layout(binding = 0) uniform sampler2DShadow shadowTex;
 
 layout(location = 0) out uvec4 color0;
 layout(location = 1) out vec4  color1;
