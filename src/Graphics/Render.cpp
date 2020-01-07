@@ -212,27 +212,24 @@ bool Render::initRectVAO()
 		1.f, 1.f, // UR
 	};
 
-	glGenVertexArrays(1, &gObjects.rectVAO);
-	glBindVertexArray(gObjects.rectVAO);
-
 	GLuint vbo;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glEnableVertexAttribArray(0);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_data), g_vertex_data, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glCreateVertexArrays(1, &gObjects.rectVAO);
 
-	GLuint vbo_texcoord;
-	glGenBuffers(1, &vbo_texcoord);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_texcoord);
-	glEnableVertexAttribArray(1);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_texcoord_data), g_texcoord_data, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindVertexArray(0);
-
+	glCreateBuffers(1, &vbo);
+	glNamedBufferStorage(vbo, sizeof(g_vertex_data), g_vertex_data, 0);
+	glVertexArrayVertexBuffer(gObjects.rectVAO, 0, vbo, 0, sizeof(mat::vec2));
+	glVertexArrayAttribFormat(gObjects.rectVAO, 0, 2, GL_FLOAT, GL_FALSE, 0);
+	glEnableVertexArrayAttrib(gObjects.rectVAO, 0);
+	glVertexArrayAttribBinding(gObjects.rectVAO, 0, 0);
 	glDeleteBuffers(1, &vbo);
-	glDeleteBuffers(1, &vbo_texcoord);
+
+	glCreateBuffers(1, &vbo);
+	glNamedBufferStorage(vbo, sizeof(g_texcoord_data), g_texcoord_data, 0);
+	glVertexArrayVertexBuffer(gObjects.rectVAO, 1, vbo, 0, sizeof(mat::vec2));
+	glVertexArrayAttribFormat(gObjects.rectVAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
+	glEnableVertexArrayAttrib(gObjects.rectVAO, 1);
+	glVertexArrayAttribBinding(gObjects.rectVAO, 1, 1);
+	glDeleteBuffers(1, &vbo);
 
 	return true;
 }

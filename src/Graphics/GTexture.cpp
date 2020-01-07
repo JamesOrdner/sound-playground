@@ -9,19 +9,18 @@ GTexture::GTexture(std::string texture)
 	int width, height, nrChannels;
 	std::string path = "res/textures/" + texture + ".tga";
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
-	if (!data) printf("ERROR: Failed to load texture %s.\n", texture.c_str());
+	stbi_uc* data = stbi_load(path.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+	if (!data || nrChannels != 4) printf("ERROR: Failed to load texture %s.\n", texture.c_str());
 
 	size.x = static_cast<float>(width);
 	size.y = static_cast<float>(height);
 
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_2D, textureID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
+	glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureStorage2D(textureID, 1, GL_RGBA8, width, height);
+	glTextureSubImage2D(textureID, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	stbi_image_free(data);
-	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 GTexture::~GTexture()
