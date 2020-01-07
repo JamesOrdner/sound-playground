@@ -64,4 +64,7 @@ private:
 
 	// Buffers storing rows of instance transformations
 	unsigned int vbo_instanceTransforms;
+
+	// Float buffer. 0 == unselected, 1 == selected.
+	unsigned int vbo_selected;
 };

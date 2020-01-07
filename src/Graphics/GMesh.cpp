@@ -33,6 +33,7 @@ GMesh::GMesh(const std::string& filepath)
 	loader.LoadBinaryFromFile(&model, &err, &warn, filepath);
 
 	glGenBuffers(1, &vbo_instanceTransforms);
+	glGenBuffers(1, &vbo_selected);
 
 	for (const Node& node : model.nodes) {
 		if (node.name == "_ray") {
@@ -129,6 +130,10 @@ GMesh::GMesh(const std::string& filepath)
 				glVertexAttribDivisor(3 + i, 1);
 			}
 
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_selected);
+			glEnableVertexAttribArray(7);
+			glVertexAttribPointer(7, 1, GL_FLOAT, GL_FALSE, sizeof(float), nullptr);
+			glVertexAttribDivisor(7, 1);
 
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindVertexArray(0);
@@ -177,6 +182,7 @@ void GMesh::loadRayMesh(const Model& model, const Node& node)
 
 GMesh::~GMesh()
 {
+	glDeleteBuffers(1, &vbo_selected);
 	glDeleteBuffers(1, &vbo_instanceTransforms);
 	for (const auto& primitive : primitives) {
 		glDeleteVertexArrays(1, &primitive.vao);
@@ -203,7 +209,12 @@ void GMesh::reloadInstanceBuffers()
 		model->transformUpdated();
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_instanceTransforms);
-	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(mat::mat4), &transforms[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(mat::mat4), transforms.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_selected);
+	std::vector<float> selected(models.size(), 0.f);
+	glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(float), selected.data(), GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
