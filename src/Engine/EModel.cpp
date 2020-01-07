@@ -1,34 +1,19 @@
 #include "EModel.h"
 #include "../Graphics/GMesh.h"
-#include "../Audio/Components/AudioComponent.h"
 
-EModel::EModel(const std::string& filepath) :
+EModel::EModel() :
+	mesh(nullptr),
 	bDirtyTransform(false),
 	bDirtySelection(false)
 {
-	this->filepath = filepath;
 }
 
 EModel::~EModel() = default;
 
-std::string EModel::getFilepath()
+void EModel::setMesh(std::string filepath)
 {
-	return filepath;
-}
-
-void EModel::registerWithMesh(std::shared_ptr<GMesh> mesh)
-{
-	this->mesh = mesh;
-}
-
-void EModel::unregister()
-{
-	mesh.reset();
-}
-
-std::shared_ptr<GMesh> EModel::getMesh()
-{
-	return mesh;
+	mesh = GMesh::getSharedMesh(filepath);
+	mesh->registerModel(this);
 }
 
 float EModel::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc)

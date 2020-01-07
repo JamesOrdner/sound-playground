@@ -189,16 +189,28 @@ GMesh::~GMesh()
 	}
 }
 
+std::map<std::string, std::unique_ptr<GMesh>> GMesh::meshes = std::map<std::string, std::unique_ptr<GMesh>>();
+
+GMesh* GMesh::getSharedMesh(const std::string& filepath)
+{
+	if (auto* existing = meshes[filepath].get()) {
+		return existing;
+	}
+	else {
+		auto& mesh = meshes[filepath] = std::make_unique<GMesh>(filepath);
+		return mesh.get();
+	}
+}
+
+const std::map<std::string, std::unique_ptr<GMesh>>& GMesh::sharedMeshes()
+{
+	return meshes;
+}
+
 void GMesh::registerModel(EModel* model)
 {
 	models.push_back(model);
 	reloadInstanceBuffers();
-}
-
-void GMesh::unregisterModel(EModel* model)
-{
-	models.remove(model);
-	if (!models.empty()) reloadInstanceBuffers();
 }
 
 void GMesh::reloadInstanceBuffers()

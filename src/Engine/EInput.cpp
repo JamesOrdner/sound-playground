@@ -7,7 +7,7 @@
 void EInput::handleInput(const SDL_Event& event)
 {
     const auto& objects = Engine::instance().world().allObjects();
-    for (auto& object : objects) {
+    for (const auto& object : objects) {
         if (auto* inputComponent = object->inputComponent()) {
             inputComponent->processInput(event);
         }

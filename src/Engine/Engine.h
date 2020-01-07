@@ -1,17 +1,14 @@
 #pragma once
 
-#include "EWorld.h"
-#include <string>
-#include <map>
-#include <list>
+#include "../Graphics/Matrix.h"
 #include <memory>
 
 // Forward declarations
 struct SDL_Window;
+class EWorld;
 class AudioEngine;
 class UIManager;
 class EModel;
-class GMesh;
 class EInput;
 class Render;
 
@@ -48,25 +45,11 @@ private:
 	// Length in seconds of the last frame
 	float lastFrameTime;
 
-	// Register a model with the engine for rendering. Does not check for double registration.
-	void registerModel(const std::shared_ptr<EModel>& model);
-	friend void EWorld::addObject(const std::shared_ptr<EObject>& object);
-
-	// Remove a model from the rendering pipeline
-	void unregisterModel(const std::shared_ptr<EModel>& model);
-	friend void EWorld::removeObject(const std::shared_ptr<EObject>& object);
-
-	// Returns a pointer to an existing mesh at the filepath, or creates a new one
-	std::shared_ptr<GMesh> makeMesh(const std::string& filepath);
-
 	// EInput handles all user input
 	std::unique_ptr<EInput> input;
 
 	// The world, containing all objects
 	std::unique_ptr<EWorld> m_world;
-
-	// Stores pointers to all loaded meshes, indexed by path
-	std::map<std::string, std::weak_ptr<GMesh>> meshes;
 
 	/** SDL */
 
@@ -81,8 +64,7 @@ private:
 
 	std::unique_ptr<AudioEngine> audioEngine;
 
-	////// TEMPORARY DEBUG
-	std::shared_ptr<EModel> activeModel;
+	/** Utility */
 
 	// Return the object at screen coordinates
 	EModel* raycastScreen(int x, int y);

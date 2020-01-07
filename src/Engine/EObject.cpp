@@ -2,11 +2,10 @@
 #include "Engine.h"
 #include "../Audio/AudioEngine.h"
 #include "../Audio/Components/AudioComponent.h"
-#include "EInputComponent.h"
 #include "../UI/UIComponent.h"
+#include "EInputComponent.h"
 
 EObject::EObject() :
-	bExistsInWorld(false),
 	bSelected(false),
 	m_scale(1)
 {
@@ -98,11 +97,8 @@ void EObject::addAudioComponent(std::unique_ptr<AudioComponent> component)
 {
 	if (m_audioComponent) removeAudioComponent();
 	m_audioComponent = std::move(component);
-	if (bExistsInWorld) {
-		// Component should only be registered with audio engine if the object exists in a world
-		auto& engine = Engine::instance();
-		engine.audio().registerComponent(m_audioComponent.get(), this);
-	}
+	auto& audioEngine = Engine::instance().audio();
+	audioEngine.registerComponent(m_audioComponent.get(), this);
 }
 
 void EObject::removeAudioComponent()

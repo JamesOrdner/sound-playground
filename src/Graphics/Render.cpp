@@ -112,19 +112,21 @@ void Render::setCamera(const mat::vec3& position, const mat::vec3& focus)
 	invProjectionViewMatrix = mat::inverse(projView);
 }
 
-void Render::draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes)
+void Render::drawMeshes()
 {
+	const auto& meshes = GMesh::sharedMeshes();
+
 	// Synchronize transform data
-	for (const auto& mesh : meshes) mesh.second.lock()->updateInstanceData();
+	for (const auto& mesh : meshes) mesh.second->updateInstanceData();
 
 	// shadow
 	shadowProgram->use();
-	for (const auto& mesh : meshes) mesh.second.lock()->draw();
+	for (const auto& mesh : meshes) mesh.second->draw();
 	shadowProgram->release();
 
 	// gbuffers
 	gbuffersProgram->use();
-	for (const auto& mesh : meshes) mesh.second.lock()->draw();
+	for (const auto& mesh : meshes) mesh.second->draw();
 	gbuffersProgram->release();
 
 	// composite

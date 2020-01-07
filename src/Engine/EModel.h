@@ -1,10 +1,7 @@
 #pragma once
 
 #include "EObject.h"
-
-#include <memory>
 #include <string>
-#include <vector>
 
 // Forward declarations
 class GMesh;
@@ -13,23 +10,15 @@ class EModel : public EObject
 {
 public:
 
-	EModel(const std::string& filepath);
+	EModel();
 
 	virtual ~EModel();
 
-	// Returns the path to the model file
-	std::string getFilepath();
+	// Set the visual representation of the model via a mesh filepath
+	void setMesh(std::string filepath);
 
-	// Called from the engine upon registration
-	void registerWithMesh(std::shared_ptr<GMesh> mesh);
-
-	// Called from engine upon removal of registration
-	void unregister();
-
-	// Returns the mesh associated with this model
-	std::shared_ptr<GMesh> getMesh();
-
-	// Perform a raycast against this model. Returns the length of the hit ray (negative if no hit).
+	// Perform a worldspace raycast against this model.
+	// Returns the length of the hit ray (negative if no hit).
 	float raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc);
 
 	// Returns the world transform matrix for this model
@@ -48,7 +37,6 @@ public:
 	void selectionUpdated();
 
 	// EObject interface
-
 	void setSelected(bool selected) override;
 	void setPosition(const mat::vec3& location) override;
 	void setRotation(const mat::vec3& rotation) override;
@@ -58,11 +46,8 @@ public:
 
 private:
 
-	// Filepath of the model's mesh
-	std::string filepath;
-
-	// Mesh storing geometry and other rendering data
-	std::shared_ptr<GMesh> mesh;
+	// Shared mesh, storing geometry and other rendering data
+	GMesh* mesh;
 
 	// Set to true when location, rotation, or scale is modified
 	bool bDirtyTransform;

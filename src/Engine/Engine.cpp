@@ -1,10 +1,8 @@
 #include "Engine.h"
+#include "EWorld.h"
 #include "../Audio/AudioEngine.h"
 #include "../Graphics/Render.h"
-#include "../Graphics/Matrix.h"
-#include "../Graphics/GMesh.h"
 #include "../UI/UIManager.h"
-#include "../UI/UIObject.h"
 #include "EModel.h"
 #include "ECamera.h"
 #include "EInput.h"
@@ -131,42 +129,9 @@ void Engine::run()
 		// Render
 		const ECamera* camera = m_world->worldCamera();
 		renderer->setCamera(camera->cameraPosition(), camera->cameraFocus());
-		renderer->draw(meshes);
+		renderer->drawMeshes();
 		renderer->drawUI(*uiManager->root, uiManager->screenBounds);
 		renderer->swap(window);
-	}
-}
-
-void Engine::registerModel(const std::shared_ptr<EModel>& model)
-{
-	// Assign mesh to model and save model reference
-	auto mesh = makeMesh(model->getFilepath());
-	model->registerWithMesh(mesh); // transfer mesh ownership to model
-	mesh->registerModel(model.get()); // add weak pointer to model in mesh model list
-
-	activeModel = model;
-}
-
-void Engine::unregisterModel(const std::shared_ptr<EModel>& model)
-{
-	model->getMesh()->unregisterModel(model.get());
-	model->unregister();
-
-	// Remove mesh from map if no more models reference this mesh
-	std::string path = model->getFilepath();
-	auto meshRef = meshes[path];
-	if (meshRef.expired()) meshes.erase(path);
-}
-
-std::shared_ptr<GMesh> Engine::makeMesh(const std::string& filepath)
-{
-	if (auto existing = meshes[filepath].lock()) {
-		return existing;
-	}
-	else {
-		auto newMesh = std::make_shared<GMesh>(filepath);
-		meshes[filepath] = newMesh;
-		return newMesh;
 	}
 }
 

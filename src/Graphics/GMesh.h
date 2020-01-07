@@ -3,6 +3,8 @@
 #include "Matrix.h"
 #include <string>
 #include <vector>
+#include <map>
+#include <memory>
 #include <list>
 
 // Forward declarations
@@ -16,15 +18,19 @@ namespace tinygltf
 class GMesh
 {
 public:
+
 	GMesh(const std::string& filepath);
 
 	~GMesh();
 
+	// Returns a pointer to a mesh object at the specified filepath.
+	static GMesh* getSharedMesh(const std::string& filepath);
+
+	// Return all shared meshes
+	static const std::map<std::string, std::unique_ptr<GMesh>>& sharedMeshes();
+
 	// Register a model with this mesh
 	void registerModel(EModel* model);
-
-	// Unregisters a model from this mesh
-	void unregisterModel(EModel* model);
 
 	// Updates any instance transforms or other data that is out of date.
 	// Should be called at the beginning of each frame, before any draw() calls.
@@ -37,6 +43,9 @@ public:
 	const std::vector<mat::vec3>& getRayMesh();
 
 private:
+
+	// Stores pointers to all loaded meshes, indexed by path
+	static std::map<std::string, std::unique_ptr<GMesh>> meshes;
 
 	struct GLPrimitive {
 		unsigned int vao;

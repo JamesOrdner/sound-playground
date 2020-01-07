@@ -1,13 +1,12 @@
 #pragma once
 
 #include "../Graphics/Matrix.h"
-#include <string>
 #include <memory>
 
 // Forward declarations
+class AudioComponent;
 class EInputComponent;
 class UIComponent;
-class AudioComponent;
 
 class EObject
 {
@@ -16,12 +15,6 @@ public:
 	EObject();
 
 	virtual ~EObject();
-
-	// Name used to identify this object
-	std::string name;
-
-	// This is only true when the object is registered with a world
-	bool bExistsInWorld;
 
 	virtual void setSelected(bool selected);
 	bool selected() const;

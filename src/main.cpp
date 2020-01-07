@@ -1,4 +1,5 @@
 #include "Engine/Engine.h"
+#include "Engine/EWorld.h"
 #include "Engine/EModel.h"
 #include "Audio/Components/AMicrophone.h"
 #include "Audio/Components/ASpeaker.h"
@@ -10,21 +11,20 @@ int main(int argc, char* args[])
 
 	for (int x = -2; x <= 2; x++) {
 		for (int z = -1; z <= 2; z++) {
-			auto model = std::make_shared<EModel>("res/platform.glb");
-			model->setPosition(mat::vec3{ static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
-			world.addObject(model);
+			EModel* platform = world.spawnObject<EModel>();
+			platform->setMesh("res/platform.glb");
+			platform->setPosition(mat::vec3{ static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
 		}
 	}
 
-	auto mic = std::make_shared<EObject>();
+	EObject* mic = world.spawnObject<EObject>();
 	mic->addAudioComponent(std::make_unique<AMicrophone>());
-	world.addObject(mic);
 
-	auto speaker = std::make_shared<EModel>("res/speaker_small.glb");
+	EModel* speaker = world.spawnObject<EModel>();
+	speaker->setMesh("res/speaker_small.glb");
 	speaker->setPosition(mat::vec3{ -2, 0, 0 });
 	speaker->setRotation(mat::vec3{ 0, mat::pi * 0.5f, 0});
 	speaker->addAudioComponent(std::make_unique<ASpeaker>());
-	world.addObject(speaker);
 
 	//auto speaker2 = std::make_shared<EModel>("res/speaker_small.glb");
 	//speaker2->setPosition(mat::vec3{ 2, 0, 0 });

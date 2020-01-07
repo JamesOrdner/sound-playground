@@ -1,16 +1,12 @@
 #pragma once
 
 #include "Matrix.h"
-#include <string>
-#include <list>
-#include <map>
 #include <memory>
 
 // Forward declarations
 struct SDL_Window;
 struct UIObject;
 class GProgram;
-class GMesh;
 class GTexture;
 
 class Render
@@ -33,7 +29,7 @@ public:
 	void setCamera(const mat::vec3& position, const mat::vec3& focus);
 
 	// Draw a frame
-	void draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes);
+	void drawMeshes();
 
 	// Draws the UI on the existing frame, provided the virtual UI screen dimensions
 	void drawUI(const UIObject& rootObject, const mat::vec2& virtualScreenBounds);
