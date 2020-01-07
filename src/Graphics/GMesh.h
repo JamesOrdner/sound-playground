@@ -26,9 +26,9 @@ public:
 	// Unregisters a model from this mesh
 	void unregisterModel(EModel* model);
 
-	// Updates any instance transforms that are out of date. Should be called
-	// at the beginning of each frame, before any draw() calls.
-	void updateInstanceTransforms();
+	// Updates any instance transforms or other data that is out of date.
+	// Should be called at the beginning of each frame, before any draw() calls.
+	void updateInstanceData();
 
 	// Called from the main render loop, draws all models using this mesh
 	void draw();

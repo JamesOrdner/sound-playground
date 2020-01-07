@@ -106,10 +106,20 @@ void Engine::run()
 			}
 			else {
 				// UI input
-				bool bConsumed = uiManager->handeInput(event, window);
+				if (uiManager->handeInput(event, window)) continue;
 
-				// Other input if not consumed by UI
-				if (!bConsumed) input->handleInput(event);
+				// Object selection
+				if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+					int x, y;
+					SDL_GetMouseState(&x, &y);
+					if (EModel* model = raycastScreen(x, y)) {
+						model->setSelected(!model->selected());
+						continue;
+					}
+				}
+				
+				// Other input if not yet consumed
+				input->handleInput(event);
 			}
 		}
 

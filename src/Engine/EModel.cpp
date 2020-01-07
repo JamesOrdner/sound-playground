@@ -2,7 +2,9 @@
 #include "../Graphics/GMesh.h"
 #include "../Audio/Components/AudioComponent.h"
 
-EModel::EModel(const std::string& filepath) : bDirtyTransform(false)
+EModel::EModel(const std::string& filepath) :
+	bDirtyTransform(false),
+	bDirtySelection(false)
 {
 	this->filepath = filepath;
 }
@@ -120,4 +122,20 @@ bool EModel::needsTransformUpdate()
 void EModel::transformUpdated()
 {
 	bDirtyTransform = false;
+}
+
+void EModel::setSelected(bool selected)
+{
+	bDirtySelection = bDirtySelection || bSelected != selected;
+	EObject::setSelected(selected);
+}
+
+bool EModel::needsSelectionUpdate()
+{
+	return bDirtySelection;
+}
+
+void EModel::selectionUpdated()
+{
+	bDirtySelection = true;
 }

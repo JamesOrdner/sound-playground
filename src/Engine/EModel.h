@@ -41,20 +41,19 @@ public:
 	// Called once transform updates have been copied to rendering device
 	void transformUpdated();
 
-	/** EObject overrides */
+	// Returns true if model selection has been modified and needs GPU update
+	bool needsSelectionUpdate();
 
-	// Sets the world space position of the model
+	// Called once selection updates have been copied to GPU
+	void selectionUpdated();
+
+	// EObject interface
+
+	void setSelected(bool selected) override;
 	void setPosition(const mat::vec3& location) override;
-
-	// Sets the world space rotation of the object
 	void setRotation(const mat::vec3& rotation) override;
-
-	// Sets the uniform scale of the model
 	void setScale(float scale) override;
-
-	// Sets the scale of the model
 	void setScale(const mat::vec3& scale) override;
-
 	void updatePhysics(float deltaTime) override;
 
 private:
@@ -67,6 +66,9 @@ private:
 
 	// Set to true when location, rotation, or scale is modified
 	bool bDirtyTransform;
+
+	// Set to true when model selection is modified
+	bool bDirtySelection;
 
 	/** Physics */
 

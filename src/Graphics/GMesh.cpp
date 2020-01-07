@@ -204,18 +204,19 @@ void GMesh::unregisterModel(EModel* model)
 void GMesh::reloadInstanceBuffers()
 {
 	std::vector<mat::mat4> transforms;
+	std::vector<float> selections;
 	for (EModel* model : models) {
 		transforms.push_back(t(model->transformMatrix()));
+		selections.push_back(model->selected() ? 1.f : 0.f);
 		model->transformUpdated();
+		model->selectionUpdated();
 	}
 
 	glNamedBufferData(vbo_instanceTransforms, models.size() * sizeof(mat::mat4), transforms.data(), GL_STATIC_DRAW);
-
-	std::vector<float> selected(models.size(), 0.f);
-	glNamedBufferData(vbo_selected, models.size() * sizeof(float), selected.data(), GL_STATIC_DRAW);
+	glNamedBufferData(vbo_selected, models.size() * sizeof(float), selections.data(), GL_STATIC_DRAW);
 }
 
-void GMesh::updateInstanceTransforms()
+void GMesh::updateInstanceData()
 {
 	// Check for modified model transforms
 	size_t i = 0;
@@ -224,6 +225,11 @@ void GMesh::updateInstanceTransforms()
 			mat::mat4 transform = t(model->transformMatrix());
 			model->transformUpdated();
 			glNamedBufferSubData(vbo_instanceTransforms, i * sizeof(mat::mat4), sizeof(mat::mat4), transform.data);
+		}
+		if (model->needsSelectionUpdate()) {
+			float selected = model->selected() ? 1.f : 0.f;
+			model->selectionUpdated();
+			glNamedBufferSubData(vbo_selected, i * sizeof(float), sizeof(float), &selected);
 		}
 		i++;
 	}

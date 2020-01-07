@@ -23,6 +23,9 @@ public:
 	// This is only true when the object is registered with a world
 	bool bExistsInWorld;
 
+	virtual void setSelected(bool selected);
+	bool selected() const;
+
 	virtual void setPosition(const mat::vec3& position);
 	virtual void setVelocity(const mat::vec3& velocity);
 	virtual void setRotation(const mat::vec3& rotation);
@@ -58,6 +61,9 @@ public:
 	virtual void updatePhysics(float deltaTime) {};
 
 protected:
+
+	// Is this object currently selected?
+	bool bSelected;
 
 	// World space location
 	mat::vec3 m_position;

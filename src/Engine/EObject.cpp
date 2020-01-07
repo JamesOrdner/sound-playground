@@ -7,11 +7,22 @@
 
 EObject::EObject() :
 	bExistsInWorld(false),
+	bSelected(false),
 	m_scale(1)
 {
 }
 
 EObject::~EObject() = default;
+
+void EObject::setSelected(bool selected)
+{
+	bSelected = selected;
+}
+
+bool EObject::selected() const
+{
+	return bSelected;
+}
 
 void EObject::setPosition(const mat::vec3& position)
 {

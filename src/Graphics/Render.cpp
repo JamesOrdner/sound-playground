@@ -115,7 +115,7 @@ void Render::setCamera(const mat::vec3& position, const mat::vec3& focus)
 void Render::draw(const std::map<std::string, std::weak_ptr<GMesh>>& meshes)
 {
 	// Synchronize transform data
-	for (const auto& mesh : meshes) mesh.second.lock()->updateInstanceTransforms();
+	for (const auto& mesh : meshes) mesh.second.lock()->updateInstanceData();
 
 	// shadow
 	shadowProgram->use();
