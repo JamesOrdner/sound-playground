@@ -202,6 +202,7 @@
     <ClCompile Include="src\Graphics\matrix.cpp" />
     <ClCompile Include="src\Graphics\Render.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Objects\ESpeaker.cpp" />
     <ClCompile Include="src\UI\UIComponent.cpp" />
     <ClCompile Include="src\UI\UIManager.cpp" />
     <ClCompile Include="src\UI\UIObject.cpp" />
@@ -232,6 +233,7 @@
     <ClInclude Include="src\Graphics\GTexture.h" />
     <ClInclude Include="src\Graphics\Matrix.h" />
     <ClInclude Include="src\Graphics\Render.h" />
+    <ClInclude Include="src\Objects\ESpeaker.h" />
     <ClInclude Include="src\UI\UIComponent.h" />
     <ClInclude Include="src\UI\UIManager.h" />
     <ClInclude Include="src\UI\UITypes.h" />

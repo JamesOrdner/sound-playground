@@ -27,6 +27,7 @@ union UIValue
 {
 	SDL_Keycode keycode;
 	float floatVal;
+	bool boolVal;
 };
 
 // UIData is a data container used to expose UObject properties to the UI. It contains only

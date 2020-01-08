@@ -2,7 +2,7 @@
 #include "UIObject.h"
 #include "../Engine/Engine.h"
 #include "../Engine/EWorld.h"
-#include "../Objects/EModel.h"
+#include "../Objects/ESpeaker.h"
 
 mat::vec2 UIManager::screenBounds = mat::vec2{ 1280, 720 };
 
@@ -35,15 +35,14 @@ void UIManager::setupMenuBar()
 	speakerButton.position = mat::vec2{ 10, 0 };
 	speakerButton.bAcceptsInput = true;
 	speakerButton.callback = [](UIManagerEvent& uiEvent) {
-		EModel* speaker = Engine::instance().world().spawnObject<EModel>();
-		speaker->setMesh("res/speaker_small.glb");
+		ESpeaker* speaker = Engine::instance().world().spawnObject<ESpeaker>();
 		speaker->setRotation(mat::vec3{ 0, mat::pi, 0 });
 		uiEvent.spawned = speaker;
 	};
 	speakerButton.textureCoords = [&state = speakerButton.state]() {
 		switch (state) {
 		case UIObjectState::Hovered:  return mat::vec4{ 81, 101, 80, 80 };
-		default:                      return mat::vec4{ 0, 101, 80, 80 };
+		default:                      return mat::vec4{  0, 101, 80, 80 };
 		}
 	};
 

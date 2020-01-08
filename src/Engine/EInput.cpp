@@ -51,7 +51,8 @@ void EInput::handleInput(const SDL_Event& sdlEvent)
 				
 				model->setSelected(true);
 				selectedObjects.emplace(model);
-				if (auto* uiComp = model->uiComponent()) uiManager->setActiveData(&uiComp->data);
+				auto* uiComp = model->uiComponent();
+				uiManager->setActiveData(uiComp ? &uiComp->data : nullptr);
 			}
 			else {
 				// clicked empty space
