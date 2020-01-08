@@ -1,5 +1,5 @@
 #include "ECamera.h"
-#include "EInputComponent.h"
+#include "../Engine/EInputComponent.h"
 
 ECamera::ECamera() :
 	prevCursorX(0),

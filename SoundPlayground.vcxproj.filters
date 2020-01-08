@@ -30,13 +30,7 @@
     <ClCompile Include="src\Graphics\GMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Engine\EModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Engine\EWorld.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Engine\EObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Audio\Components\AMicrophone.cpp">
@@ -90,9 +84,6 @@
     <ClCompile Include="src\Engine\EInput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Engine\ECamera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Graphics\GTexture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -100,6 +91,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\UI\UIObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Objects\ECamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Objects\EModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Objects\EObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -116,13 +116,7 @@
     <ClInclude Include="src\Graphics\GMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Engine\EModel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Engine\EWorld.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Engine\EObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Audio\Components\AMicrophone.h">
@@ -179,9 +173,6 @@
     <ClInclude Include="src\Engine\EInput.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Engine\ECamera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Graphics\GTexture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -191,9 +182,14 @@
     <ClInclude Include="src\UI\UIObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="res\shaders\main.vert" />
-    <None Include="res\shaders\main.frag" />
+    <ClInclude Include="src\Objects\ECamera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Objects\EModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Objects\EObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

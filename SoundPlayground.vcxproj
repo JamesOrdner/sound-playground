@@ -187,11 +187,11 @@
     <ClCompile Include="src\Audio\Components\OutputAudioComponent.cpp" />
     <ClCompile Include="src\Audio\Components\AMicrophone.cpp" />
     <ClCompile Include="src\Audio\Components\ASpeaker.cpp" />
-    <ClCompile Include="src\Engine\ECamera.cpp" />
+    <ClCompile Include="src\Objects\ECamera.cpp" />
     <ClCompile Include="src\Engine\EInput.cpp" />
     <ClCompile Include="src\Engine\EInputComponent.cpp" />
-    <ClCompile Include="src\Engine\EModel.cpp" />
-    <ClCompile Include="src\Engine\EObject.cpp" />
+    <ClCompile Include="src\Objects\EModel.cpp" />
+    <ClCompile Include="src\Objects\EObject.cpp" />
     <ClCompile Include="src\Engine\EWorld.cpp" />
     <ClCompile Include="src\Graphics\GMesh.cpp" />
     <ClCompile Include="lib\gl3w\src\gl3w.c" />
@@ -219,11 +219,11 @@
     <ClInclude Include="src\Audio\Components\OutputAudioComponent.h" />
     <ClInclude Include="src\Audio\Components\AMicrophone.h" />
     <ClInclude Include="src\Audio\Components\ASpeaker.h" />
-    <ClInclude Include="src\Engine\ECamera.h" />
+    <ClInclude Include="src\Objects\ECamera.h" />
     <ClInclude Include="src\Engine\EInput.h" />
     <ClInclude Include="src\Engine\EInputComponent.h" />
-    <ClInclude Include="src\Engine\EModel.h" />
-    <ClInclude Include="src\Engine\EObject.h" />
+    <ClInclude Include="src\Objects\EModel.h" />
+    <ClInclude Include="src\Objects\EObject.h" />
     <ClInclude Include="src\Engine\EWorld.h" />
     <ClInclude Include="src\Graphics\GMesh.h" />
     <ClInclude Include="src\Audio\AudioEngine.h" />
@@ -236,10 +236,6 @@
     <ClInclude Include="src\UI\UIManager.h" />
     <ClInclude Include="src\UI\UITypes.h" />
     <ClInclude Include="src\UI\UIObject.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="res\shaders\main.frag" />
-    <None Include="res\shaders\main.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

@@ -3,8 +3,8 @@
 #include "../Audio/AudioEngine.h"
 #include "../Graphics/Render.h"
 #include "../UI/UIManager.h"
-#include "EModel.h"
-#include "ECamera.h"
+#include "../Objects/EModel.h"
+#include "../Objects/ECamera.h"
 #include "EInput.h"
 #include <SDL.h>
 

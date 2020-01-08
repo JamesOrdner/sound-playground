@@ -1,7 +1,7 @@
 #include "EWorld.h"
-#include "EObject.h"
-#include "EModel.h"
-#include "ECamera.h"
+#include "../Objects/EObject.h"
+#include "../Objects/EModel.h"
+#include "../Objects/ECamera.h"
 
 EWorld::EWorld() :
 	physicsUpdateInterval(0.05f),

@@ -1,5 +1,5 @@
 #include "GMesh.h"
-#include "../Engine/EModel.h"
+#include "../Objects/EModel.h"
 
 #include <GL/gl3w.h>
 #include <vector>

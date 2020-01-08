@@ -2,7 +2,7 @@
 #include "UIObject.h"
 #include "../Engine/Engine.h"
 #include "../Engine/EWorld.h"
-#include "../Engine/EModel.h"
+#include "../Objects/EModel.h"
 
 mat::vec2 UIManager::screenBounds = mat::vec2{ 1280, 720 };
 

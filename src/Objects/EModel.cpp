@@ -1,7 +1,7 @@
 #include "EModel.h"
-#include "Engine.h"
+#include "../Engine/Engine.h"
 #include "../Graphics/GMesh.h"
-#include "EInputComponent.h"
+#include "../Engine/EInputComponent.h"
 
 EModel::EModel() :
 	mesh(nullptr),

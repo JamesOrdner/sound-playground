@@ -1,9 +1,9 @@
 #include "EObject.h"
-#include "Engine.h"
+#include "../Engine/Engine.h"
 #include "../Audio/AudioEngine.h"
 #include "../Audio/Components/AudioComponent.h"
 #include "../UI/UIComponent.h"
-#include "EInputComponent.h"
+#include "../Engine/EInputComponent.h"
 
 EObject::EObject() :
 	bSelected(false),

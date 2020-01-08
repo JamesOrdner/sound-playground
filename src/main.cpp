@@ -1,6 +1,6 @@
 #include "Engine/Engine.h"
 #include "Engine/EWorld.h"
-#include "Engine/EModel.h"
+#include "Objects/EModel.h"
 #include "Audio/Components/AMicrophone.h"
 #include "Audio/Components/ASpeaker.h"
 
