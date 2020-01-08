@@ -14,10 +14,55 @@ UIManager::UIManager() :
 	root->bounds = screenBounds;
 	
 	setupMenuBar();
+	setupProperties();
 }
 
 UIManager::~UIManager()
 {
+}
+
+void UIManager::setupMenuBar()
+{
+	UIObject& menuBar = root->subobjects.emplace_back();
+	menuBar.anchor = UIAnchor::Bottom;
+	menuBar.bounds = mat::vec2{ 768, 100 };
+	menuBar.bAcceptsInput = true;
+	menuBar.textureCoords = []() { return mat::vec4{ 0, 0, 768, 100 }; };
+
+	UIObject& speakerButton = menuBar.subobjects.emplace_back();
+	speakerButton.anchor = UIAnchor::Left;
+	speakerButton.bounds = mat::vec2{ 80, 80 };
+	speakerButton.position = mat::vec2{ 10, 0 };
+	speakerButton.bAcceptsInput = true;
+	speakerButton.callback = [](UIManagerEvent& uiEvent) {
+		EModel* speaker = Engine::instance().world().spawnObject<EModel>();
+		speaker->setMesh("res/speaker_small.glb");
+		speaker->setRotation(mat::vec3{ 0, mat::pi, 0 });
+		uiEvent.spawned = speaker;
+	};
+	speakerButton.textureCoords = [&state = speakerButton.state]() {
+		switch (state) {
+		case UIObjectState::Hovered:  return mat::vec4{ 81, 101, 80, 80 };
+		default:                      return mat::vec4{ 0, 101, 80, 80 };
+		}
+	};
+
+	UIObject& speaker = speakerButton.subobjects.emplace_back();
+	speaker.anchor = UIAnchor::Center;
+	speaker.bounds = mat::vec2{ 60, 60 };
+	speaker.textureCoords = []() { return mat::vec4{ 162, 101, 60, 60 }; };
+}
+
+void UIManager::setupProperties()
+{
+	UIObject& propertiesPanel = root->subobjects.emplace_back();
+	propertiesPanel.anchor = UIAnchor::BottomRight;
+	propertiesPanel.bounds = mat::vec2{ 256, 256 };
+	propertiesPanel.bAcceptsInput = true;
+	propertiesPanel.textureCoords = []() { return mat::vec4{ 768, 0, 256, 256 }; };
+	propertiesPanel.animationRate = 5.f;
+	propertiesPanel.position = mat::vec2{ 0, -256 };
+	propertiesRoot = &propertiesPanel;
 }
 
 UIManagerEvent UIManager::handeInput(const SDL_Event& event, SDL_Window* window)
@@ -45,44 +90,17 @@ UIManagerEvent UIManager::handeInput(const SDL_Event& event, SDL_Window* window)
 	return uiEvent;
 }
 
+void UIManager::tick(float deltaTime)
+{
+	root->tick(deltaTime);
+}
+
 mat::vec2 UIManager::virtualMousePosition(SDL_Window* window)
 {
 	int x, y, width, height;
 	SDL_GetMouseState(&x, &y);
 	SDL_GL_GetDrawableSize(window, &width, &height);
 	return mat::vec2{ static_cast<float>(x) / width, 1.f - static_cast<float>(y) / height } * screenBounds;
-}
-
-void UIManager::setupMenuBar()
-{
-	UIObject& menuBar = root->subobjects.emplace_back();
-	menuBar.anchor = UIAnchor::Bottom;
-	menuBar.bounds = mat::vec2{ 768, 100 };
-	menuBar.bAcceptsInput = true;
-	menuBar.textureCoords = []() { return mat::vec4{ 0, 0, 768, 100 }; };
-
-	UIObject& speakerButton = menuBar.subobjects.emplace_back();
-	speakerButton.anchor = UIAnchor::Left;
-	speakerButton.bounds = mat::vec2{ 80, 80 };
-	speakerButton.position = mat::vec2{ 10, 0 };
-	speakerButton.bAcceptsInput = true;
-	speakerButton.callback = [](UIManagerEvent& uiEvent) {
-		EModel* speaker = Engine::instance().world().spawnObject<EModel>();
-		speaker->setMesh("res/speaker_small.glb");
-		speaker->setRotation(mat::vec3{ 0, mat::pi, 0 });
-		uiEvent.spawned = speaker;
-	};
-	speakerButton.textureCoords = [&state = speakerButton.state]() {
-		switch (state) {
-		case UIObjectState::Hovered:  return mat::vec4{ 81, 101, 80, 80 };
-		default:                      return mat::vec4{  0, 101, 80, 80 };
-		}
-	};
-
-	UIObject& speaker = speakerButton.subobjects.emplace_back();
-	speaker.anchor = UIAnchor::Center;
-	speaker.bounds = mat::vec2{ 60, 60 };
-	speaker.textureCoords = []() { return mat::vec4{ 162, 101, 60, 60 }; };
 }
 
 UIObject* UIManager::objectAt(const mat::vec2& location)

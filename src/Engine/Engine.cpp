@@ -96,6 +96,7 @@ void Engine::run()
 	bool quit = false;
 	Uint32 sdlTime = SDL_GetTicks();
 	while (!quit) {
+		// input
 		SDL_Event sdlEvent;
 		while (SDL_PollEvent(&sdlEvent)) {
 			if (sdlEvent.type == SDL_QUIT) {
@@ -108,12 +109,14 @@ void Engine::run()
 			}
 		}
 
+		// tick
 		Uint32 newSdlTime = SDL_GetTicks();
 		lastFrameTime = static_cast<float>(newSdlTime - sdlTime) * 0.001f;
-		m_world->tick(lastFrameTime);
 		sdlTime = newSdlTime;
+		m_world->tick(lastFrameTime);
+		uiManager->tick(lastFrameTime);
 
-		// Render
+		// render
 		const ECamera* camera = m_world->worldCamera();
 		renderer->setCamera(camera->cameraPosition(), camera->cameraFocus());
 		renderer->drawMeshes();

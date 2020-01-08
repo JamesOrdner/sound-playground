@@ -20,8 +20,6 @@ struct UIObject
 
 	std::string name;
 
-	UIValue value;
-
 	// Subobjects inherit the transform of the parent object
 	std::vector<UIObject> subobjects;
 
@@ -50,6 +48,20 @@ struct UIObject
 	// Current state of the object
 	UIObjectState state;
 
+	// Rate of object animation. Set to 0 if object does not animate (default).
+	float animationRate;
+
 	// Returns the relative anchor position in normalized device coordinates [-1, 1]
 	mat::vec2 anchorPosition() const;
+
+	// Sets the animation target position of the object. If the object does not animate,
+	// it will be set immediately to this position.
+	void setAnimationTarget(const mat::vec2& position);
+
+	// Tick this object and all subobjects
+	void tick(float deltaTime);
+
+private:
+
+	mat::vec2 animationTarget;
 };

@@ -31,6 +31,9 @@ public:
 	// Handles input events. Returns true if the UI consumed the input.
 	UIManagerEvent handeInput(const SDL_Event& event, SDL_Window* window);
 
+	// UIManager needs to be ticked to allow animations
+	void tick(float deltaTime);
+
 	// Virtual screen bounds. All UI elements are arranged to this virtual resolution.
 	// Scaling to the actual screen resolution is handled automatically during rendering.
 	static mat::vec2 screenBounds;
@@ -40,6 +43,9 @@ public:
 	// the array. UIObjects draw on top of previously-drawn objects, so later-drawn objects will be on top.
 	std::unique_ptr<UIObject> root;
 
+	// Points to the root object of the properties panel
+	UIObject* propertiesRoot;
+
 private:
 
 	// Currently hovered object. Objects must accept input to become hovered.
@@ -48,6 +54,7 @@ private:
 	mat::vec2 virtualMousePosition(SDL_Window* window);
 
 	void setupMenuBar();
+	void setupProperties();
 
 	// Returns the object at location, provided as a virtual screen coordinate
 	UIObject* objectAt(const mat::vec2& location);

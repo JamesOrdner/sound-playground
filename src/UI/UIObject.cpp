@@ -3,10 +3,10 @@
 UIObject::UIObject() :
 	anchor(UIAnchor::Center),
 	bAcceptsInput(false),
-	state(UIObjectState::Neutral)
+	state(UIObjectState::Neutral),
+	animationRate(0.f)
 {
 	textureCoords = []() { return mat::vec4(); };
-	value.floatVal = 0.f;
 }
 
 mat::vec2 UIObject::anchorPosition() const
@@ -23,5 +23,25 @@ mat::vec2 UIObject::anchorPosition() const
 	case UIAnchor::BottomLeft: return vec2{ -1.f, -1.f };
 	case UIAnchor::BottomRight: return vec2{ 1.f, -1.f };
 	default: return vec2();
+	}
+}
+
+void UIObject::setAnimationTarget(const mat::vec2& position)
+{
+	if (animationRate > 0.f) {
+		animationTarget = position;
+	}
+	else {
+		this->position = position;
+	}
+}
+
+void UIObject::tick(float deltaTime)
+{
+	for (auto& object : subobjects) object.tick(deltaTime);
+
+	if (animationRate > 0.f && animationTarget != position) {
+		position += (animationTarget - position) * std::atanf(animationRate * deltaTime) * mat::pi * 0.5f;
+		if (mat::dist(animationTarget, position) < 0.1f) position = animationTarget;
 	}
 }
