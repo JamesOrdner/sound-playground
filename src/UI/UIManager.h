@@ -7,6 +7,18 @@
 struct UIObject;
 struct SDL_Window;
 union SDL_Event;
+class EObject;
+
+// UIManagerEvent is the return value of handleInput(...), used as a
+// means to communicate the result of an event to dependent processes
+struct UIManagerEvent
+{
+	// Should this event consume the input?
+	bool bConsumedInput;
+	
+	// Points to the object spawned by the event, or nullptr if no object spawned
+	EObject* spawned;
+};
 
 class UIManager
 {
@@ -17,7 +29,7 @@ public:
 	~UIManager();
 
 	// Handles input events. Returns true if the UI consumed the input.
-	bool handeInput(const SDL_Event& event, SDL_Window* window);
+	UIManagerEvent handeInput(const SDL_Event& event, SDL_Window* window);
 
 	// Virtual screen bounds. All UI elements are arranged to this virtual resolution.
 	// Scaling to the actual screen resolution is handled automatically during rendering.

@@ -1,11 +1,33 @@
 #include "EModel.h"
+#include "Engine.h"
 #include "../Graphics/GMesh.h"
+#include "EInputComponent.h"
 
 EModel::EModel() :
+	bActivePlacement(false),
+	mouseX(0),
+	mouseY(0),
 	mesh(nullptr),
 	bDirtyTransform(false),
 	bDirtySelection(false)
 {
+	m_inputComponent = std::make_unique<EInputComponent>();
+	m_inputComponent->registerCursorCallback(
+		[this](int x, int y) {
+			if (bActivePlacement) {
+				mouseX = x; mouseY = y;
+			}
+		}
+	);
+	m_inputComponent->registerMouseButtonCallback(
+		EInputMouseButtonEvent{ SDL_BUTTON_LEFT, SDL_MOUSEBUTTONDOWN },
+		[this] {
+			if (bActivePlacement) {
+				setSelected(true);
+				bActivePlacement = false;
+			}
+		}
+	);
 }
 
 EModel::~EModel() = default;
@@ -80,6 +102,16 @@ void EModel::setScale(const mat::vec3& scale)
 {
 	EObject::setScale(scale);
 	bDirtyTransform = true;
+}
+
+void EModel::tick(float deltaTime)
+{
+	EObject::tick(deltaTime);
+
+	mat::vec3 hitLoc;
+	if (bActivePlacement && Engine::instance().raycastScreen(mouseX, mouseY, hitLoc)) {
+		setPosition(hitLoc);
+	}
 }
 
 void EModel::updatePhysics(float deltaTime)

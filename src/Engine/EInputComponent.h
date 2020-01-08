@@ -30,7 +30,7 @@ public:
 	void deleteScrollDownCallback();
 
 	// Register a function that will be called when a mouse moved event it received.
-	// Callback takes two parameters, the x and y distance the cursor has moved in pixels.
+	// Callback takes the absolute pixel coordinates of the cursor, x and y.
 	void registerCursorCallback(std::function<void(int, int)> callback);
 	void deleteCursorCallback();
 
@@ -43,7 +43,4 @@ private:
 	std::function<void()> scrollUpCallback;
 	std::function<void()> scrollDownCallback;
 	std::function<void(int, int)> cursorCallback;
-
-	// Stores the last cursor position, to calculate delta position
-	int prevCursorX, prevCursorY;
 };

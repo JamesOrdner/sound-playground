@@ -14,6 +14,9 @@ public:
 
 	virtual ~EModel();
 
+	// Is this object being actively placed? Object tracks mouse cursor when true.
+	bool bActivePlacement;
+
 	// Set the visual representation of the model via a mesh filepath
 	void setMesh(std::string filepath);
 
@@ -42,9 +45,13 @@ public:
 	void setRotation(const mat::vec3& rotation) override;
 	void setScale(float scale) override;
 	void setScale(const mat::vec3& scale) override;
+	void tick(float deltaTime) override;
 	void updatePhysics(float deltaTime) override;
 
 private:
+
+	// Cursor coordinates, updated when bActivePlacement == true
+	int mouseX, mouseY;
 
 	// Shared mesh, storing geometry and other rendering data
 	GMesh* mesh;

@@ -31,6 +31,12 @@ public:
 	// Main runloop
 	void run();
 
+	// Return the object at screen coordinates
+	EModel* raycastScreen(int x, int y);
+
+	// Return the object at screen coordinates, as well as the hit location
+	EModel* raycastScreen(int x, int y, mat::vec3& hitLoc);
+
 private:
 
 	Engine();
@@ -63,12 +69,4 @@ private:
 	/** Audio */
 
 	std::unique_ptr<AudioEngine> audioEngine;
-
-	/** Utility */
-
-	// Return the object at screen coordinates
-	EModel* raycastScreen(int x, int y);
-
-	// Return the object at screen coordinates, as well as the hit location
-	EModel* raycastScreen(int x, int y, mat::vec3& hitLoc);
 };

@@ -96,28 +96,15 @@ void Engine::run()
 	bool quit = false;
 	Uint32 sdlTime = SDL_GetTicks();
 	while (!quit) {
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
+		SDL_Event sdlEvent;
+		while (SDL_PollEvent(&sdlEvent)) {
+			if (sdlEvent.type == SDL_QUIT) {
 				quit = true;
 				break;
 			}
 			else {
-				// UI input
-				if (uiManager->handeInput(event, window)) continue;
-
-				// Object selection
-				if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-					int x, y;
-					SDL_GetMouseState(&x, &y);
-					if (EModel* model = raycastScreen(x, y)) {
-						model->setSelected(!model->selected());
-						continue;
-					}
-				}
-				
-				// Other input if not yet consumed
-				input->handleInput(event);
+				UIManagerEvent uiEvent = uiManager->handeInput(sdlEvent, window);
+				input->handleInput(sdlEvent, uiEvent);
 			}
 		}
 

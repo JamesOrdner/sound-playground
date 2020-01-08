@@ -42,7 +42,10 @@ void main()
 	}
 
 	if (gSelected < 0.5 && highlightNeighbor > 0.5) {
-		color = vec4(1, 0, 0, 1);
+		color = vec4(1, 0, 0, 1); // red outline
+	}
+	else if (gSelected > 0.5) {
+		color = vec4(vec3(gColor * lit) * vec3(1, 0.8, 0.8), 1); // red tint
 	}
 	else {
 		color = vec4(vec3(gColor * lit), 1);

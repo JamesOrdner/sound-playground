@@ -1,8 +1,6 @@
 #include "EInputComponent.h"
 
-EInputComponent::EInputComponent() :
-	prevCursorX(0),
-	prevCursorY(0)
+EInputComponent::EInputComponent()
 {
 }
 
@@ -66,9 +64,7 @@ void EInputComponent::processInput(const SDL_Event& event)
 	else if (event.type == SDL_MOUSEMOTION && cursorCallback) {
 		int x, y;
 		SDL_GetMouseState(&x, &y);
-		cursorCallback(x - prevCursorX, y - prevCursorY);
-		prevCursorX = x;
-		prevCursorY = y;
+		cursorCallback(x, y);
 	}
 	else if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
 		EInputKeyEvent event_ = std::make_pair(event.button.button, static_cast<SDL_EventType>(event.type));
@@ -76,10 +72,10 @@ void EInputComponent::processInput(const SDL_Event& event)
 		if (callback != mouseButtonCallbacks.end()) callback->second();
 	}
 	else if (event.type == SDL_MOUSEWHEEL) {
-		if (event.wheel.y > 0) {
+		if (scrollUpCallback && event.wheel.y > 0) {
 			scrollUpCallback();
 		}
-		else if (event.wheel.y < 0) {
+		else if (scrollDownCallback && event.wheel.y < 0) {
 			scrollDownCallback();
 		}
 	}

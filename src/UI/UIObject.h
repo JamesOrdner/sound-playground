@@ -41,7 +41,7 @@ struct UIObject
 	std::function<mat::vec4()> textureCoords;
 
 	// Function called when this object is interacted with
-	std::function<void()> callback;
+	std::function<void(struct UIManagerEvent& uiEvent)> callback;
 
 	// Does this object accept and consume input? If bAcceptsInput == true and no callback
 	// function exists, the object will simply consume input without any resulting action.

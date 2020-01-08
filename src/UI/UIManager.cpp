@@ -1,5 +1,8 @@
 #include "UIManager.h"
 #include "UIObject.h"
+#include "../Engine/Engine.h"
+#include "../Engine/EWorld.h"
+#include "../Engine/EModel.h"
 #include <SDL_events.h>
 
 mat::vec2 UIManager::screenBounds = mat::vec2{ 1280, 720 };
@@ -9,7 +12,7 @@ UIManager::UIManager() :
 {
 	root = std::make_unique<UIObject>();
 	root->bounds = screenBounds;
-
+	
 	setupMenuBar();
 }
 
@@ -17,13 +20,14 @@ UIManager::~UIManager()
 {
 }
 
-bool UIManager::handeInput(const SDL_Event& event, SDL_Window* window)
+UIManagerEvent UIManager::handeInput(const SDL_Event& event, SDL_Window* window)
 {
+	UIManagerEvent uiEvent = {};
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-		UIObject* obj = objectAt(virtualMousePosition(window));
-		if (obj) {
-			if (obj->callback) obj->callback();
-			return true;
+		if (UIObject* obj = objectAt(virtualMousePosition(window))) {
+			if (obj->callback) obj->callback(uiEvent);
+			uiEvent.bConsumedInput = true;
+			return uiEvent;
 		}
 	}
 	else if (event.type == SDL_MOUSEMOTION) {
@@ -38,7 +42,7 @@ bool UIManager::handeInput(const SDL_Event& event, SDL_Window* window)
 		}
 	}
 
-	return false;
+	return uiEvent;
 }
 
 mat::vec2 UIManager::virtualMousePosition(SDL_Window* window)
@@ -62,7 +66,12 @@ void UIManager::setupMenuBar()
 	speakerButton.bounds = mat::vec2{ 80, 80 };
 	speakerButton.position = mat::vec2{ 10, 0 };
 	speakerButton.bAcceptsInput = true;
-	speakerButton.callback = [] { printf("Little button pressed.\n"); };
+	speakerButton.callback = [](UIManagerEvent& uiEvent) {
+		EModel* speaker = Engine::instance().world().spawnObject<EModel>();
+		speaker->setMesh("res/speaker_small.glb");
+		speaker->setRotation(mat::vec3{ 0, mat::pi, 0 });
+		uiEvent.spawned = speaker;
+	};
 	speakerButton.textureCoords = [&state = speakerButton.state]() {
 		switch (state) {
 		case UIObjectState::Hovered:  return mat::vec4{ 81, 101, 80, 80 };

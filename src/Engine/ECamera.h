@@ -23,6 +23,9 @@ private:
 	void changePivotDist(float deltaDist);
 	void orbit(int x, int y);
 
+	// Stores the last cursor position, to calculate delta position
+	int prevCursorX, prevCursorY;
+
 	// Camera movement multiplier
 	float movementScale;
 

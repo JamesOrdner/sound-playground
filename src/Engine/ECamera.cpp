@@ -2,6 +2,8 @@
 #include "EInputComponent.h"
 
 ECamera::ECamera() :
+	prevCursorX(0),
+	prevCursorY(0),
 	movementScale(0.08f),
 	bOrbiting(false),
 	pivotDistance(5.f),
@@ -85,10 +87,15 @@ void ECamera::changePivotDist(float deltaDist)
 
 void ECamera::orbit(int x, int y)
 {
+	int deltaX = x - prevCursorX;
+	int deltaY = y - prevCursorY;
+	prevCursorX = x;
+	prevCursorY = y;
+
 	if (!bOrbiting) return;
-	float xRot = m_rotation.x + static_cast<float>(y) * 0.003f;
+	float xRot = m_rotation.x + static_cast<float>(deltaY) * 0.003f;
 	m_rotation.x = std::fminf(std::fmaxf(xRot, mat::pi * 0.02f), mat::pi * 0.45f);
-	m_rotation.y -= static_cast<float>(x) * 0.003f;
+	m_rotation.y -= static_cast<float>(deltaX) * 0.003f;
 }
 
 const mat::vec3& ECamera::cameraFocus() const
