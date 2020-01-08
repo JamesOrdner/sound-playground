@@ -6,6 +6,7 @@
 #include "EInputComponent.h"
 #include "../UI/UITypes.h"
 #include "../UI/UIManager.h"
+#include "../UI/UIComponent.h"
 
 EInput::EInput() :
 	uiManager(nullptr),
@@ -47,12 +48,16 @@ void EInput::handleInput(const SDL_Event& sdlEvent)
 			if (EModel* model = engine.raycastScreen(sdlEvent.motion.x, sdlEvent.motion.y)) {
 				for (auto* obj : selectedObjects) obj->setSelected(false);
 				selectedObjects.clear();
-				selectedObjects.emplace(model);
+				
 				model->setSelected(true);
-
-				// TEMP
-				UIData data;
-				uiManager->setActiveData(&data);
+				selectedObjects.emplace(model);
+				if (auto* uiComp = model->uiComponent()) uiManager->setActiveData(&uiComp->data);
+			}
+			else {
+				// clicked empty space
+				for (auto* obj : selectedObjects) obj->setSelected(false);
+				selectedObjects.clear();
+				uiManager->setActiveData(nullptr);
 			}
 		}
 	}

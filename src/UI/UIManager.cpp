@@ -3,7 +3,6 @@
 #include "../Engine/Engine.h"
 #include "../Engine/EWorld.h"
 #include "../Engine/EModel.h"
-#include <SDL_events.h>
 
 mat::vec2 UIManager::screenBounds = mat::vec2{ 1280, 720 };
 
@@ -62,7 +61,7 @@ void UIManager::setupProperties()
 	propertiesPanel.bAcceptsInput = true;
 	propertiesPanel.textureCoords = []() { return mat::vec4{ 768, 0, 256, 256 }; };
 	propertiesPanel.setAnimationTarget(mat::vec2{ 0, -256 });
-	propertiesPanel.animationRate = 10.f;
+	propertiesPanel.animationRate = 15.f;
 	propertiesRoot = &propertiesPanel;
 }
 
@@ -91,7 +90,7 @@ UIManagerEvent UIManager::handeInput(const SDL_Event& event)
 	return uiEvent;
 }
 
-void UIManager::setActiveData(UIData* data)
+void UIManager::setActiveData(std::vector<UIData>* data)
 {
 	propertiesData = data;
 	if (propertiesData) {

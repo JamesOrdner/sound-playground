@@ -2,6 +2,7 @@
 
 #include "../Graphics/Matrix.h"
 #include <SDL_events.h>
+#include <vector>
 #include <memory>
 
 // Forward declarations
@@ -41,13 +42,13 @@ public:
 	UIObject* propertiesRoot;
 	
 	// Data currently displayed in the properties panel
-	UIData* propertiesData;
+	std::vector<UIData>* propertiesData;
 
 	// Handles input events. Returns true if the UI consumed the input.
 	UIManagerEvent handeInput(const SDL_Event& event);
 
 	// Set the data to be displayed in the properties panel, or nullptr to clear
-	void setActiveData(UIData* data);
+	void setActiveData(std::vector<UIData>* data);
 
 	// UIManager needs to be ticked to allow animations
 	void tick(float deltaTime);
