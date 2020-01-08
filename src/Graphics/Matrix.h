@@ -111,11 +111,11 @@ namespace mat // Matrix
 			for (int i = 0; i < 4; i++) this->data[i] = data[i];
 		}
 
-		constexpr explicit Vector(const Vector<T, 3>& v) : data{} {
+		constexpr explicit Vector(const Vector<T, 3>& v, T w) : data{} {
 			data[0] = v.data[0];
 			data[1] = v.data[1];
 			data[2] = v.data[2];
-			data[3] = static_cast<T>(1);
+			data[3] = w;
 		}
 
 		explicit constexpr Vector(T fill) : data{} {

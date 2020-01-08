@@ -4,30 +4,10 @@
 #include "EInputComponent.h"
 
 EModel::EModel() :
-	bActivePlacement(false),
-	mouseX(0),
-	mouseY(0),
 	mesh(nullptr),
 	bDirtyTransform(false),
 	bDirtySelection(false)
 {
-	m_inputComponent = std::make_unique<EInputComponent>();
-	m_inputComponent->registerCursorCallback(
-		[this](int x, int y) {
-			if (bActivePlacement) {
-				mouseX = x; mouseY = y;
-			}
-		}
-	);
-	m_inputComponent->registerMouseButtonCallback(
-		EInputMouseButtonEvent{ SDL_BUTTON_LEFT, SDL_MOUSEBUTTONDOWN },
-		[this] {
-			if (bActivePlacement) {
-				setSelected(true);
-				bActivePlacement = false;
-			}
-		}
-	);
 }
 
 EModel::~EModel() = default;
@@ -41,15 +21,13 @@ void EModel::setMesh(std::string filepath)
 float EModel::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc)
 {
 	using namespace mat;
-	const std::vector<vec3>& rawBuffer = mesh->getRayMesh();
+	const std::vector<vec3>& buffer = mesh->getRayMesh();
 
-	// transformed buffer
-	std::vector<vec3> buffer;
-	buffer.reserve(rawBuffer.size());
+	// model space origin/direction
 	mat4 transform = transformMatrix();
-	for (size_t i = 0; i < rawBuffer.size(); i++) {
-		buffer.push_back(vec3(transform * vec4(rawBuffer[i])));
-	}
+	mat4 iTransform = inverse(transform);
+	vec3 originModel = vec3(iTransform * vec4(origin, 1.f));
+	vec3 dirModel = vec3(iTransform * vec4(direction, 0.f));
 
 	// MT Raytrace
 	float shortest = -1.f;
@@ -59,25 +37,26 @@ float EModel::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::
 		const vec3& v2 = buffer[i + 2];
 		vec3 edge1 = v1 - v0;
 		vec3 edge2 = v2 - v0;
-		vec3 h = cross(direction, edge2);
+		vec3 h = cross(dirModel, edge2);
 		float a = dot(edge1, h);
 		if (a > -FLT_EPSILON && a < FLT_EPSILON) continue; // Ray is parallel to triangle
 		float f = 1.f / a;
-		vec3 s = origin - v0;
+		vec3 s = originModel - v0;
 		float u = f * dot(s, h);
 		if (u < 0.f || u > 1.f) continue;
 		vec3 q = cross(s, edge1);
-		float v = f * dot(direction, q);
+		float v = f * dot(dirModel, q);
 		if (v < 0.f || u + v > 1.f) continue;
 		float t = f * dot(edge2, q);
 		if (FLT_EPSILON < t && t < FLT_MAX) { // ray intersection
 			if (shortest < 0 || t < shortest) {
 				shortest = t;
-				hitLoc = origin + direction * t;
+				hitLoc = originModel + dirModel * t;
 			}
 		}
 	}
-	return shortest;
+	hitLoc = vec3(transform * vec4(hitLoc, 1.f));
+	return shortest > 0 ? dist(origin, hitLoc) : -1.f;
 }
 
 void EModel::setPosition(const mat::vec3& location)
@@ -102,16 +81,6 @@ void EModel::setScale(const mat::vec3& scale)
 {
 	EObject::setScale(scale);
 	bDirtyTransform = true;
-}
-
-void EModel::tick(float deltaTime)
-{
-	EObject::tick(deltaTime);
-
-	mat::vec3 hitLoc;
-	if (bActivePlacement && Engine::instance().raycastScreen(mouseX, mouseY, hitLoc)) {
-		setPosition(hitLoc);
-	}
 }
 
 void EModel::updatePhysics(float deltaTime)

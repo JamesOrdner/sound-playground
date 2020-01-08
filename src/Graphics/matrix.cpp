@@ -25,7 +25,7 @@ vec3 mat::rotate(const vec3& vector, const vec3& rotation)
 		{                 0,                  0, 0, 1 }
 	};
 
-	return vec3(rz * ry * rx * vec4(vector));
+	return vec3(rz * ry * rx * vec4(vector, 1.f));
 }
 
 mat4 mat::transform(const vec3& loc, const vec3& rot, const vec3& scale) {
