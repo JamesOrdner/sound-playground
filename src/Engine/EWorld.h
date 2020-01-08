@@ -2,6 +2,7 @@
 
 #include "../Graphics/Matrix.h"
 #include <list>
+#include <unordered_set>
 #include <memory>
 
 // Forward declarations
@@ -28,7 +29,11 @@ public:
 	ECamera* worldCamera() const;
 
 	// Perform a raycast. Returns hit model on success.
-	EModel* raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc) const;
+	EModel* raycast(
+		const mat::vec3& origin,
+		const mat::vec3& direction,
+		mat::vec3& hitLoc,
+		const std::unordered_set<EObject*>& ignore = std::unordered_set<EObject*>()) const;
 
 	// Called once per frame
 	void tick(float deltaTime);

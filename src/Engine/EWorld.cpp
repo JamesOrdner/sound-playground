@@ -28,20 +28,25 @@ ECamera* EWorld::worldCamera() const
 	return camera;
 }
 
-EModel* EWorld::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hitLoc) const
+EModel* EWorld::raycast(
+	const mat::vec3& origin,
+	const mat::vec3& direction,
+	mat::vec3& hitLoc,
+	const std::unordered_set<EObject*>& ignore) const
 {
 	float shortest = FLT_MAX;
 	EModel* hitObject = nullptr;
 	for (const auto& object : objects) {
-		auto* model = dynamic_cast<EModel*>(object.get());
-		if (!model) continue;
-		mat::vec3 hit;
-		float l = model->raycast(origin, direction, hit);
-		if (l > 0) {
-			if (!hitObject || l < shortest) {
-				shortest = l;
-				hitLoc = hit;
-				hitObject = model;
+		if (ignore.find(object.get()) != ignore.end()) continue;
+		if (EModel* model = dynamic_cast<EModel*>(object.get())) {
+			mat::vec3 hit;
+			float l = model->raycast(origin, direction, hit);
+			if (l > 0) {
+				if (!hitObject || l < shortest) {
+					shortest = l;
+					hitLoc = hit;
+					hitObject = model;
+				}
 			}
 		}
 	}

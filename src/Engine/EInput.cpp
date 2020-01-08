@@ -28,7 +28,7 @@ void EInput::handleInput(const SDL_Event& sdlEvent, const UIManagerEvent& uiEven
 	if (bPlacingSelected) {
 		if (sdlEvent.type == SDL_MOUSEMOTION) {
 			mat::vec3 hitLoc;
-			if (EModel* model = engine.raycastScreen(sdlEvent.motion.x, sdlEvent.motion.y, hitLoc)) {
+			if (EModel* model = engine.raycastScreen(sdlEvent.motion.x, sdlEvent.motion.y, hitLoc, selectedObjects)) {
 				for (auto* obj : selectedObjects) obj->setPosition(hitLoc); // temp
 			}
 		}

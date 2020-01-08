@@ -2,12 +2,14 @@
 
 #include "../Graphics/Matrix.h"
 #include <memory>
+#include <unordered_set>
 
 // Forward declarations
 struct SDL_Window;
 class EWorld;
 class AudioEngine;
 class UIManager;
+class EObject;
 class EModel;
 class EInput;
 class Render;
@@ -35,7 +37,11 @@ public:
 	EModel* raycastScreen(int x, int y);
 
 	// Return the object at screen coordinates, as well as the hit location
-	EModel* raycastScreen(int x, int y, mat::vec3& hitLoc);
+	EModel* raycastScreen(
+		int x,
+		int y,
+		mat::vec3& hitLoc,
+		const std::unordered_set<EObject*>& ignore = std::unordered_set<EObject*>());
 
 private:
 

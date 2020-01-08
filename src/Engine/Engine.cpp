@@ -127,7 +127,11 @@ EModel* Engine::raycastScreen(int x, int y) {
 	return raycastScreen(x, y, hitLoc);
 }
 
-EModel* Engine::raycastScreen(int x, int y, mat::vec3& hitLoc)
+EModel* Engine::raycastScreen(
+	int x,
+	int y,
+	mat::vec3& hitLoc,
+	const std::unordered_set<EObject*>& ignore)
 {
 	int width, height;
 	SDL_GL_GetDrawableSize(window, &width, &height);
@@ -142,5 +146,5 @@ EModel* Engine::raycastScreen(int x, int y, mat::vec3& hitLoc)
 
 	const mat::vec3& rayStartWorld = m_world->worldCamera()->cameraPosition();
 
-	return m_world->raycast(rayStartWorld, rayEndWorldNormalized - rayStartWorld, hitLoc);
+	return m_world->raycast(rayStartWorld, rayEndWorldNormalized - rayStartWorld, hitLoc, ignore);
 }
