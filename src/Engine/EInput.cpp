@@ -4,15 +4,19 @@
 #include "EObject.h"
 #include "EModel.h"
 #include "EInputComponent.h"
+#include "../UI/UITypes.h"
 #include "../UI/UIManager.h"
 
 EInput::EInput() :
+	uiManager(nullptr),
 	bPlacingSelected(false)
 {
 }
 
-void EInput::handleInput(const SDL_Event& sdlEvent, const UIManagerEvent& uiEvent)
+void EInput::handleInput(const SDL_Event& sdlEvent)
 {
+	UIManagerEvent uiEvent = uiManager->handeInput(sdlEvent);
+
 	if (uiEvent.spawned) {
 		for (auto* obj : selectedObjects) obj->setSelected(false);
 		selectedObjects.clear();
@@ -45,6 +49,10 @@ void EInput::handleInput(const SDL_Event& sdlEvent, const UIManagerEvent& uiEven
 				selectedObjects.clear();
 				selectedObjects.emplace(model);
 				model->setSelected(true);
+
+				// TEMP
+				UIData data;
+				uiManager->setActiveData(&data);
 			}
 		}
 	}

@@ -1,12 +1,12 @@
 #pragma once
 
 #include "../Graphics/Matrix.h"
+#include <SDL_events.h>
 #include <memory>
 
 // Forward declarations
 struct UIObject;
-struct SDL_Window;
-union SDL_Event;
+struct UIData;
 class EObject;
 
 // UIManagerEvent is the return value of handleInput(...), used as a
@@ -28,12 +28,6 @@ public:
 
 	~UIManager();
 
-	// Handles input events. Returns true if the UI consumed the input.
-	UIManagerEvent handeInput(const SDL_Event& event, SDL_Window* window);
-
-	// UIManager needs to be ticked to allow animations
-	void tick(float deltaTime);
-
 	// Virtual screen bounds. All UI elements are arranged to this virtual resolution.
 	// Scaling to the actual screen resolution is handled automatically during rendering.
 	static mat::vec2 screenBounds;
@@ -45,13 +39,27 @@ public:
 
 	// Points to the root object of the properties panel
 	UIObject* propertiesRoot;
+	
+	// Data currently displayed in the properties panel
+	UIData* propertiesData;
+
+	// Handles input events. Returns true if the UI consumed the input.
+	UIManagerEvent handeInput(const SDL_Event& event);
+
+	// Set the data to be displayed in the properties panel, or nullptr to clear
+	void setActiveData(UIData* data);
+
+	// UIManager needs to be ticked to allow animations
+	void tick(float deltaTime);
 
 private:
 
 	// Currently hovered object. Objects must accept input to become hovered.
 	UIObject* hoveredObject;
 
-	mat::vec2 virtualMousePosition(SDL_Window* window);
+	inline mat::vec2 virtualMousePosition(const SDL_Event& event) {
+		return mat::vec2{ event.motion.x / 1280.f, 1.f - event.motion.y / 720.f } * screenBounds;
+	}
 
 	void setupMenuBar();
 	void setupProperties();

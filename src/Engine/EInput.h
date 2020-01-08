@@ -4,7 +4,7 @@
 #include <unordered_set>
 
 // Forward declarations
-struct UIManagerEvent;
+class UIManager;
 class EObject;
 
 class EInput
@@ -13,7 +13,10 @@ public:
 
 	EInput();
 
-	void handleInput(const SDL_Event& sdlEvent, const UIManagerEvent& uiEvent);
+	// Pointer to the UIManager object
+	UIManager* uiManager;
+
+	void handleInput(const SDL_Event& sdlEvent);
 
 private:
 

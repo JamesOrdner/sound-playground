@@ -23,6 +23,8 @@ Engine::Engine() :
 	audioEngine(new AudioEngine)
 
 {
+	input->uiManager = uiManager.get();
+
 	if (init()) {
 		audioEngine->start();
 		bInitialized = true;
@@ -104,8 +106,7 @@ void Engine::run()
 				break;
 			}
 			else {
-				UIManagerEvent uiEvent = uiManager->handeInput(sdlEvent, window);
-				input->handleInput(sdlEvent, uiEvent);
+				input->handleInput(sdlEvent);
 			}
 		}
 

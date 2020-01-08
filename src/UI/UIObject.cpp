@@ -28,12 +28,8 @@ mat::vec2 UIObject::anchorPosition() const
 
 void UIObject::setAnimationTarget(const mat::vec2& position)
 {
-	if (animationRate > 0.f) {
-		animationTarget = position;
-	}
-	else {
-		this->position = position;
-	}
+	animationTarget = position;
+	if (animationRate == 0.f) this->position = position;
 }
 
 void UIObject::tick(float deltaTime)
@@ -41,7 +37,7 @@ void UIObject::tick(float deltaTime)
 	for (auto& object : subobjects) object.tick(deltaTime);
 
 	if (animationRate > 0.f && animationTarget != position) {
-		position += (animationTarget - position) * std::atanf(animationRate * deltaTime) * mat::pi * 0.5f;
+		position += (animationTarget - position) * std::atanf(animationRate * deltaTime) * (mat::pi / 2.f);
 		if (mat::dist(animationTarget, position) < 0.1f) position = animationTarget;
 	}
 }

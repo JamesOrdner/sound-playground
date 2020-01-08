@@ -8,7 +8,8 @@
 mat::vec2 UIManager::screenBounds = mat::vec2{ 1280, 720 };
 
 UIManager::UIManager() :
-	hoveredObject(nullptr)
+	hoveredObject(nullptr),
+	propertiesData(nullptr)
 {
 	root = std::make_unique<UIObject>();
 	root->bounds = screenBounds;
@@ -60,23 +61,23 @@ void UIManager::setupProperties()
 	propertiesPanel.bounds = mat::vec2{ 256, 256 };
 	propertiesPanel.bAcceptsInput = true;
 	propertiesPanel.textureCoords = []() { return mat::vec4{ 768, 0, 256, 256 }; };
-	propertiesPanel.animationRate = 5.f;
-	propertiesPanel.position = mat::vec2{ 0, -256 };
+	propertiesPanel.setAnimationTarget(mat::vec2{ 0, -256 });
+	propertiesPanel.animationRate = 10.f;
 	propertiesRoot = &propertiesPanel;
 }
 
-UIManagerEvent UIManager::handeInput(const SDL_Event& event, SDL_Window* window)
+UIManagerEvent UIManager::handeInput(const SDL_Event& event)
 {
 	UIManagerEvent uiEvent = {};
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-		if (UIObject* obj = objectAt(virtualMousePosition(window))) {
+		if (UIObject* obj = objectAt(virtualMousePosition(event))) {
 			if (obj->callback) obj->callback(uiEvent);
 			uiEvent.bConsumedInput = true;
 			return uiEvent;
 		}
 	}
 	else if (event.type == SDL_MOUSEMOTION) {
-		UIObject* obj = objectAt(virtualMousePosition(window));
+		UIObject* obj = objectAt(virtualMousePosition(event));
 		if (obj != hoveredObject) {
 			if (hoveredObject && hoveredObject->state == UIObjectState::Hovered) {
 				hoveredObject->state = UIObjectState::Neutral;
@@ -90,17 +91,20 @@ UIManagerEvent UIManager::handeInput(const SDL_Event& event, SDL_Window* window)
 	return uiEvent;
 }
 
+void UIManager::setActiveData(UIData* data)
+{
+	propertiesData = data;
+	if (propertiesData) {
+		propertiesRoot->setAnimationTarget(mat::vec2{ 0, 0 });
+	}
+	else {
+		propertiesRoot->setAnimationTarget(mat::vec2{ 0, -256 });
+	}
+}
+
 void UIManager::tick(float deltaTime)
 {
 	root->tick(deltaTime);
-}
-
-mat::vec2 UIManager::virtualMousePosition(SDL_Window* window)
-{
-	int x, y, width, height;
-	SDL_GetMouseState(&x, &y);
-	SDL_GL_GetDrawableSize(window, &width, &height);
-	return mat::vec2{ static_cast<float>(x) / width, 1.f - static_cast<float>(y) / height } * screenBounds;
 }
 
 UIObject* UIManager::objectAt(const mat::vec2& location)
