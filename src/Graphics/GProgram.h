@@ -32,6 +32,7 @@ public:
 	void setUniform(std::string name, const mat::vec4& vector);
 	void setUniform(std::string name, const mat::mat3& matrix);
 	void setUniform(std::string name, const mat::mat4& matrix);
+	void setUniform(std::string name, const std::vector<mat::vec3>& vectors);
 
 	// Return the GLuint location of a glsl uniform
 	unsigned int getUniformLocation(std::string name);

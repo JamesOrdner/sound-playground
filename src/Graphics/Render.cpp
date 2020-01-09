@@ -107,9 +107,10 @@ void Render::setCamera(const mat::vec3& position, const mat::vec3& focus)
 	float aspectRatio = 720.f / 1280.f;
 	mat::mat4 view = lookAt(position, focus);
 	mat::mat4 proj = mat::perspective(-0.05f, 0.05f, -0.05f * aspectRatio, 0.05f * aspectRatio, 0.1f, 15.f);
-	mat::mat4 projView = proj * view;
-	gbuffersProgram->setUniform("viewProj", projView);
-	invProjectionViewMatrix = mat::inverse(projView);
+	gbuffersProgram->setUniform("viewMat", view);
+	gbuffersProgram->setUniform("projMat", proj);
+	compositeProgram->setUniform("viewMat", view);
+	invProjectionViewMatrix = mat::inverse(proj * view);
 }
 
 void Render::drawMeshes()
@@ -284,6 +285,21 @@ bool Render::initDeferredPipeline()
 		}
 	);
 
+	// SSAO random directions
+	std::vector<mat::vec3> dirs;
+	dirs.reserve(64);
+	for (size_t i = 0; i < 64; i++) {
+		dirs.push_back(
+			mat::normal(mat::vec3{
+				static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f,
+				static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f,
+				static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f
+				}
+			)
+		);
+	}
+	compositeProgram->setUniform("samplePoints", dirs);
+	
 	return true;
 }
 

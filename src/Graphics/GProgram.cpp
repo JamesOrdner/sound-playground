@@ -86,6 +86,12 @@ void GProgram::setUniform(std::string name, const mat::mat4& matrix)
 	glProgramUniformMatrix4fv(program, id, 1, true, *matrix.data);
 }
 
+void GProgram::setUniform(std::string name, const std::vector<mat::vec3>& vectors)
+{
+	GLuint id = getUniformLocation(name);
+	glProgramUniform3fv(program, id, vectors.size(), vectors[0].data);
+}
+
 void GProgram::setFramebuffer(unsigned int framebuffer)
 {
 	fbo = framebuffer;
