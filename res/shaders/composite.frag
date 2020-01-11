@@ -52,8 +52,8 @@ void main()
 	// END ambient occlusion
 
 	vec3 light = normalize(vec3(2, 3, -0.5));
-	float ambient = gNormal.y * 0.2 + 0.2;
-	float lit = max(dot(light, gNormal), 0) * gShadow * 0.7 + ambient * ao;
+	float ambient = gNormal.y * 0.25 + 0.25;
+	vec3 lit = max(dot(light, gNormal), 0) * gShadow * vec3(1.0, 0.95, 0.9) + ambient * ao * vec3(.7, .9, 1) * 1.1;
 	
 	color = vec4(vec3(gColor * lit), 1);
 	

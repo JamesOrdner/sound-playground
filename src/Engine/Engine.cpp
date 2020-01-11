@@ -64,10 +64,10 @@ bool Engine::init()
 		return false;
 	}
 
-	//if (!audioEngine->init()) {
-	//	printf("Warning: AudioEngine failed to initialize!\n");
-	//	return false;
-	//}
+	if (!audioEngine->init()) {
+		printf("Warning: AudioEngine failed to initialize!\n");
+		return false;
+	}
 
 	return true;
 }

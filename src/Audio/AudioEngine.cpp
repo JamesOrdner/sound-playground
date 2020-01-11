@@ -23,7 +23,7 @@ int pa_callback(
 
 AudioEngine::AudioEngine() :
 	audioStream(nullptr),
-	sampleRate(44100.f),
+	sampleRate(48000.f),
 	channels(2),
 	bufferLength(256)
 {
@@ -41,23 +41,15 @@ bool AudioEngine::init()
 	PaDeviceIndex deviceCount = Pa_GetDeviceCount();
 	for (PaDeviceIndex i = 0; i < deviceCount; i++) {
 		const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
-		if (Pa_GetHostApiInfo(deviceInfo->hostApi)->type == paWASAPI) {
-			PaWasapiStreamInfo wasapiInfo;
-			wasapiInfo.size = sizeof(PaWasapiStreamInfo);
-			wasapiInfo.hostApiType = paWASAPI;
-			wasapiInfo.version = 1;
-			wasapiInfo.flags = paWinWasapiExclusive;
-			wasapiInfo.channelMask = NULL;
-			wasapiInfo.hostProcessorOutput = NULL;
-			wasapiInfo.hostProcessorInput = NULL;
-			wasapiInfo.threadPriority = eThreadPriorityProAudio;
+		if (Pa_GetHostApiInfo(deviceInfo->hostApi)->type == paWASAPI && deviceInfo->maxOutputChannels >= 2) {
+			sampleRate = static_cast<float>(deviceInfo->defaultSampleRate);
+			bufferLength = static_cast<int>(deviceInfo->defaultHighOutputLatency * sampleRate);
 
-			PaStreamParameters outputParams;
+			PaStreamParameters outputParams = {};
 			outputParams.device = i;
 			outputParams.channelCount = channels;
 			outputParams.sampleFormat = paFloat32;
-			outputParams.suggestedLatency = Pa_GetDeviceInfo(i)->defaultLowOutputLatency;
-			outputParams.hostApiSpecificStreamInfo = &wasapiInfo;
+			outputParams.suggestedLatency = deviceInfo->defaultHighOutputLatency;
 			err = Pa_OpenStream(
 				&audioStream,
 				nullptr,
