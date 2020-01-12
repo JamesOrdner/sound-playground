@@ -26,6 +26,8 @@ inline void makeBuffer(GLuint& vbo, GLenum target, GLsizeiptr byteLen, const voi
 
 GMesh::GMesh(const std::string& filepath)
 {
+	this->filepath = filepath;
+
 	TinyGLTF loader;
 	Model model;
 	std::string err;
@@ -211,6 +213,13 @@ void GMesh::registerModel(EModel* model)
 {
 	models.push_back(model);
 	reloadInstanceBuffers();
+}
+
+void GMesh::unregisterModel(EModel* model)
+{
+	models.remove(model);
+	if (models.empty()) meshes.erase(filepath);
+	else reloadInstanceBuffers();
 }
 
 void GMesh::reloadInstanceBuffers()

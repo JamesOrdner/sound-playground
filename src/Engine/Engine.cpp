@@ -75,6 +75,7 @@ bool Engine::init()
 void Engine::deinit()
 {
 	bInitialized = false;
+	m_world.reset(); // This will deinit all objects
 	audioEngine->deinit();
 	renderer->deinit();
 	SDL_DestroyWindow(window);

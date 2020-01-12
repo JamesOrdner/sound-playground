@@ -10,10 +10,14 @@ EModel::EModel() :
 {
 }
 
-EModel::~EModel() = default;
+EModel::~EModel()
+{
+	if (mesh) mesh->unregisterModel(this);
+}
 
 void EModel::setMesh(std::string filepath)
 {
+	if (mesh) mesh->unregisterModel(this);
 	mesh = GMesh::getSharedMesh(filepath);
 	mesh->registerModel(this);
 }

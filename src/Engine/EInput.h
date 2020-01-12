@@ -24,4 +24,7 @@ private:
 
 	// True when selected objects should be placed at the cursor
 	bool bPlacingSelected;
+
+	void handleInputPlacing(const SDL_Event& sdlEvent);
+	void handleInputObjectManagement(const SDL_Event& sdlEvent);
 };

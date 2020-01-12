@@ -212,6 +212,6 @@ void AudioEngine::unregisterComponent(AudioComponent* component)
 		}
 	}
 
-	component->deinit();
+	if (audioStream) component->deinit(); // Only deinit if engine running
 	components.remove(component);
 }

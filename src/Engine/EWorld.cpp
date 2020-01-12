@@ -11,11 +11,26 @@ EWorld::EWorld() :
 	camera = static_cast<ECamera*>(objects.front().get());
 }
 
+EWorld::~EWorld()
+{
+	objects.clear();
+}
+
 EObject* EWorld::addObject(std::unique_ptr<EObject> object)
 {
 	EObject* objectPtr = object.get();
 	objects.push_back(std::move(object));
 	return objectPtr;
+}
+
+void EWorld::destroyObject(EObject* object)
+{
+	for (const auto& obj : objects) {
+		if (obj.get() == object) {
+			objects.remove(obj);
+			return;
+		}
+	}
 }
 
 const std::list<std::unique_ptr<EObject>>& EWorld::allObjects() const

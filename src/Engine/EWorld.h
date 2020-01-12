@@ -16,11 +16,17 @@ public:
 
 	EWorld();
 
+	~EWorld();
+
 	// Spawn an object into the world
 	template<class T>
 	T* spawnObject() {
 		return static_cast<T*>(addObject(std::make_unique<T>()));
 	};
+
+	// Remove an object from the world and deallocate the object.
+	// Pointers to this object will be invalid after calling this function.
+	void destroyObject(EObject* object);
 
 	// Return a reference to the "global" list of objects
 	const std::list<std::unique_ptr<EObject>>& allObjects() const;

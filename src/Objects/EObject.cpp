@@ -11,7 +11,10 @@ EObject::EObject() :
 {
 }
 
-EObject::~EObject() = default;
+EObject::~EObject()
+{
+	if (m_audioComponent) removeAudioComponent();
+}
 
 void EObject::setSelected(bool selected)
 {
