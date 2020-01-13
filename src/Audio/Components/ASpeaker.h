@@ -7,15 +7,15 @@
 // Forward declarations
 class AConvolver;
 
-class ASpeaker : public AuralizingAudioComponent
+class ASpeaker : public AudioComponent // AuralizingAudioComponent
 {
 public:
 
 	ASpeaker();
 
 	// AudioComponent interface
-	void init(float sampleRate, size_t channels, size_t bufferSize) override;
-	void deinit() override;
+	// void init(float sampleRate) override;
+	// void deinit() override;
 	size_t process(size_t n) override;
 
 private:
@@ -24,8 +24,8 @@ private:
 	std::unique_ptr<AConvolver> convolver;
 
 	// Buffer required for process()
-	std::vector<float> workingBuffer;
+	std::vector<float> processingBuffer;
 
 	// GeneratingAudioComponent interface
-	size_t generateImpl(float* buffer, size_t count) override;
+	// size_t generateImpl(float* buffer, size_t count) override;
 };

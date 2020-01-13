@@ -1,8 +1,7 @@
 #include "AuralizingAudioComponent.h"
 #include "OutputAudioComponent.h"
 
-AuralizingAudioComponent::AuralizingAudioComponent() :
-	indirectBufferOffset(0)
+AuralizingAudioComponent::AuralizingAudioComponent()
 {
 	genID = GeneratingAudioComponent::addConsumer();
 }
@@ -18,10 +17,10 @@ void AuralizingAudioComponent::transformUpdated()
 	for (auto& send : indirectReceivers) send->auralize();
 }
 
-void AuralizingAudioComponent::init(float sampleRate, size_t channels, size_t bufferSize)
+void AuralizingAudioComponent::init(float sampleRate)
 {
-	AudioComponent::init(sampleRate, channels, bufferSize);
-	processIndirectBuffer.resize(bufferSize);
+	AudioComponent::init(sampleRate);
+	processingBuffer.resize(512); // TEMP
 	for (auto& receiver : indirectReceivers) {
 		for (auto& convolver : receiver->convolvers) {
 			convolver.init(sampleRate);
@@ -32,23 +31,12 @@ void AuralizingAudioComponent::init(float sampleRate, size_t channels, size_t bu
 void AuralizingAudioComponent::deinit()
 {
 	AudioComponent::deinit();
-	processIndirectBuffer.clear();
+	processingBuffer.clear();
 	for (auto& receiver : indirectReceivers) {
 		for (auto& convolver : receiver->convolvers) {
 			convolver.deinit();
 		}
 	}
-}
-
-void AuralizingAudioComponent::preprocess()
-{
-	AudioComponent::preprocess();
-	indirectBufferOffset = 0;
-}
-
-size_t AuralizingAudioComponent::indirectFramesProcessed()
-{
-	return indirectBufferOffset;
 }
 
 IndirectSend* AuralizingAudioComponent::registerIndirectReceiver(OutputAudioComponent* receiver)
@@ -86,20 +74,19 @@ void AuralizingAudioComponent::unregisterIndirectReceiver(const OutputAudioCompo
 	}
 }
 
-void AuralizingAudioComponent::processIndirect(size_t n)
+size_t AuralizingAudioComponent::processIndirect(float* buffer, size_t n)
 {
 	size_t available = GeneratingAudioComponent::readable(genID);
 	if (available < n) GeneratingAudioComponent::generate(n - available);
-	n = GeneratingAudioComponent::readGenerated(genID, processIndirectBuffer.data(), n);
+	n = GeneratingAudioComponent::readGenerated(genID, processingBuffer.data(), n);
 
 	for (auto& send : indirectReceivers) {
 		size_t channels = send->convolvers.size();
-		float* dest = send->receiver->rawOutputBuffer() + indirectBufferOffset * channels;
 		for (size_t ch = 0; ch < channels; ch++) {
-			send->convolvers[ch].process(processIndirectBuffer.data(), processIndirectBuffer.data(), n);
-			for (size_t i = 0; i < n; i++) dest[i * channels + ch] += processIndirectBuffer[i];
+			send->convolvers[ch].process(processingBuffer.data(), processingBuffer.data(), n);
+			for (size_t i = 0; i < n; i++) buffer[i * channels + ch] += processingBuffer[i];
 		}
 	}
 
-	indirectBufferOffset += n;
+	return n;
 }

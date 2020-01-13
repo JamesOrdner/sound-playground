@@ -16,16 +16,14 @@ int pa_callback(
 	PaStreamCallbackFlags statusFlags,
 	void* userData)
 {
-	float* out = (float*)output;
-	((AudioEngine*)userData)->process_float((float*)output, frameCount);
+	((AudioEngine*)userData)->process_float((float*)output, static_cast<size_t>(frameCount));
 	return paContinue;
 }
 
 AudioEngine::AudioEngine() :
 	audioStream(nullptr),
 	sampleRate(48000.f),
-	channels(2),
-	bufferLength(256)
+	channels(2)
 {
 }
 
@@ -43,7 +41,6 @@ bool AudioEngine::init()
 		const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
 		if (Pa_GetHostApiInfo(deviceInfo->hostApi)->type == paWASAPI && deviceInfo->maxOutputChannels >= 2) {
 			sampleRate = static_cast<float>(deviceInfo->defaultSampleRate);
-			bufferLength = static_cast<int>(deviceInfo->defaultHighOutputLatency * sampleRate);
 
 			PaStreamParameters outputParams = {};
 			outputParams.device = i;
@@ -55,7 +52,7 @@ bool AudioEngine::init()
 				nullptr,
 				&outputParams,
 				sampleRate,
-				bufferLength,
+				paFramesPerBufferUnspecified,
 				paNoFlag,
 				pa_callback,
 				this);
@@ -68,10 +65,7 @@ bool AudioEngine::init()
 		}
 	}
 
-	for (const auto& component : components) {
-		component->init(sampleRate, bufferLength, channels);
-	}
-
+	for (const auto& comp : components) comp->init(sampleRate);
 	return true;
 }
 
@@ -107,42 +101,37 @@ void AudioEngine::stop()
 	}
 }
 
-void AudioEngine::process_float(float* buffer, unsigned long frames)
+void AudioEngine::process_float(float* buffer, size_t frames)
 {
-	// preprocess
-	for (const auto& c : components) c->preprocess();
+	// zero output buffer
+	std::fill_n(buffer, frames * channels, 0.f);
 
-	// process
-	// naive just-get-it-working ordering
-	std::vector<size_t> remaining(components.size(), frames);
-	bool done = false;
-	while (!done) {
-		size_t i = 0;
-		done = true;
-		for (const auto& c : components) {
-			// direct
-			remaining[i] -= c->process(remaining[0]);
-			if (remaining[i++] && dynamic_cast<OutputAudioComponent*>(c)) done = false;
-			i %= remaining.size();
+	std::vector<size_t> outputProcessedCount(outputComponents.size());
+	std::vector<size_t> auralizeProcessedCount(auralizingComponents.size());
 
-			// indirect
-			if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(c)) {
-				size_t processed = aComp->indirectFramesProcessed();
-				if (processed < frames) {
-					aComp->processIndirect(frames - processed);
-					done = done && aComp->indirectFramesProcessed() == frames;
-				}
-			}
+	size_t i;
+	while (true) {
+		size_t maxRemaining = 0;
+		i = 0;
+		for (auto* c : outputComponents) {
+			size_t processed = outputProcessedCount[i];
+			processed += c->processOutput(buffer + processed, frames - processed);
+			if (frames - processed > maxRemaining) maxRemaining = frames - processed;
+			outputProcessedCount[i++] = processed;
 		}
-	}
 
-	// collect output
-	unsigned long len = frames * channels;
-	for (unsigned long i = 0; i < len; i++) buffer[i] = 0.f;
-	for (const auto& c : components) {
-		if (auto* outputComponent = dynamic_cast<OutputAudioComponent*>(c)) {
-			float* cOut = outputComponent->rawOutputBuffer();
-			for (unsigned long i = 0; i < len; i++) buffer[i] += cOut[i];
+		i = 0;
+		for (auto* c : auralizingComponents) {
+			size_t processed = auralizeProcessedCount[i];
+			processed += c->processIndirect(buffer + processed, frames - processed);
+			if (frames - processed > maxRemaining) maxRemaining = frames - processed;
+			auralizeProcessedCount[i++] = processed;
+		}
+
+		if (maxRemaining == 0) break;
+
+		for (auto* c : components) {
+			c->process(maxRemaining);
 		}
 	}
 }
@@ -150,7 +139,7 @@ void AudioEngine::process_float(float* buffer, unsigned long frames)
 void AudioEngine::registerComponent(AudioComponent* component, const EObject* owner)
 {
 	component->owner = owner;
-	if (audioStream) component->init(sampleRate, channels, bufferLength);
+	if (audioStream) component->init(sampleRate);
 
 	// Setup delay lines
 	const mat::vec3& thisPos = component->position();
@@ -177,6 +166,7 @@ void AudioEngine::registerComponent(AudioComponent* component, const EObject* ow
 
 	// If OutputAudioComponent, setup indirect connections to this object
 	if (auto* oComp = dynamic_cast<OutputAudioComponent*>(component)) {
+		outputComponents.push_back(oComp);
 		for (AudioComponent* compOther : components) {
 			if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(compOther)) {
 				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
@@ -187,6 +177,7 @@ void AudioEngine::registerComponent(AudioComponent* component, const EObject* ow
 
 	// If AuralizingAudioComponent, setup indirect connections from this object
 	if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(component)) {
+		auralizingComponents.push_back(aComp);
 		for (AudioComponent* compOther : components) {
 			if (auto* oComp = dynamic_cast<OutputAudioComponent*>(compOther)) {
 				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
@@ -212,6 +203,10 @@ void AudioEngine::unregisterComponent(AudioComponent* component)
 		}
 	}
 
-	if (audioStream) component->deinit(); // Only deinit if engine running
+	// Only deinit if engine is running
+	if (audioStream) component->deinit();
+
 	components.remove(component);
+	outputComponents.remove(dynamic_cast<OutputAudioComponent*>(component));
+	auralizingComponents.remove(dynamic_cast<AuralizingAudioComponent*>(component));
 }

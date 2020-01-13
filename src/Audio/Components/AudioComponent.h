@@ -20,7 +20,7 @@ public:
 	virtual ~AudioComponent();
 
 	// Initialize internal variables for current audio session
-	virtual void init(float sampleRate, size_t channels, size_t bufferSize);
+	virtual void init(float sampleRate);
 
 	// Clean up internals and delete any memory allocated in init()
 	virtual void deinit();
@@ -32,15 +32,11 @@ public:
 	// bInput == true if this is an input to the called AudioComponent, == false if output.
 	virtual void otherTransformUpdated(const ADelayLine& connection, bool bInput) {};
 
-	// This optional function is called just before processing a full callback.
-	// It can be used to prep output buffers or other internals.
-	virtual void preprocess() {};
-
 	// Pull from the input delay lines and attempt to fill output buffers and
 	// and output delay lines with n samples. Returns the number of outputted
 	// samples, which will often be less than n due to full output buffers or
 	// running out of input samples.
-	virtual size_t process(size_t n) = 0;
+	virtual size_t process(size_t n) { return n; };
 
 	// Returns the world space position of the owning object
 	const mat::vec3& position() const;

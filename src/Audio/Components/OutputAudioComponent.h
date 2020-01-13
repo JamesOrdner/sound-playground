@@ -15,27 +15,20 @@ public:
 
 	virtual ~OutputAudioComponent();
 
-	// AudioComponent interface
-	virtual void init(float sampleRate, size_t channels, size_t bufferSize) override;
-	virtual void transformUpdated() override;
-	virtual void preprocess() override;
-
 	// Register a receiving component with this component. Called outside the audio thread.
 	void registerIndirectSend(IndirectSend* send);
 
 	// Unregister a receiving component from this component. Called outside the audio thread.
 	void unregisterIndirectSend(IndirectSend* send);
 
-	// Returns a pointer to the raw data of outputBuffer, which is filled during process()
-	float* rawOutputBuffer();
+	// Contribute `n` frames to interleaved buffer `buffer`. Samples should be constructively
+	// added to `buffer`, rather than overridden, as `buffer` is shared by all output components.
+	virtual size_t processOutput(float* buffer, size_t n) = 0;
+
+	// AudioComponent interface
+	virtual void transformUpdated() override;
 
 protected:
-
-	// Number of output channels
-	size_t channels;
-
-	// This interleaved buffer is filled during process() and will be sent directly to the output device
-	std::vector<float> outputBuffer;
 
 	// List of pointers to all AuralizingAudioComponents sends to this component
 	std::list<IndirectSend*> indirectSends;

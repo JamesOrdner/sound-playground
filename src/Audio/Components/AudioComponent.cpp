@@ -13,7 +13,7 @@ AudioComponent::AudioComponent() :
 
 AudioComponent::~AudioComponent() = default;
 
-void AudioComponent::init(float sampleRate, size_t channels, size_t bufferSize)
+void AudioComponent::init(float sampleRate)
 {
 	for (const auto& input : inputs) input->init(sampleRate);
 	for (const auto& output : outputs) output->init(sampleRate);

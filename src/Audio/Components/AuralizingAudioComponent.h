@@ -39,18 +39,6 @@ public:
 
 	virtual ~AuralizingAudioComponent();
 
-	// AudioComponent interface
-	virtual void transformUpdated() override;
-	virtual void init(float sampleRate, size_t channels, size_t bufferSize) override;
-	virtual void deinit() override;
-	virtual void preprocess() override;
-
-	// Process `n` output samples with auralization filters and send to indirect receivers
-	void processIndirect(size_t n);
-
-	// Return the number of indirect frames processed since the last preprocess() call
-	size_t indirectFramesProcessed();
-
 	// Register a receiving component with this component. Called outside the audio thread.
 	// Returns a pointer to the created IndirectSend object.
 	IndirectSend* registerIndirectReceiver(OutputAudioComponent* receiver);
@@ -58,16 +46,22 @@ public:
 	// Unregister a receiving component from this component. Called outside the audio thread.
 	void unregisterIndirectReceiver(const OutputAudioComponent* receiver);
 
+	// Contribute `n` frames to interleaved buffer `buffer`. Samples should be constructively
+	// added to `buffer`, rather than overridden, as `buffer` is shared by all output components.
+	size_t processIndirect(float* buffer, size_t n);
+
+	// AudioComponent interface
+	virtual void transformUpdated() override;
+	virtual void init(float sampleRate) override;
+	virtual void deinit() override;
+
 private:
 
 	// Sends to OutputAudioComponents receiving indirect sound from this component
 	std::list<std::unique_ptr<IndirectSend>> indirectReceivers;
 
 	// This buffer is required for processIndirect()
-	std::vector<float> processIndirectBuffer;
-
-	// Write offset within the current buffer, reset to 0 each preprocess() call
-	size_t indirectBufferOffset;
+	std::vector<float> processingBuffer;
 
 	// Unique ID which associates the AuralizingAudioComponent with the GeneratingAudioComponent
 	unsigned int genID;

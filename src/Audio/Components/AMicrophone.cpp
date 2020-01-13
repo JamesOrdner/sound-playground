@@ -2,25 +2,17 @@
 #include "../DSP/ADelayLine.h"
 
 AMicrophone::AMicrophone() :
-	outputPtr(0),
-	inputBuffer(nullptr),
+	processingBuffer(512), // TEMP
 	gainL(0.5)
 {
 	bAcceptsInput = true;
 	bAcceptsOutput = false;
 }
 
-void AMicrophone::init(float sampleRate, size_t channels, size_t bufferSize)
+void AMicrophone::init(float sampleRate)
 {
-	OutputAudioComponent::init(sampleRate, channels, bufferSize);
-	inputBuffer = new float[bufferSize];
+	OutputAudioComponent::init(sampleRate);
 	gainL.sampleRate = sampleRate;
-}
-
-void AMicrophone::deinit()
-{
-	OutputAudioComponent::deinit();
-	delete[] inputBuffer;
 }
 
 void AMicrophone::transformUpdated()
@@ -39,26 +31,17 @@ void AMicrophone::otherTransformUpdated(const ADelayLine& connection, bool bInpu
 	gainL.target = gL;
 }
 
-void AMicrophone::preprocess()
+size_t AMicrophone::processOutput(float* buffer, size_t n)
 {
-	OutputAudioComponent::preprocess();
-	outputPtr = 0;
-}
-
-size_t AMicrophone::process(size_t n)
-{
-	if (outputPtr + n * channels >= outputBuffer.size()) {
-		n = (outputBuffer.size() - outputPtr) / channels;
-	}
-
 	for (const auto& input : inputs) {
-		n = input->read(inputBuffer, n);
+		n = input->read(processingBuffer.data(), n);
+		size_t bIdx = 0;
 		for (size_t i = 0; i < n; i++) {
 			// This is all hardcoded for stereo, needs to be changed eventually
 			float gL = gainL.update();
 			float gR = 1.f - gL;
-			outputBuffer[outputPtr++] += inputBuffer[i] * gL * 0.5f;
-			outputBuffer[outputPtr++] += inputBuffer[i] * gR * 0.5f;
+			buffer[bIdx++] += processingBuffer[i];// * gL * 0.5f;
+			buffer[bIdx++] += processingBuffer[i];// * gR * 0.5f;
 		}
 	}
 
@@ -69,6 +52,6 @@ void AMicrophone::calcStereoGain(const AudioComponent* source, float& gainL, flo
 {
 	mat::vec3 dir = source->position() - position();
 	float angle = atanf(dir.x / fabsf(dir.z)) * 0.5f + 0.25f * mat::pi;
-	gainL = cosf(angle);
-	gainR = sinf(angle);
+	gainL = std::isnan(angle) ? 0.f : cosf(angle);
+	gainR = std::isnan(angle) ? 0.f : sinf(angle);
 }

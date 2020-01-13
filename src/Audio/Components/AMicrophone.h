@@ -10,12 +10,12 @@ public:
 	AMicrophone();
 
 	// AudioComponent interface
-	void init(float sampleRate, size_t channels, size_t bufferSize) override;
-	void deinit() override;
+	void init(float sampleRate) override;
 	void transformUpdated() override;
 	void otherTransformUpdated(const ADelayLine& connection, bool bInput) override;
-	void preprocess() override;
-	size_t process(size_t n) override;
+	
+	// OutputAudioComponent interface
+	size_t processOutput(float* buffer, size_t n) override;
 
 private:
 
@@ -25,9 +25,6 @@ private:
 	// Left channel gain in a stereo setup. Right channel gain is calculated as 1 - gainL.
 	AInterpParameter gainL;
 
-	// Points to the current location in the outputBuffer, reset each preprocess()
-	size_t outputPtr;
-
 	// Buffer used to copy data from input buffers
-	float* inputBuffer;
+	std::vector<float> processingBuffer;
 };
