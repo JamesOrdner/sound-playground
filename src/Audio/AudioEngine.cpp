@@ -139,13 +139,14 @@ void AudioEngine::process_float(float* buffer, size_t frames)
 		}
 	}
 
+	// handle pending changes to audio objects
 	StateManager::instance().notifyAudioObservers();
 }
 
 AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> component, const EObject* owner)
 {
 	AudioComponent* ptr = component.get();
-	ownedComponents.push_back(std::move(component));
+	audioComponents.push_back(std::move(component));
 	ptr->setOwner(owner);
 
 	auto& stateManager = StateManager::instance();
@@ -245,5 +246,5 @@ void AudioEngine::unregisterComponent(const StateManager::EventData& data)
 	outputComponents.remove(dynamic_cast<OutputAudioComponent*>(component));
 	auralizingComponents.remove(dynamic_cast<AuralizingAudioComponent*>(component));
 	
-	ownedComponents.remove_if([component](const auto& data) { return data.get() == component; });
+	audioComponents.remove_if([component](const auto& data) { return data.get() == component; });
 }

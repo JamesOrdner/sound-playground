@@ -18,7 +18,7 @@ int main(int argc, char* args[])
 	}
 
 	EObject* mic = world.spawnObject<EObject>();
-	mic->m_audioComponent = engine.audio().createAudioComponent<AMicrophone>(mic);
+	mic->audioComponent = engine.audio().createAudioComponent<AMicrophone>(mic);
 
 	engine.run();
 	return 0;

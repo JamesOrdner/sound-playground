@@ -50,10 +50,10 @@ private:
 	// Current number of channels
 	int channels;
 
+	// Contains all existing AudioComponents and is responsible for their deallocation
+	std::list<std::unique_ptr<AudioComponent>> audioComponents;
 
-	std::list<std::unique_ptr<AudioComponent>> ownedComponents;
-
-	// This list contains all audio components, sorted from least dependent to most dependent.
+	// This list contains all active audio components, sorted from least dependent to most dependent.
 	// Dependency is determined from the input buffers. Components with longer input buffers
 	// are considered less dependent, while components with shorter length input buffers
 	// are more dependent. Components with no input buffers are the least dependent.
@@ -69,8 +69,9 @@ private:
 
 	// Registers an audio component with the engine for processing
 	AudioComponent* registerComponent(std::unique_ptr<AudioComponent> component, const EObject* owner);
+	void destroyComponent();
 
-	// Called from the audio thread
+	// Called in the audio thread. Registers a component for active processing.
 	void registerComponent(const StateManager::EventData& data);
 	void unregisterComponent(const StateManager::EventData& data);
 };

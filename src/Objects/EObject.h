@@ -32,9 +32,6 @@ public:
 	// Returns a normalized vector in the direction the object is facing
 	mat::vec3 forward() const;
 
-	// Returns the object's audio component, if present
-	AudioComponent* audioComponent();
-
 	// Returns the object's input component, if present
 	EInputComponent* inputComponent();
 
@@ -48,7 +45,7 @@ public:
 	virtual void updatePhysics(float deltaTime) {};
 
 	// Object's audio component (optional, unowned)
-	AudioComponent* m_audioComponent;
+	AudioComponent* audioComponent;
 
 protected:
 

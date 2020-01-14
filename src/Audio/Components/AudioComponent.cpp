@@ -14,7 +14,7 @@ AudioComponent::AudioComponent() :
 AudioComponent::~AudioComponent()
 {
 	for (auto id : observerIDs) {
-		StateManager::instance().unregisterObserver(id);
+		StateManager::instance().unregisterAudioObserver(id);
 	}
 }
 

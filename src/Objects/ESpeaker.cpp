@@ -8,7 +8,7 @@ ESpeaker::ESpeaker()
 {
 	setMesh("res/speaker_small.glb");
 
-	m_audioComponent = Engine::instance().audio().createAudioComponent<ASpeaker>(this);
+	audioComponent = Engine::instance().audio().createAudioComponent<ASpeaker>(this);
 
 	m_uiComponent = std::make_unique<UIComponent>();
 	UIData& data = m_uiComponent->data.emplace_back();

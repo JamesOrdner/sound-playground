@@ -124,6 +124,9 @@ void Engine::run()
 		renderer->drawMeshes();
 		renderer->drawUI(*uiManager->root, uiManager->screenBounds);
 		renderer->swap(window);
+
+		// sync changes across systems
+		StateManager::instance().notifyObservers();
 	}
 }
 

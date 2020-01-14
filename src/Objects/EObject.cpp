@@ -9,17 +9,17 @@
 EObject::EObject() :
 	bSelected(false),
 	m_scale(1),
-	m_audioComponent(nullptr)
+	audioComponent(nullptr)
 {
 }
 
 EObject::~EObject()
 {
-	if (m_audioComponent) {
+	if (audioComponent) {
 		StateManager::instance().event(
-			m_audioComponent,
+			audioComponent,
 			StateManager::EventType::ComponentDeleted,
-			m_audioComponent);
+			audioComponent);
 	}
 }
 
@@ -86,11 +86,6 @@ const mat::vec3& EObject::scale() const
 mat::vec3 EObject::forward() const
 {
 	return mat::rotate(mat::vec3{ 0.f, 0.f, 1.f }, m_rotation);
-}
-
-AudioComponent* EObject::audioComponent()
-{
-	return m_audioComponent;
 }
 
 EInputComponent* EObject::inputComponent()
