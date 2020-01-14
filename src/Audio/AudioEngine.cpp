@@ -139,11 +139,8 @@ void AudioEngine::process_float(float* buffer, size_t frames)
 		}
 	}
 
-	// TODO: Only notify audio-related observers
-	StateManager::instance().notifyObservers();
+	StateManager::instance().notifyAudioObservers();
 }
-
-StateManager::ObserverID ids[2]; // TEMP
 
 AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> component, const EObject* owner)
 {
@@ -152,16 +149,20 @@ AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> c
 	ptr->setOwner(owner);
 
 	auto& stateManager = StateManager::instance();
-	ids[0] = stateManager.registerObserver(
-		ptr,
-		StateManager::EventType::ComponentCreated,
-		[this](const StateManager::EventData& data) { registerComponent(data); }
+	ptr->observerIDs.push_back(
+		stateManager.registerAudioObserver(
+			ptr,
+			StateManager::EventType::ComponentCreated,
+			[this](const StateManager::EventData& data) { registerComponent(data); }
+		)
 	);
 
-	ids[1] = stateManager.registerObserver(
-		ptr,
-		StateManager::EventType::ComponentDeleted,
-		[this](const StateManager::EventData& data) { unregisterComponent(data); }
+	ptr->observerIDs.push_back(
+		stateManager.registerAudioObserver(
+			ptr,
+			StateManager::EventType::ComponentDeleted,
+			[this](const StateManager::EventData& data) { unregisterComponent(data); }
+		)
 	);
 
 	stateManager.event(ptr, StateManager::EventType::ComponentCreated, ptr);
@@ -245,7 +246,4 @@ void AudioEngine::unregisterComponent(const StateManager::EventData& data)
 	auralizingComponents.remove(dynamic_cast<AuralizingAudioComponent*>(component));
 	
 	ownedComponents.remove_if([component](const auto& data) { return data.get() == component; });
-
-	StateManager::instance().unregisterObserver(ids[0]);
-	StateManager::instance().unregisterObserver(ids[1]);
 }

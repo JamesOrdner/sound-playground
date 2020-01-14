@@ -13,30 +13,35 @@ AudioComponent::AudioComponent() :
 
 AudioComponent::~AudioComponent()
 {
-	StateManager::instance().unregisterObserver(ids[0]);
-	StateManager::instance().unregisterObserver(ids[1]);
+	for (auto id : observerIDs) {
+		StateManager::instance().unregisterObserver(id);
+	}
 }
 
 void AudioComponent::setOwner(const EObject* owner)
 {
 	auto& stateManager = StateManager::instance();
 
-	ids[0] = stateManager.registerObserver(
-		owner,
-		StateManager::EventType::PositionUpdated,
-		[this](const StateManager::EventData& data) {
-			position = std::get<mat::vec3>(data);
-			transformUpdated();
-		}
+	observerIDs.push_back(
+		stateManager.registerAudioObserver(
+			owner,
+			StateManager::EventType::PositionUpdated,
+			[this](const StateManager::EventData& data) {
+				position = std::get<mat::vec3>(data);
+				transformUpdated();
+			}
+		)
 	);
 
-	ids[1] = stateManager.registerObserver(
-		owner,
-		StateManager::EventType::VelocityUpdated,
-		[this](const StateManager::EventData& data) {
-			velocity = std::get<mat::vec3>(data);
-			velocityUpdated();
-		}
+	observerIDs.push_back(
+		stateManager.registerAudioObserver(
+			owner,
+			StateManager::EventType::VelocityUpdated,
+			[this](const StateManager::EventData& data) {
+				velocity = std::get<mat::vec3>(data);
+				velocityUpdated();
+			}
+		)
 	);
 }
 

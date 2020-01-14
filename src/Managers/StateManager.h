@@ -32,16 +32,19 @@ public:
 		ScaleUpdated, // mat::vec3
 	};
 
-	typedef unsigned int ObserverID;
-
-	ObserverID registerObserver(const void* subject, EventType event, ObserverCallback callback);
-	void unregisterObserver(ObserverID id);
-
 	// Called by subjects after modifying shared data
 	void event(void* subject, EventType event, const EventData& data = EventData());
 
-	// Iterates pending events and dispatches to registered observers
-	void notifyObservers();
+	typedef unsigned int ObserverID;
+
+	// Register an observer that will be notified in the audio thread
+	ObserverID registerAudioObserver(const void* subject, EventType event, ObserverCallback callback);
+
+	// Unregister an observer with the given ID
+	void unregisterObserver(ObserverID id);
+
+	// Iterates pending events and dispatches to registered observers in the audio thread
+	void notifyAudioObservers();
 
 private:
 
@@ -64,7 +67,9 @@ private:
 		EventType event;
 	};
 
-	LFQueue<NotifyQueueItem> eventQueue;
+	// As the audio thread runs on its own callback-driven thread, it requires a parallel
+	// queue that can be polled separately from the main event queue.
+	LFQueue<NotifyQueueItem> audioEventQueue;
 
 	// Queue stores pending observers which have requested unregistration
 	LFQueue<ObserverID> removeQueue;

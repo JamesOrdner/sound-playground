@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../Graphics/Matrix.h"
+#include "../../Managers/StateManager.h"
 #include <vector>
 #include <list>
 #include <memory>
@@ -75,5 +76,5 @@ private:
 	mat::vec3 position;
 	mat::vec3 velocity;
 
-	unsigned int ids[2]; // TEMP
+	std::vector<StateManager::ObserverID> observerIDs;
 };

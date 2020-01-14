@@ -10,8 +10,17 @@ StateManager::StateManager()
 {
 }
 
+void StateManager::event(void* subject, EventType event, const EventData& data)
+{
+	NotifyQueueItem queueItem;
+	queueItem.subject = subject;
+	queueItem.event = event;
+	queueItem.data = data;
+	audioEventQueue.push(queueItem);
+}
+
 StateManager::ObserverID tempCounter = 0; // TODO: ID generator
-StateManager::ObserverID StateManager::registerObserver(const void* subject, EventType event, ObserverCallback callback)
+StateManager::ObserverID StateManager::registerAudioObserver(const void* subject, EventType event, ObserverCallback callback)
 {
 	auto& observerData = observers.emplace_back();
 	observerData.subject = subject;
@@ -26,16 +35,7 @@ void StateManager::unregisterObserver(ObserverID id)
 	removeQueue.push(id);
 }
 
-void StateManager::event(void* subject, EventType event, const EventData& data)
-{
-	NotifyQueueItem queueItem;
-	queueItem.subject = subject;
-	queueItem.event = event;
-	queueItem.data = data;
-	eventQueue.push(queueItem);
-}
-
-void StateManager::notifyObservers()
+void StateManager::notifyAudioObservers()
 {
 	// Sticking this here for now, should go somewhere else
 	ObserverID id;
@@ -44,7 +44,7 @@ void StateManager::notifyObservers()
 	}
 
 	NotifyQueueItem event;
-	while (eventQueue.pop(event)) {
+	while (audioEventQueue.pop(event)) {
 		for (const auto& observer : observers) {
 			if (event.subject == observer.subject && event.event == observer.event) {
 				observer.callback(event.data);
