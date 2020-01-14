@@ -19,16 +19,16 @@ public:
 
 	virtual ~AudioComponent();
 
+	// TEMP for StateManager testing
+	void setOwner(const EObject* owner);
+
 	// Initialize internal variables for current audio session
 	virtual void init(float sampleRate);
 
 	// Clean up internals and delete any memory allocated in init()
 	virtual void deinit();
 
-	// Called when the owning EObject transform changes. Does not run in the audio thread.
-	virtual void transformUpdated();
-
-	// Called when a connected object updates its transform. Does not run in the audio thread.
+	// Called when a connected object updates its transform. Called in the audio thread.
 	// bInput == true if this is an input to the called AudioComponent, == false if output.
 	virtual void otherTransformUpdated(const ADelayLine& connection, bool bInput) {};
 
@@ -38,17 +38,14 @@ public:
 	// running out of input samples.
 	virtual size_t process(size_t n) { return n; };
 
-	// Returns the world space position of the owning object
-	const mat::vec3& position() const;
+	// Returns the world space position of the component
+	const mat::vec3& componentPosition() const;
 
 	// Returns the world space velocity of the owning object
-	const mat::vec3& velocity() const;
+	const mat::vec3& componentVelocity() const;
 
 	// Returns the world space forward vector of the owning object
 	mat::vec3 forward() const;
-
-	// Called when the velocity of the owning object changed. Does not run in the audio thread.
-	void updateVelocity(const mat::vec3& velocity);
 
 protected:
 
@@ -70,8 +67,13 @@ protected:
 	// Outputs to other AudioComponents
 	std::list<std::shared_ptr<ADelayLine>> outputs;
 
-private:
+	virtual void transformUpdated();
+	virtual void velocityUpdated();
 
-	// Pointer to the owning EObject
-	const EObject* owner;
+private:
+	
+	mat::vec3 position;
+	mat::vec3 velocity;
+
+	unsigned int ids[2]; // TEMP
 };

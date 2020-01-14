@@ -27,6 +27,10 @@ AudioEngine::AudioEngine() :
 {
 }
 
+AudioEngine::~AudioEngine()
+{
+}
+
 bool AudioEngine::init()
 {
 	PaError err;
@@ -134,15 +138,43 @@ void AudioEngine::process_float(float* buffer, size_t frames)
 			c->process(maxRemaining);
 		}
 	}
+
+	// TODO: Only notify audio-related observers
+	StateManager::instance().notifyObservers();
 }
 
-void AudioEngine::registerComponent(AudioComponent* component, const EObject* owner)
+StateManager::ObserverID ids[2]; // TEMP
+
+AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> component, const EObject* owner)
 {
-	component->owner = owner;
+	AudioComponent* ptr = component.get();
+	ownedComponents.push_back(std::move(component));
+	ptr->setOwner(owner);
+
+	auto& stateManager = StateManager::instance();
+	ids[0] = stateManager.registerObserver(
+		ptr,
+		StateManager::EventType::ComponentCreated,
+		[this](const StateManager::EventData& data) { registerComponent(data); }
+	);
+
+	ids[1] = stateManager.registerObserver(
+		ptr,
+		StateManager::EventType::ComponentDeleted,
+		[this](const StateManager::EventData& data) { unregisterComponent(data); }
+	);
+
+	stateManager.event(ptr, StateManager::EventType::ComponentCreated, ptr);
+
+	return ptr;
+}
+
+void AudioEngine::registerComponent(const StateManager::EventData& data)
+{
+	auto* component = std::get<AudioComponent*>(data);
 	if (audioStream) component->init(sampleRate);
 
 	// Setup delay lines
-	const mat::vec3& thisPos = component->position();
 	for (AudioComponent* compOther : components) {
 		// outputs
 		if (component->bAcceptsOutput && compOther->bAcceptsInput) {
@@ -190,8 +222,10 @@ void AudioEngine::registerComponent(AudioComponent* component, const EObject* ow
 	components.push_back(component);
 }
 
-void AudioEngine::unregisterComponent(AudioComponent* component)
+void AudioEngine::unregisterComponent(const StateManager::EventData& data)
 {
+	auto* component = std::get<AudioComponent*>(data);
+
 	for (const auto& input : component->inputs) {
 		input->source->outputs.remove(input);
 	}
@@ -209,4 +243,9 @@ void AudioEngine::unregisterComponent(AudioComponent* component)
 	components.remove(component);
 	outputComponents.remove(dynamic_cast<OutputAudioComponent*>(component));
 	auralizingComponents.remove(dynamic_cast<AuralizingAudioComponent*>(component));
+	
+	ownedComponents.remove_if([component](const auto& data) { return data.get() == component; });
+
+	StateManager::instance().unregisterObserver(ids[0]);
+	StateManager::instance().unregisterObserver(ids[1]);
 }

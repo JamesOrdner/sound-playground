@@ -20,7 +20,8 @@ enum class UIAnchor
 enum class UIType
 {
 	Button,
-	Slider
+	Slider,
+	None
 };
 
 union UIValue
@@ -42,4 +43,10 @@ struct UIData
 
 	UIType type;
 	UIValue value;
+
+	UIData() :
+		type(UIType::None),
+		value{}
+	{
+	}
 };

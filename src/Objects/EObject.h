@@ -41,17 +41,14 @@ public:
 	// Returns the object's UI component, if present
 	UIComponent* uiComponent();
 
-	// Registers an audio component with this object, replacing any existing component
-	void addAudioComponent(std::unique_ptr<AudioComponent> component);
-
-	// Removes the audio component from this object
-	void removeAudioComponent();
-
 	// Called once per frame
 	virtual void tick(float deltaTime) {};
 
 	// Called periodically, usually at a lower rate than the frame rate
 	virtual void updatePhysics(float deltaTime) {};
+
+	// Object's audio component (optional, unowned)
+	AudioComponent* m_audioComponent;
 
 protected:
 
@@ -75,9 +72,4 @@ protected:
 
 	// Object's UI component (optional)
 	std::unique_ptr<UIComponent> m_uiComponent;
-
-private:
-
-	// Pointer to the object's audio component, if present
-	std::unique_ptr<AudioComponent> m_audioComponent;
 };

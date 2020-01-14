@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Managers/StateManager.h"
 #include <list>
 #include <memory>
 
@@ -14,6 +15,14 @@ class AudioEngine
 public:
 
 	AudioEngine();
+
+	~AudioEngine();
+
+	// Create and return an audio component
+	template<class T>
+	T* createAudioComponent(const EObject* owner) {
+		return static_cast<T*>(registerComponent(std::make_unique<T>(), owner));
+	};
 
 	// Set up AudioEngine and open the audio device. Returns success.
 	bool init();
@@ -30,12 +39,6 @@ public:
 	// Internal callback called by the unscoped SDL callback
 	void process_float(float* buffer, size_t frames);
 
-	// Registers an audio component with the engine for processing
-	void registerComponent(AudioComponent* component, const EObject* owner);
-
-	// Removes an audio component from the engine
-	void unregisterComponent(AudioComponent* component);
-
 private:
 
 	// Pointer to the active stream (may be null)
@@ -46,6 +49,9 @@ private:
 
 	// Current number of channels
 	int channels;
+
+
+	std::list<std::unique_ptr<AudioComponent>> ownedComponents;
 
 	// This list contains all audio components, sorted from least dependent to most dependent.
 	// Dependency is determined from the input buffers. Components with longer input buffers
@@ -60,4 +66,11 @@ private:
 	// This list contains all AuralizingAudioComponents. Pointers to
 	// these objects also exists in the `components` list.
 	std::list<AuralizingAudioComponent*> auralizingComponents;
+
+	// Registers an audio component with the engine for processing
+	AudioComponent* registerComponent(std::unique_ptr<AudioComponent> component, const EObject* owner);
+
+	// Called from the audio thread
+	void registerComponent(const StateManager::EventData& data);
+	void unregisterComponent(const StateManager::EventData& data);
 };

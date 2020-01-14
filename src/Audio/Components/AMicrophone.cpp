@@ -50,7 +50,7 @@ size_t AMicrophone::processOutput(float* buffer, size_t n)
 
 void AMicrophone::calcStereoGain(const AudioComponent* source, float& gainL, float& gainR)
 {
-	mat::vec3 dir = source->position() - position();
+	mat::vec3 dir = source->componentPosition() - componentPosition();
 	float angle = atanf(dir.x / fabsf(dir.z)) * 0.5f + 0.25f * mat::pi;
 	gainL = std::isnan(angle) ? 0.f : cosf(angle);
 	gainR = std::isnan(angle) ? 0.f : sinf(angle);

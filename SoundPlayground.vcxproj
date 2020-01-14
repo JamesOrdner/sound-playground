@@ -187,6 +187,8 @@
     <ClCompile Include="src\Audio\Components\OutputAudioComponent.cpp" />
     <ClCompile Include="src\Audio\Components\AMicrophone.cpp" />
     <ClCompile Include="src\Audio\Components\ASpeaker.cpp" />
+    <ClCompile Include="src\Engine\EScheduler.cpp" />
+    <ClCompile Include="src\Managers\StateManager.cpp" />
     <ClCompile Include="src\Objects\ECamera.cpp" />
     <ClCompile Include="src\Engine\EInput.cpp" />
     <ClCompile Include="src\Engine\EInputComponent.cpp" />
@@ -220,6 +222,8 @@
     <ClInclude Include="src\Audio\Components\OutputAudioComponent.h" />
     <ClInclude Include="src\Audio\Components\AMicrophone.h" />
     <ClInclude Include="src\Audio\Components\ASpeaker.h" />
+    <ClInclude Include="src\Engine\EScheduler.h" />
+    <ClInclude Include="src\Managers\StateManager.h" />
     <ClInclude Include="src\Objects\ECamera.h" />
     <ClInclude Include="src\Engine\EInput.h" />
     <ClInclude Include="src\Engine\EInputComponent.h" />
@@ -238,6 +242,7 @@
     <ClInclude Include="src\UI\UIManager.h" />
     <ClInclude Include="src\UI\UITypes.h" />
     <ClInclude Include="src\UI\UIObject.h" />
+    <ClInclude Include="src\Util\LFQueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

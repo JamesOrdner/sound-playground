@@ -1,6 +1,7 @@
 #include "Engine/Engine.h"
 #include "Engine/EWorld.h"
 #include "Objects/EModel.h"
+#include "Audio/AudioEngine.h"
 #include "Audio/Components/AMicrophone.h"
 
 int main(int argc, char* args[])
@@ -17,7 +18,7 @@ int main(int argc, char* args[])
 	}
 
 	EObject* mic = world.spawnObject<EObject>();
-	mic->addAudioComponent(std::make_unique<AMicrophone>());
+	mic->m_audioComponent = engine.audio().createAudioComponent<AMicrophone>(mic);
 
 	engine.run();
 	return 0;
