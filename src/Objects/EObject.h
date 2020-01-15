@@ -5,6 +5,7 @@
 
 // Forward declarations
 class AudioComponent;
+class GraphicsComponent;
 class EInputComponent;
 class UIComponent;
 
@@ -44,8 +45,10 @@ public:
 	// Called periodically, usually at a lower rate than the frame rate
 	virtual void updatePhysics(float deltaTime) {};
 
-	// Object's audio component (optional, unowned)
+	// Components
+
 	AudioComponent* audioComponent;
+	GraphicsComponent* graphicsComponent;
 
 protected:
 

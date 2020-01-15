@@ -2,7 +2,8 @@
 #include "../DSP/ADelayLine.h"
 #include "../DSP/AConvolver.h"
 
-ASpeaker::ASpeaker()
+ASpeaker::ASpeaker(const EObject* owner) :
+	AudioComponent(owner) // AuralizingAudioComponent(owner)
 {
 	bAcceptsInput = false;
 	bAcceptsOutput = true;

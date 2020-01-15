@@ -102,10 +102,10 @@ void Render::GObjects::deinit()
 	gbufferTextures[0] = gbufferTextures[1] = gbufferTextures[2] = 0;
 }
 
-void Render::setCamera(const mat::vec3& position, const mat::vec3& focus)
+void Render::setCamera(const mat::vec3& position, const mat::vec3& forward)
 {
 	float aspectRatio = 720.f / 1280.f;
-	mat::mat4 view = lookAt(position, focus);
+	mat::mat4 view = lookAt(position, forward - position);
 	mat::mat4 proj = mat::perspective(-0.05f, 0.05f, -0.05f * aspectRatio, 0.05f * aspectRatio, 0.1f, 15.f);
 	gbuffersProgram->setUniform("viewMat", view);
 	gbuffersProgram->setUniform("projMat", proj);

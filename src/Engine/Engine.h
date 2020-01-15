@@ -5,27 +5,17 @@
 #include <unordered_set>
 
 // Forward declarations
-struct SDL_Window;
-class EWorld;
+class UScene;
 class AudioEngine;
 class UIManager;
 class EObject;
 class EModel;
 class EInput;
-class Render;
+class SystemInterface;
 
 class Engine
 {
 public:
-
-	static Engine& instance();
-
-	// Deleted functions prevent singleton duplication
-	Engine(Engine const&) = delete;
-	void operator=(Engine const&) = delete;
-
-	// Returns the world object
-	EWorld& world();
 
 	// Returns the audio engine object
 	AudioEngine& audio();
@@ -51,28 +41,34 @@ private:
 	bool init();
 	void deinit();
 
+	void setupInitialScene();
+
 	// True only after a successful call to init()
 	bool bInitialized;
 
 	// Length in seconds of the last frame
 	float lastFrameTime;
 
+	// All loaded universal scenes
+	std::list<std::unique_ptr<UScene>> scenes;
+
 	// EInput handles all user input
 	std::unique_ptr<EInput> input;
 
-	// The world, containing all objects
-	std::unique_ptr<EWorld> m_world;
+	// Graphics
+	std::unique_ptr<SystemInterface> graphicsSystem;
 
-	/** SDL */
-
-	SDL_Window* window;
-
-	/** Graphics */
-
-	std::unique_ptr<Render> renderer;
 	std::unique_ptr<UIManager> uiManager;
 
 	/** Audio */
 
 	std::unique_ptr<AudioEngine> audioEngine;
+
+public:
+
+	static Engine& instance();
+
+	// Deleted functions prevent singleton duplication
+	Engine(Engine const&) = delete;
+	void operator=(Engine const&) = delete;
 };

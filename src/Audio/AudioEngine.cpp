@@ -143,14 +143,13 @@ void AudioEngine::process_float(float* buffer, size_t frames)
 	StateManager::instance().notifyAudioObservers();
 }
 
-AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> component, const EObject* owner)
+AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> component)
 {
 	AudioComponent* ptr = component.get();
 	audioComponents.push_back(std::move(component));
-	ptr->setOwner(owner);
 
 	auto& stateManager = StateManager::instance();
-	ptr->observerIDs.push_back(
+	ptr->audioObserverIDs.push_back(
 		stateManager.registerAudioObserver(
 			ptr,
 			StateManager::EventType::ComponentCreated,
@@ -158,7 +157,7 @@ AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> c
 		)
 	);
 
-	ptr->observerIDs.push_back(
+	ptr->audioObserverIDs.push_back(
 		stateManager.registerAudioObserver(
 			ptr,
 			StateManager::EventType::ComponentDeleted,
@@ -173,7 +172,7 @@ AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> c
 
 void AudioEngine::registerComponent(const StateManager::EventData& data)
 {
-	auto* component = std::get<AudioComponent*>(data);
+	auto* component = static_cast<AudioComponent*>(std::get<EComponent*>(data));
 	if (audioStream) component->init(sampleRate);
 
 	// Setup delay lines
@@ -226,7 +225,7 @@ void AudioEngine::registerComponent(const StateManager::EventData& data)
 
 void AudioEngine::unregisterComponent(const StateManager::EventData& data)
 {
-	auto* component = std::get<AudioComponent*>(data);
+	auto* component = static_cast<AudioComponent*>(std::get<EComponent*>(data));
 
 	for (const auto& input : component->inputs) {
 		input->source->outputs.remove(input);

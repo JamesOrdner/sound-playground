@@ -1,5 +1,5 @@
 #include "GMesh.h"
-#include "../Objects/EModel.h"
+#include "GraphicsObject.h"
 
 #include <GL/gl3w.h>
 #include <vector>
@@ -209,16 +209,16 @@ const std::map<std::string, std::unique_ptr<GMesh>>& GMesh::sharedMeshes()
 	return meshes;
 }
 
-void GMesh::registerModel(EModel* model)
+void GMesh::registerWithComponent(GraphicsObject* component)
 {
-	models.push_back(model);
+	registeredObjects.push_back(component);
 	reloadInstanceBuffers();
 }
 
-void GMesh::unregisterModel(EModel* model)
+void GMesh::unregisterWithComponent(GraphicsObject* component)
 {
-	models.remove(model);
-	if (models.empty()) meshes.erase(filepath);
+	registeredObjects.remove(component);
+	if (registeredObjects.empty()) meshes.erase(filepath);
 	else reloadInstanceBuffers();
 }
 
@@ -226,31 +226,31 @@ void GMesh::reloadInstanceBuffers()
 {
 	std::vector<mat::mat4> transforms;
 	std::vector<float> selections;
-	for (EModel* model : models) {
-		transforms.push_back(t(model->transformMatrix()));
-		selections.push_back(model->selected() ? 1.f : 0.f);
-		model->transformUpdated();
-		model->selectionUpdated();
+	for (GraphicsObject* gobject : registeredObjects) {
+		transforms.push_back(t(gobject->componentTransformMatrix()));
+		selections.push_back(gobject->isSelected() ? 1.f : 0.f);
+		gobject->bDirtyTransform = false;
+		gobject->bDirtySelection = false;
 	}
 
-	glNamedBufferData(vbo_instanceTransforms, models.size() * sizeof(mat::mat4), transforms.data(), GL_STATIC_DRAW);
-	glNamedBufferData(vbo_selected, models.size() * sizeof(float), selections.data(), GL_STATIC_DRAW);
+	glNamedBufferData(vbo_instanceTransforms, registeredObjects.size() * sizeof(mat::mat4), transforms.data(), GL_STATIC_DRAW);
+	glNamedBufferData(vbo_selected, registeredObjects.size() * sizeof(float), selections.data(), GL_STATIC_DRAW);
 }
 
 void GMesh::updateInstanceData()
 {
 	// Check for modified model transforms
 	size_t i = 0;
-	for (EModel* model : models) {
-		if (model->needsTransformUpdate()) {
-			mat::mat4 transform = t(model->transformMatrix());
-			model->transformUpdated();
+	for (GraphicsObject* gobject : registeredObjects) {
+		if (gobject->bDirtyTransform) {
+			mat::mat4 transform = t(gobject->componentTransformMatrix());
 			glNamedBufferSubData(vbo_instanceTransforms, i * sizeof(mat::mat4), sizeof(mat::mat4), transform.data);
+			gobject->bDirtyTransform = false;
 		}
-		if (model->needsSelectionUpdate()) {
-			float selected = model->selected() ? 1.f : 0.f;
-			model->selectionUpdated();
+		if (gobject->bDirtySelection) {
+			float selected = gobject->isSelected() ? 1.f : 0.f;
 			glNamedBufferSubData(vbo_selected, i * sizeof(float), sizeof(float), &selected);
+			gobject->bDirtySelection = false;
 		}
 		i++;
 	}
@@ -265,7 +265,7 @@ void GMesh::draw()
 			primitive.drawCount,
 			primitive.drawComponentType,
 			primitive.drawByteOffset,
-			static_cast<GLsizei>(models.size()));
+			static_cast<GLsizei>(registeredObjects.size()));
 	}
 	glBindVertexArray(0);
 }

@@ -26,6 +26,7 @@ EObject::~EObject()
 void EObject::setSelected(bool selected)
 {
 	bSelected = selected;
+	StateManager::instance().event(this, StateManager::EventType::SelectionUpdated, selected);
 }
 
 bool EObject::selected() const

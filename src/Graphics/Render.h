@@ -25,8 +25,8 @@ public:
 	// Deinitialize memory and delete the OpenGL context (safe to call multiple times)
 	void deinit();
 
-	// Set the camera position and focus, which sets the projection matrix
-	void setCamera(const mat::vec3& position, const mat::vec3& focus);
+	// Set the camera position and orientation, which sets the projection matrix
+	void setCamera(const mat::vec3& position, const mat::vec3& forward);
 
 	// Draw a frame
 	void drawMeshes();

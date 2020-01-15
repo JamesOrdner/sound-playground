@@ -11,7 +11,7 @@ class ASpeaker : public AudioComponent // AuralizingAudioComponent
 {
 public:
 
-	ASpeaker();
+	ASpeaker(const EObject* owner);
 
 	// AudioComponent interface
 	// void init(float sampleRate) override;

@@ -1,7 +1,8 @@
 #include "AMicrophone.h"
 #include "../DSP/ADelayLine.h"
 
-AMicrophone::AMicrophone() :
+AMicrophone::AMicrophone(const EObject* owner) :
+	OutputAudioComponent(owner),
 	processingBuffer(512), // TEMP
 	gainL(0.5)
 {

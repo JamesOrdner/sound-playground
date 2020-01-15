@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../Engine/EComponent.h"
 #include "../../Graphics/Matrix.h"
 #include "../../Managers/StateManager.h"
 #include <vector>
@@ -10,18 +11,15 @@
 class EObject;
 class ADelayLine;
 
-class AudioComponent
+class AudioComponent : public EComponent
 {
 	friend class AudioEngine;
 
 public:
 
-	AudioComponent();
+	AudioComponent(const EObject* owner);
 
 	virtual ~AudioComponent();
-
-	// TEMP for StateManager testing
-	void setOwner(const EObject* owner);
 
 	// Initialize internal variables for current audio session
 	virtual void init(float sampleRate);
@@ -73,8 +71,9 @@ protected:
 
 private:
 	
+	// Audio observers are registered with this vector to allow automatic unregistration
+	std::vector<StateManager::ObserverID> audioObserverIDs;
+
 	mat::vec3 position;
 	mat::vec3 velocity;
-
-	std::vector<StateManager::ObserverID> observerIDs;
 };

@@ -21,7 +21,7 @@ public:
 	// Create and return an audio component
 	template<class T>
 	T* createAudioComponent(const EObject* owner) {
-		return static_cast<T*>(registerComponent(std::make_unique<T>(), owner));
+		return static_cast<T*>(registerComponent(std::make_unique<T>(owner)));
 	};
 
 	// Set up AudioEngine and open the audio device. Returns success.
@@ -68,7 +68,7 @@ private:
 	std::list<AuralizingAudioComponent*> auralizingComponents;
 
 	// Registers an audio component with the engine for processing
-	AudioComponent* registerComponent(std::unique_ptr<AudioComponent> component, const EObject* owner);
+	AudioComponent* registerComponent(std::unique_ptr<AudioComponent> component);
 	void destroyComponent();
 
 	// Called in the audio thread. Registers a component for active processing.

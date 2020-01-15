@@ -3,9 +3,6 @@
 #include "EObject.h"
 #include <string>
 
-// Forward declarations
-class GMesh;
-
 class EModel : public EObject
 {
 public:
@@ -13,9 +10,6 @@ public:
 	EModel();
 
 	virtual ~EModel();
-
-	// Set the visual representation of the model via a mesh filepath
-	void setMesh(std::string filepath);
 
 	// Perform a worldspace raycast against this model.
 	// Returns the length of the hit ray (negative if no hit).
@@ -45,9 +39,6 @@ public:
 	void updatePhysics(float deltaTime) override;
 
 private:
-
-	// Shared mesh, storing geometry and other rendering data
-	GMesh* mesh;
 
 	// Set to true when location, rotation, or scale is modified
 	bool bDirtyTransform;

@@ -8,7 +8,6 @@
 #include <list>
 
 // Forward declarations
-class EModel;
 namespace tinygltf
 {
 	struct Model;
@@ -32,11 +31,11 @@ public:
 	// Filepath of this mesh, and the key to this mesh in the `meshes` map
 	std::string filepath;
 
-	// Register a model with this mesh
-	void registerModel(EModel* model);
+	// Register a GraphicsComponent with this mesh
+	void registerWithComponent(class GraphicsObject* component);
 
-	// Disassociate a model with this mesh, deleting the mesh if no model references remain.
-	void unregisterModel(EModel* model);
+	// Disassociate a GraphicsComponent with this mesh, deleting the mesh if no references remain
+	void unregisterWithComponent(class GraphicsObject* component);
 
 	// Updates any instance transforms or other data that is out of date.
 	// Should be called at the beginning of each frame, before any draw() calls.
@@ -64,8 +63,8 @@ private:
 	// Load the simplified mesh used for raycasting
 	void loadRayMesh(const tinygltf::Model& model, const tinygltf::Node& node);
 
-	// An ordered list of weak pointers to all owning models sharing this mesh
-	std::list<EModel*> models;
+	// An ordered list of pointers to all GraphicsObjects sharing this mesh
+	std::list<class GraphicsObject*> registeredObjects;
 
 	// The raycasting mesh. Each three vertices forms a triangle.
 	std::vector<mat::vec3> rayMeshBuffer;

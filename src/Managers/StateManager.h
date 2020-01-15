@@ -7,7 +7,7 @@
 #include <variant>
 
 // Forward declarations
-class AudioComponent; // TODO: Generalize to a base component type
+class EComponent;
 
 class StateManager
 {
@@ -15,21 +15,22 @@ public:
 
 	// This variant includes all possible callback parameter types
 	typedef std::variant<
-		float,
+		bool,
 		mat::vec3,
-		AudioComponent*
+		EComponent*
 	> EventData;
 
 	typedef std::function<void(const EventData&)> ObserverCallback;
 
 	enum class EventType
 	{
-		ComponentCreated, // AudioComponent*
-		ComponentDeleted, // AudioComponent*
+		ComponentCreated, // EComponent*
+		ComponentDeleted, // EComponent*
 		PositionUpdated, // mat::vec3
 		VelocityUpdated, // mat::vec3
 		RotationUpdated, // mat::vec3
 		ScaleUpdated, // mat::vec3
+		SelectionUpdated, // bool
 	};
 
 	// Called by subjects after modifying shared data

@@ -1,7 +1,8 @@
 #include "OutputAudioComponent.h"
 #include "AuralizingAudioComponent.h"
 
-OutputAudioComponent::OutputAudioComponent()
+OutputAudioComponent::OutputAudioComponent(const EObject* owner) :
+	AudioComponent(owner)
 {
 }
 

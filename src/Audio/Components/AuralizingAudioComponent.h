@@ -35,7 +35,7 @@ class AuralizingAudioComponent : public AudioComponent, public GeneratingAudioCo
 {
 public:
 
-	AuralizingAudioComponent();
+	AuralizingAudioComponent(const EObject* owner);
 
 	virtual ~AuralizingAudioComponent();
 

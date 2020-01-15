@@ -3,26 +3,15 @@
 #include "../../Objects/EObject.h"
 #include "../../Managers/StateManager.h"
 
-AudioComponent::AudioComponent() :
+AudioComponent::AudioComponent(const EObject* owner) :
 	bAcceptsInput(false),
 	bAcceptsOutput(false),
 	sampleRate(0.f),
 	bInitialized(false)
 {
-}
-
-AudioComponent::~AudioComponent()
-{
-	for (auto id : observerIDs) {
-		StateManager::instance().unregisterAudioObserver(id);
-	}
-}
-
-void AudioComponent::setOwner(const EObject* owner)
-{
 	auto& stateManager = StateManager::instance();
 
-	observerIDs.push_back(
+	audioObserverIDs.push_back(
 		stateManager.registerAudioObserver(
 			owner,
 			StateManager::EventType::PositionUpdated,
@@ -33,7 +22,7 @@ void AudioComponent::setOwner(const EObject* owner)
 		)
 	);
 
-	observerIDs.push_back(
+	audioObserverIDs.push_back(
 		stateManager.registerAudioObserver(
 			owner,
 			StateManager::EventType::VelocityUpdated,
@@ -43,6 +32,13 @@ void AudioComponent::setOwner(const EObject* owner)
 			}
 		)
 	);
+}
+
+AudioComponent::~AudioComponent()
+{
+	for (auto id : audioObserverIDs) {
+		StateManager::instance().unregisterAudioObserver(id);
+	}
 }
 
 void AudioComponent::init(float sampleRate)

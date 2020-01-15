@@ -11,7 +11,7 @@ class OutputAudioComponent : public AudioComponent
 {
 public:
 
-	OutputAudioComponent();
+	OutputAudioComponent(const EObject* owner);
 
 	virtual ~OutputAudioComponent();
 
