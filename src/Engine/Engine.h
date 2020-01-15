@@ -1,44 +1,23 @@
 #pragma once
 
-#include "../Graphics/Matrix.h"
+#include <list>
 #include <memory>
-#include <unordered_set>
-
-// Forward declarations
-class UScene;
-class AudioEngine;
-class UIManager;
-class EObject;
-class EModel;
-class EInput;
-class SystemInterface;
 
 class Engine
 {
 public:
 
-	// Returns the audio engine object
-	AudioEngine& audio();
-
-	// Main runloop
+	// Main runloop, returns on user exit
 	void run();
-
-	// Return the object at screen coordinates
-	EModel* raycastScreen(int x, int y);
-
-	// Return the object at screen coordinates, as well as the hit location
-	EModel* raycastScreen(
-		int x,
-		int y,
-		mat::vec3& hitLoc,
-		const std::unordered_set<EObject*>& ignore = std::unordered_set<EObject*>());
 
 private:
 
 	Engine();
+	
 	~Engine();
 
 	bool init();
+
 	void deinit();
 
 	void setupInitialScene();
@@ -46,23 +25,11 @@ private:
 	// True only after a successful call to init()
 	bool bInitialized;
 
-	// Length in seconds of the last frame
-	float lastFrameTime;
+	// All scenes
+	std::list<std::unique_ptr<class UScene>> scenes;
 
-	// All loaded universal scenes
-	std::list<std::unique_ptr<UScene>> scenes;
-
-	// EInput handles all user input
-	std::unique_ptr<EInput> input;
-
-	// Graphics
-	std::unique_ptr<SystemInterface> graphicsSystem;
-
-	std::unique_ptr<UIManager> uiManager;
-
-	/** Audio */
-
-	std::unique_ptr<AudioEngine> audioEngine;
+	std::unique_ptr<class SystemInterface> inputSystem;
+	std::unique_ptr<class SystemInterface> graphicsSystem;
 
 public:
 
