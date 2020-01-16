@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Graphics/Matrix.h"
+#include "../Util/Matrix.h"
 #include <SDL_events.h>
 #include <vector>
 #include <memory>

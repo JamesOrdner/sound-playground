@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Graphics/Matrix.h"
+#include "../Util/Matrix.h"
 #include "../Util/LFQueue.h"
 #include <list>
 #include <functional>

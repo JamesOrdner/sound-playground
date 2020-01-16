@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GraphicsObject.h"
-#include "Matrix.h"
+#include "../Util/Matrix.h"
 
 class CameraGraphicsObject : public GraphicsObject
 {

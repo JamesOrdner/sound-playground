@@ -209,12 +209,12 @@
     <ClCompile Include="src\engine\Engine.cpp" />
     <ClCompile Include="src\Graphics\GProgram.cpp" />
     <ClCompile Include="src\Graphics\GTexture.cpp" />
-    <ClCompile Include="src\Graphics\matrix.cpp" />
     <ClCompile Include="src\Graphics\Render.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\UI\UIComponent.cpp" />
     <ClCompile Include="src\UI\UIManager.cpp" />
     <ClCompile Include="src\UI\UIObject.cpp" />
+    <ClCompile Include="src\Util\Matrix.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Audio\Auralization\Auralizer.h" />
@@ -250,7 +250,7 @@
     <ClInclude Include="src\engine\Engine.h" />
     <ClInclude Include="src\Graphics\GProgram.h" />
     <ClInclude Include="src\Graphics\GTexture.h" />
-    <ClInclude Include="src\Graphics\Matrix.h" />
+    <ClInclude Include="src\Util\Matrix.h" />
     <ClInclude Include="src\Graphics\Render.h" />
     <ClInclude Include="src\UI\UIComponent.h" />
     <ClInclude Include="src\UI\UIManager.h" />

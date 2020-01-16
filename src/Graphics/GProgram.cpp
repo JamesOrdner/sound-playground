@@ -89,7 +89,7 @@ void GProgram::setUniform(std::string name, const mat::mat4& matrix)
 void GProgram::setUniform(std::string name, const std::vector<mat::vec3>& vectors)
 {
 	GLuint id = getUniformLocation(name);
-	glProgramUniform3fv(program, id, vectors.size(), vectors[0].data);
+	glProgramUniform3fv(program, id, static_cast<GLsizei>(vectors.size()), vectors[0].data);
 }
 
 void GProgram::setFramebuffer(unsigned int framebuffer)

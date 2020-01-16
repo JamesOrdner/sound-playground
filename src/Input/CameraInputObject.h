@@ -1,7 +1,7 @@
 #pragma once
 
 #include "InputObject.h"
-#include "../Graphics/Matrix.h"
+#include "../Util/Matrix.h"
 
 class CameraInputObject : public InputObject
 {
