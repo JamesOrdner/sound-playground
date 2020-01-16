@@ -6,7 +6,7 @@ CameraInputObject::CameraInputObject(const UObject* uobject) :
 	pivotDistance(5.f),
 	maxPivotDistance(10.f),
 	bOrbiting(false),
-	movementSpeedMultiplier(1.f)
+	movementSpeedMultiplier(2.f)
 {
 }
 

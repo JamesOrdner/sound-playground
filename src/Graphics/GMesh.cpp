@@ -1,5 +1,5 @@
 #include "GMesh.h"
-#include "GraphicsObject.h"
+#include "MeshGraphicsObject.h"
 
 #include <GL/gl3w.h>
 #include <vector>
@@ -209,13 +209,13 @@ const std::map<std::string, std::unique_ptr<GMesh>>& GMesh::sharedMeshes()
 	return meshes;
 }
 
-void GMesh::registerWithComponent(GraphicsObject* component)
+void GMesh::registerWithComponent(MeshGraphicsObject* component)
 {
 	registeredObjects.push_back(component);
 	reloadInstanceBuffers();
 }
 
-void GMesh::unregisterWithComponent(GraphicsObject* component)
+void GMesh::unregisterWithComponent(MeshGraphicsObject* component)
 {
 	registeredObjects.remove(component);
 	if (registeredObjects.empty()) meshes.erase(filepath);
@@ -226,7 +226,7 @@ void GMesh::reloadInstanceBuffers()
 {
 	std::vector<mat::mat4> transforms;
 	std::vector<float> selections;
-	for (GraphicsObject* gobject : registeredObjects) {
+	for (MeshGraphicsObject* gobject : registeredObjects) {
 		transforms.push_back(t(gobject->componentTransformMatrix()));
 		selections.push_back(gobject->isSelected() ? 1.f : 0.f);
 		gobject->bDirtyTransform = false;
@@ -241,7 +241,7 @@ void GMesh::updateInstanceData()
 {
 	// Check for modified model transforms
 	size_t i = 0;
-	for (GraphicsObject* gobject : registeredObjects) {
+	for (MeshGraphicsObject* gobject : registeredObjects) {
 		if (gobject->bDirtyTransform) {
 			mat::mat4 transform = t(gobject->componentTransformMatrix());
 			glNamedBufferSubData(vbo_instanceTransforms, i * sizeof(mat::mat4), sizeof(mat::mat4), transform.data);

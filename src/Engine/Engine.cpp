@@ -12,7 +12,8 @@
 #include "../Input/InputScene.h"
 #include "../Input/CameraInputObject.h"
 #include "../Graphics/GraphicsScene.h"
-#include "../Graphics/GraphicsObject.h"
+#include "../Graphics/CameraGraphicsObject.h"
+#include "../Graphics/MeshGraphicsObject.h"
 
 Engine::Engine() :
 	bInitialized(false)
@@ -72,15 +73,13 @@ void Engine::setupInitialScene()
 	auto* graphicsScene = graphicsSystem->createSystemScene<GraphicsScene>(uscene);
 
 	auto* uspeaker = uscene->createUniversalObject();
-	auto* graphicsObject = graphicsScene->createSystemObject<GraphicsObject>(uspeaker);
+	auto* graphicsObject = graphicsScene->createSystemObject<MeshGraphicsObject>(uspeaker);
 	graphicsObject->setMesh("res/speaker_small.glb");
 
-	// TEMP
-	auto* inputObject = inputScene->createSystemObject<CameraInputObject>(uspeaker);
-
-	//auto* ucamera = uscene->createUniversalObject();
-	//auto* inputObject = inputScene->createSystemObject<CameraInputObject>(ucamera);
-	//auto* camGraphicsObject = graphicsScene->createSystemObject<GraphicsObject>(ucamera);
+	auto* ucamera = uscene->createUniversalObject();
+	auto* inputObject = inputScene->createSystemObject<CameraInputObject>(ucamera);
+	auto* camGraphicsObject = graphicsScene->createSystemObject<CameraGraphicsObject>(ucamera);
+	graphicsScene->activeCamera = camGraphicsObject;
 }
 
 void Engine::run()

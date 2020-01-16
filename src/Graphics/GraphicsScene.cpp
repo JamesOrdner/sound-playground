@@ -1,6 +1,11 @@
 #include "GraphicsScene.h"
 #include "GraphicsObject.h"
 
+GraphicsScene::GraphicsScene() :
+	activeCamera(nullptr)
+{
+}
+
 GraphicsScene::~GraphicsScene()
 {
 }

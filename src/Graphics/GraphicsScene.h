@@ -8,7 +8,11 @@ class GraphicsScene : public SystemSceneInterface
 {
 public:
 
+	GraphicsScene();
+
 	~GraphicsScene();
+
+	class CameraGraphicsObject* activeCamera;
 
 private:
 

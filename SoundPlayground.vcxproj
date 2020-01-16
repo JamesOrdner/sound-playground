@@ -192,9 +192,11 @@
     <ClCompile Include="src\Engine\SystemSceneInterface.cpp" />
     <ClCompile Include="src\Engine\UObject.cpp" />
     <ClCompile Include="src\Engine\UScene.cpp" />
+    <ClCompile Include="src\Graphics\CameraGraphicsObject.cpp" />
     <ClCompile Include="src\Graphics\GraphicsObject.cpp" />
     <ClCompile Include="src\Graphics\GraphicsScene.cpp" />
     <ClCompile Include="src\Graphics\GraphicsSystem.cpp" />
+    <ClCompile Include="src\Graphics\MeshGraphicsObject.cpp" />
     <ClCompile Include="src\Input\CameraInputObject.cpp" />
     <ClCompile Include="src\Input\InputObject.cpp" />
     <ClCompile Include="src\Input\InputScene.cpp" />
@@ -232,9 +234,11 @@
     <ClInclude Include="src\Engine\SystemSceneInterface.h" />
     <ClInclude Include="src\Engine\UObject.h" />
     <ClInclude Include="src\Engine\UScene.h" />
+    <ClInclude Include="src\Graphics\CameraGraphicsObject.h" />
     <ClInclude Include="src\Graphics\GraphicsObject.h" />
     <ClInclude Include="src\Graphics\GraphicsScene.h" />
     <ClInclude Include="src\Graphics\GraphicsSystem.h" />
+    <ClInclude Include="src\Graphics\MeshGraphicsObject.h" />
     <ClInclude Include="src\Input\CameraInputObject.h" />
     <ClInclude Include="src\Input\InputObject.h" />
     <ClInclude Include="src\Input\InputScene.h" />

@@ -32,10 +32,10 @@ public:
 	std::string filepath;
 
 	// Register a GraphicsComponent with this mesh
-	void registerWithComponent(class GraphicsObject* component);
+	void registerWithComponent(class MeshGraphicsObject* component);
 
 	// Disassociate a GraphicsComponent with this mesh, deleting the mesh if no references remain
-	void unregisterWithComponent(class GraphicsObject* component);
+	void unregisterWithComponent(class MeshGraphicsObject* component);
 
 	// Updates any instance transforms or other data that is out of date.
 	// Should be called at the beginning of each frame, before any draw() calls.
@@ -64,7 +64,7 @@ private:
 	void loadRayMesh(const tinygltf::Model& model, const tinygltf::Node& node);
 
 	// An ordered list of pointers to all GraphicsObjects sharing this mesh
-	std::list<class GraphicsObject*> registeredObjects;
+	std::list<class MeshGraphicsObject*> registeredObjects;
 
 	// The raycasting mesh. Each three vertices forms a triangle.
 	std::vector<mat::vec3> rayMeshBuffer;
