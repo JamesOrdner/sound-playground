@@ -80,6 +80,17 @@ void Engine::setupInitialScene()
 	auto* inputObject = inputScene->createSystemObject<CameraInputObject>(ucamera);
 	auto* camGraphicsObject = graphicsScene->createSystemObject<CameraGraphicsObject>(ucamera);
 	graphicsScene->activeCamera = camGraphicsObject;
+
+	for (int x = -2; x <= 2; x++) {
+		for (int z = -1; z <= 2; z++) {
+			auto* p = uscene->createUniversalObject();
+			auto* pGraphicsObject = graphicsScene->createSystemObject<MeshGraphicsObject>(p);
+			pGraphicsObject->setMesh("res/platform.glb");
+			StateManager::instance().event(p,
+				StateManager::EventType::PositionUpdated,
+				mat::vec3 { static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
+		}
+	}
 }
 
 void Engine::run()
@@ -100,10 +111,12 @@ void Engine::run()
 
 		// execute systems
 		inputSystem->execute(deltaTime);
-		graphicsSystem->execute(deltaTime);
 
 		// sync changes across systems
 		StateManager::instance().notifyObservers();
+
+		// by executing the graphics system after syncing changes, we reduce input lag
+		graphicsSystem->execute(deltaTime);
 
 	} while (!EnvironmentManager::instance().bQuitRequested);
 }
