@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Managers/StateManager.h"
 #include <list>
 #include <memory>
 
@@ -60,11 +59,11 @@ private:
 	// these objects also exists in the `components` list.
 	std::list<AuralizingAudioComponent*> auralizingComponents;
 
-	// Registers an audio component with the engine for processing
-	AudioComponent* registerComponent(std::unique_ptr<AudioComponent> component);
-	void destroyComponent();
+	//// Registers an audio component with the engine for processing
+	//AudioComponent* registerComponent(std::unique_ptr<AudioComponent> component);
+	//void destroyComponent();
 
-	// Called in the audio thread. Registers a component for active processing.
-	void registerComponent(const StateManager::EventData& data);
-	void unregisterComponent(const StateManager::EventData& data);
+	//// Called in the audio thread. Registers a component for active processing.
+	//void registerComponent(const StateManager::EventData& data);
+	//void unregisterComponent(const StateManager::EventData& data);
 };

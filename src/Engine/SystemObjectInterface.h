@@ -8,11 +8,9 @@ public:
 
 	SystemObjectInterface(const class UObject* uobject);
 
-	virtual ~SystemObjectInterface();
+	virtual ~SystemObjectInterface() {};
 
 protected:
 
 	const class UObject* const uobject;
-
-	std::vector<unsigned int> observerIDs;
 };

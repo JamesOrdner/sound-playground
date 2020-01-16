@@ -1,8 +1,9 @@
 #pragma once
 
+#include "../Util/Observer.h"
 #include <vector>
 
-class UObject
+class UObject : public SubjectInterface
 {
 public:
 
@@ -14,7 +15,5 @@ public:
 		return new T;
 	}
 
-private:
-
-	// std::vector<class SystemObjectInterface*> systemObjects;
+	virtual ~UObject();
 };

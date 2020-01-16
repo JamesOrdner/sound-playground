@@ -1,29 +1,23 @@
 #include "CameraGraphicsObject.h"
-#include "../Managers/StateManager.h"
+#include "../Engine/UObject.h"
 
 CameraGraphicsObject::CameraGraphicsObject(const UObject* uobject) :
 	GraphicsObject(uobject)
 {
-	auto& stateManager = StateManager::instance();
-
-	observerIDs.push_back(
-		stateManager.registerObserver(
-			uobject,
-			StateManager::EventType::PositionUpdated,
-			[this](const StateManager::EventData& data) {
-				position = std::get<mat::vec3>(data);
-			}
-		)
+	registerCallback(
+		uobject,
+		EventType::PositionUpdated,
+		[this](const EventData& data) {
+			position = std::get<mat::vec3>(data);
+		}
 	);
 
-	observerIDs.push_back(
-		stateManager.registerObserver(
-			uobject,
-			StateManager::EventType::RotationUpdated,
-			[this](const StateManager::EventData& data) {
-				rotation = std::get<mat::vec3>(data);
-			}
-		)
+	registerCallback(
+		uobject,
+		EventType::RotationUpdated,
+		[this](const EventData& data) {
+			rotation = std::get<mat::vec3>(data);
+		}
 	);
 }
 

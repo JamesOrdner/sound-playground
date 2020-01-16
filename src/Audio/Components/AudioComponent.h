@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../Util/Matrix.h"
-#include "../../Managers/StateManager.h"
 #include <vector>
 #include <list>
 #include <memory>
@@ -69,9 +68,6 @@ protected:
 	virtual void velocityUpdated();
 
 private:
-	
-	// Audio observers are registered with this vector to allow automatic unregistration
-	std::vector<StateManager::ObserverID> audioObserverIDs;
 
 	mat::vec3 position;
 	mat::vec3 velocity;

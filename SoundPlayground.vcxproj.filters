@@ -132,6 +132,12 @@
     <ClCompile Include="src\Util\Matrix.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Objects\USpeaker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Util\Observer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\Engine.h">
@@ -252,6 +258,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Util\Matrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Objects\USpeaker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Util\Observer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

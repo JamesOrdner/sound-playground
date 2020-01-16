@@ -1,5 +1,4 @@
 #include "InputObject.h"
-#include "../Managers/StateManager.h"
 
 InputObject::InputObject(const UObject* uobject) :
 	SystemObjectInterface(uobject)

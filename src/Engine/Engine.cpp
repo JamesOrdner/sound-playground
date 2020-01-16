@@ -86,8 +86,9 @@ void Engine::setupInitialScene()
 			auto* p = uscene->createUniversalObject();
 			auto* pGraphicsObject = graphicsScene->createSystemObject<MeshGraphicsObject>(p);
 			pGraphicsObject->setMesh("res/platform.glb");
-			StateManager::instance().event(p,
-				StateManager::EventType::PositionUpdated,
+			StateManager::instance().event(
+				p,
+				EventType::PositionUpdated,
 				mat::vec3 { static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
 		}
 	}

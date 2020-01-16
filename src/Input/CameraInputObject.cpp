@@ -1,5 +1,5 @@
 #include "CameraInputObject.h"
-#include "../Managers/StateManager.h"
+#include "../Engine/UObject.h"
 
 CameraInputObject::CameraInputObject(const UObject* uobject) :
 	InputObject(uobject),
@@ -71,16 +71,10 @@ void CameraInputObject::tick(float deltaTime)
 
 void CameraInputObject::broadcastPositionChange()
 {
-	StateManager::instance().event(
-		uobject,
-		StateManager::EventType::PositionUpdated,
-		pivotPosition - mat::forward(pivotRotation) * pivotDistance);
+	uobject->event(EventType::PositionUpdated, pivotPosition - mat::forward(pivotRotation) * pivotDistance);
 }
 
 void CameraInputObject::broadcastRotationChange()
 {
-	StateManager::instance().event(
-		uobject,
-		StateManager::EventType::RotationUpdated,
-		pivotRotation);
+	uobject->event(EventType::RotationUpdated, pivotRotation);
 }

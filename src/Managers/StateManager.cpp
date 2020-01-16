@@ -10,18 +10,21 @@ StateManager::StateManager()
 {
 }
 
-void StateManager::event(const void* subject, EventType event, const EventData& data)
+void StateManager::event(const SubjectInterface* subject, EventType event, const EventData& data)
 {
 	NotifyQueueItem queueItem;
 	queueItem.subject = subject;
 	queueItem.event = event;
 	queueItem.data = data;
 	eventQueue.push(queueItem);
-	audioEventQueue.push(queueItem);
+	// audioEventQueue.push(queueItem);
 }
 
 StateManager::ObserverID tempCounter = 0; // TODO: ID generator
-StateManager::ObserverID StateManager::registerObserver(const void* subject, EventType event, ObserverCallback callback)
+StateManager::ObserverID StateManager::registerObserver(
+	const SubjectInterface* subject,
+	EventType event,
+	ObserverInterface::ObserverCallback callback)
 {
 	auto& observerData = observers.emplace_back();
 	observerData.subject = subject;
@@ -31,7 +34,10 @@ StateManager::ObserverID StateManager::registerObserver(const void* subject, Eve
 	return observerData.id;
 }
 
-StateManager::ObserverID StateManager::registerAudioObserver(const void* subject, EventType event, ObserverCallback callback)
+StateManager::ObserverID StateManager::registerAudioObserver(
+	const SubjectInterface* subject,
+	EventType event,
+	ObserverInterface::ObserverCallback callback)
 {
 	auto& observerData = audioObservers.emplace_back();
 	observerData.subject = subject;

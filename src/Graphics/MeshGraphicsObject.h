@@ -2,9 +2,10 @@
 
 #include "GraphicsObject.h"
 #include "../Util/Matrix.h"
+#include "../Util/Observer.h"
 #include <string>
 
-class MeshGraphicsObject : public GraphicsObject
+class MeshGraphicsObject : public GraphicsObject, public ObserverInterface
 {
 public:
 

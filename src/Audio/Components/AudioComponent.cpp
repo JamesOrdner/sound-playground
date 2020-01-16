@@ -1,6 +1,5 @@
 #include "AudioComponent.h"
 #include "../DSP/ADelayLine.h"
-#include "../../Managers/StateManager.h"
 
 AudioComponent::AudioComponent(const EObject* owner) :
 	bAcceptsInput(false),
@@ -8,36 +7,33 @@ AudioComponent::AudioComponent(const EObject* owner) :
 	sampleRate(0.f),
 	bInitialized(false)
 {
-	auto& stateManager = StateManager::instance();
+	//auto& stateManager = StateManager::instance();
 
-	audioObserverIDs.push_back(
-		stateManager.registerAudioObserver(
-			owner,
-			StateManager::EventType::PositionUpdated,
-			[this](const StateManager::EventData& data) {
-				position = std::get<mat::vec3>(data);
-				transformUpdated();
-			}
-		)
-	);
+	//audioObserverIDs.push_back(
+	//	stateManager.registerAudioObserver(
+	//		owner,
+	//		StateManager::EventType::PositionUpdated,
+	//		[this](const StateManager::EventData& data) {
+	//			position = std::get<mat::vec3>(data);
+	//			transformUpdated();
+	//		}
+	//	)
+	//);
 
-	audioObserverIDs.push_back(
-		stateManager.registerAudioObserver(
-			owner,
-			StateManager::EventType::VelocityUpdated,
-			[this](const StateManager::EventData& data) {
-				velocity = std::get<mat::vec3>(data);
-				velocityUpdated();
-			}
-		)
-	);
+	//audioObserverIDs.push_back(
+	//	stateManager.registerAudioObserver(
+	//		owner,
+	//		StateManager::EventType::VelocityUpdated,
+	//		[this](const StateManager::EventData& data) {
+	//			velocity = std::get<mat::vec3>(data);
+	//			velocityUpdated();
+	//		}
+	//	)
+	//);
 }
 
 AudioComponent::~AudioComponent()
 {
-	for (auto id : audioObserverIDs) {
-		StateManager::instance().unregisterAudioObserver(id);
-	}
 }
 
 void AudioComponent::init(float sampleRate)

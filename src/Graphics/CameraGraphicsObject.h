@@ -2,8 +2,9 @@
 
 #include "GraphicsObject.h"
 #include "../Util/Matrix.h"
+#include "../Util/Observer.h"
 
-class CameraGraphicsObject : public GraphicsObject
+class CameraGraphicsObject : public GraphicsObject, public ObserverInterface
 {
 public:
 

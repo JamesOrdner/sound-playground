@@ -1,10 +1,11 @@
 #pragma once
 
+#include "../Util/Observer.h"
 #include <list>
 #include <memory>
 #include <vector>
 
-class UScene
+class UScene : public ObserverInterface
 {
 public:
 

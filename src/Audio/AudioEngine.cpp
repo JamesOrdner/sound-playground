@@ -140,110 +140,110 @@ void AudioEngine::process_float(float* buffer, size_t frames)
 	}
 
 	// handle pending changes to audio objects
-	StateManager::instance().notifyAudioObservers();
+	// StateManager::instance().notifyAudioObservers();
 }
 
-AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> component)
-{
-	AudioComponent* ptr = component.get();
-	audioComponents.push_back(std::move(component));
-
-	//auto& stateManager = StateManager::instance();
-	//ptr->audioObserverIDs.push_back(
-	//	stateManager.registerAudioObserver(
-	//		ptr,
-	//		StateManager::EventType::ComponentCreated,
-	//		[this](const StateManager::EventData& data) { registerComponent(data); }
-	//	)
-	//);
-
-	//ptr->audioObserverIDs.push_back(
-	//	stateManager.registerAudioObserver(
-	//		ptr,
-	//		StateManager::EventType::ComponentDeleted,
-	//		[this](const StateManager::EventData& data) { unregisterComponent(data); }
-	//	)
-	//);
-
-	//stateManager.event(ptr, StateManager::EventType::ComponentCreated, ptr);
-
-	return ptr;
-}
-
-void AudioEngine::registerComponent(const StateManager::EventData& data)
-{
-	//auto* component = static_cast<AudioComponent*>(std::get<EComponent*>(data));
-	//if (audioStream) component->init(sampleRate);
-
-	//// Setup delay lines
-	//for (AudioComponent* compOther : components) {
-	//	// outputs
-	//	if (component->bAcceptsOutput && compOther->bAcceptsInput) {
-	//		auto output = std::make_shared<ADelayLine>(component, compOther);
-	//		output->init(sampleRate);
-	//		component->outputs.push_back(output);
-	//		compOther->inputs.push_back(output);
-	//		if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component)) {
-	//			output->genID = gComp->addConsumer();
-	//		}
-	//	}
-
-	//	// inputs
-	//	if (component->bAcceptsInput && compOther->bAcceptsOutput) {
-	//		auto input = std::make_shared<ADelayLine>(compOther, component);
-	//		input->init(sampleRate);
-	//		compOther->outputs.push_back(input);
-	//		component->inputs.push_back(input);
-	//	}
-	//}
-
-	//// If OutputAudioComponent, setup indirect connections to this object
-	//if (auto* oComp = dynamic_cast<OutputAudioComponent*>(component)) {
-	//	outputComponents.push_back(oComp);
-	//	for (AudioComponent* compOther : components) {
-	//		if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(compOther)) {
-	//			IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
-	//			oComp->registerIndirectSend(sendPtr);
-	//		}
-	//	}
-	//}
-
-	//// If AuralizingAudioComponent, setup indirect connections from this object
-	//if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(component)) {
-	//	auralizingComponents.push_back(aComp);
-	//	for (AudioComponent* compOther : components) {
-	//		if (auto* oComp = dynamic_cast<OutputAudioComponent*>(compOther)) {
-	//			IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
-	//			oComp->registerIndirectSend(sendPtr);
-	//		}
-	//	}
-	//}
-
-	//// TODO: Sort by dependency for performance
-	//components.push_back(component);
-}
-
-void AudioEngine::unregisterComponent(const StateManager::EventData& data)
-{
-	//auto* component = static_cast<AudioComponent*>(std::get<EComponent*>(data));
-
-	//for (const auto& input : component->inputs) {
-	//	input->source->outputs.remove(input);
-	//}
-
-	//for (const auto& output : component->outputs) {
-	//	output->dest->inputs.remove(output);
-	//	if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component)) {
-	//		gComp->removeConsumer(output->genID);
-	//	}
-	//}
-
-	//// Only deinit if engine is running
-	//if (audioStream) component->deinit();
-
-	//components.remove(component);
-	//outputComponents.remove(dynamic_cast<OutputAudioComponent*>(component));
-	//auralizingComponents.remove(dynamic_cast<AuralizingAudioComponent*>(component));
-	//
-	//audioComponents.remove_if([component](const auto& data) { return data.get() == component; });
-}
+//AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> component)
+//{
+//	AudioComponent* ptr = component.get();
+//	audioComponents.push_back(std::move(component));
+//
+//	auto& stateManager = StateManager::instance();
+//	ptr->audioObserverIDs.push_back(
+//		stateManager.registerAudioObserver(
+//			ptr,
+//			StateManager::EventType::ComponentCreated,
+//			[this](const StateManager::EventData& data) { registerComponent(data); }
+//		)
+//	);
+//
+//	ptr->audioObserverIDs.push_back(
+//		stateManager.registerAudioObserver(
+//			ptr,
+//			StateManager::EventType::ComponentDeleted,
+//			[this](const StateManager::EventData& data) { unregisterComponent(data); }
+//		)
+//	);
+//
+//	stateManager.event(ptr, StateManager::EventType::ComponentCreated, ptr);
+//
+//	return ptr;
+//}
+//
+//void AudioEngine::registerComponent(const StateManager::EventData& data)
+//{
+//	auto* component = static_cast<AudioComponent*>(std::get<EComponent*>(data));
+//	if (audioStream) component->init(sampleRate);
+//
+//	// Setup delay lines
+//	for (AudioComponent* compOther : components) {
+//		// outputs
+//		if (component->bAcceptsOutput && compOther->bAcceptsInput) {
+//			auto output = std::make_shared<ADelayLine>(component, compOther);
+//			output->init(sampleRate);
+//			component->outputs.push_back(output);
+//			compOther->inputs.push_back(output);
+//			if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component)) {
+//				output->genID = gComp->addConsumer();
+//			}
+//		}
+//
+//		// inputs
+//		if (component->bAcceptsInput && compOther->bAcceptsOutput) {
+//			auto input = std::make_shared<ADelayLine>(compOther, component);
+//			input->init(sampleRate);
+//			compOther->outputs.push_back(input);
+//			component->inputs.push_back(input);
+//		}
+//	}
+//
+//	// If OutputAudioComponent, setup indirect connections to this object
+//	if (auto* oComp = dynamic_cast<OutputAudioComponent*>(component)) {
+//		outputComponents.push_back(oComp);
+//		for (AudioComponent* compOther : components) {
+//			if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(compOther)) {
+//				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
+//				oComp->registerIndirectSend(sendPtr);
+//			}
+//		}
+//	}
+//
+//	// If AuralizingAudioComponent, setup indirect connections from this object
+//	if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(component)) {
+//		auralizingComponents.push_back(aComp);
+//		for (AudioComponent* compOther : components) {
+//			if (auto* oComp = dynamic_cast<OutputAudioComponent*>(compOther)) {
+//				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
+//				oComp->registerIndirectSend(sendPtr);
+//			}
+//		}
+//	}
+//
+//	// TODO: Sort by dependency for performance
+//	components.push_back(component);
+//}
+//
+//void AudioEngine::unregisterComponent(const StateManager::EventData& data)
+//{
+//	auto* component = static_cast<AudioComponent*>(std::get<EComponent*>(data));
+//
+//	for (const auto& input : component->inputs) {
+//		input->source->outputs.remove(input);
+//	}
+//
+//	for (const auto& output : component->outputs) {
+//		output->dest->inputs.remove(output);
+//		if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component)) {
+//			gComp->removeConsumer(output->genID);
+//		}
+//	}
+//
+//	// Only deinit if engine is running
+//	if (audioStream) component->deinit();
+//
+//	components.remove(component);
+//	outputComponents.remove(dynamic_cast<OutputAudioComponent*>(component));
+//	auralizingComponents.remove(dynamic_cast<AuralizingAudioComponent*>(component));
+//	
+//	audioComponents.remove_if([component](const auto& data) { return data.get() == component; });
+//}

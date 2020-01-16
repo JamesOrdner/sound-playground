@@ -1,45 +1,29 @@
 #pragma once
 
-#include "../Util/Matrix.h"
 #include "../Util/LFQueue.h"
+#include "../Util/Observer.h"
 #include <list>
-#include <functional>
-#include <variant>
 
 class StateManager
 {
 public:
 
-	// This variant includes all possible callback parameter types. As each node will
-	// have memory allocated enough for the largest variant type, these should be small
-	typedef std::variant<
-		bool,
-		mat::vec3,
-		class UObject*(*)()
-	> EventData;
-
-	typedef std::function<void(const EventData&)> ObserverCallback;
-
-	enum class EventType
-	{
-		CreateObjectRequest, // UObject*(*)()
-		PositionUpdated, // mat::vec3
-		VelocityUpdated, // mat::vec3
-		RotationUpdated, // mat::vec3
-		ScaleUpdated, // mat::vec3
-		SelectionUpdated, // bool
-	};
-
 	// Called by subjects after modifying shared data
-	void event(const void* subject, EventType event, const EventData& data = EventData());
+	void event(const SubjectInterface* subject, EventType event, const EventData& data = EventData());
 
 	typedef unsigned int ObserverID;
 
 	// Register an observer that will be notified after a call to notifyObservers()
-	ObserverID registerObserver(const void* subject, EventType event, ObserverCallback callback);
+	[[nodiscard]] ObserverID registerObserver(
+		const SubjectInterface* subject,
+		EventType event,
+		ObserverInterface::ObserverCallback callback);
 
 	// Register an observer that will be notified after a call to notifyAudioObservers()
-	ObserverID registerAudioObserver(const void* subject, EventType event, ObserverCallback callback);
+	[[nodiscard]] ObserverID registerAudioObserver(
+		const SubjectInterface* subject,
+		EventType event,
+		ObserverInterface::ObserverCallback callback);
 
 	// Unregister an observer with the given ID
 	void unregisterObserver(ObserverID id);
@@ -57,8 +41,8 @@ private:
 
 	struct ObserverData
 	{
-		ObserverCallback callback;
-		const void* subject;
+		ObserverInterface::ObserverCallback callback;
+		const SubjectInterface* subject;
 		EventType event;
 		ObserverID id;
 	};
@@ -71,7 +55,7 @@ private:
 	struct NotifyQueueItem
 	{
 		EventData data;
-		const void* subject;
+		const SubjectInterface* subject;
 		EventType event;
 	};
 
