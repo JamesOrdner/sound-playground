@@ -148,24 +148,24 @@ AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> c
 	AudioComponent* ptr = component.get();
 	audioComponents.push_back(std::move(component));
 
-	auto& stateManager = StateManager::instance();
-	ptr->audioObserverIDs.push_back(
-		stateManager.registerAudioObserver(
-			ptr,
-			StateManager::EventType::ComponentCreated,
-			[this](const StateManager::EventData& data) { registerComponent(data); }
-		)
-	);
+	//auto& stateManager = StateManager::instance();
+	//ptr->audioObserverIDs.push_back(
+	//	stateManager.registerAudioObserver(
+	//		ptr,
+	//		StateManager::EventType::ComponentCreated,
+	//		[this](const StateManager::EventData& data) { registerComponent(data); }
+	//	)
+	//);
 
-	ptr->audioObserverIDs.push_back(
-		stateManager.registerAudioObserver(
-			ptr,
-			StateManager::EventType::ComponentDeleted,
-			[this](const StateManager::EventData& data) { unregisterComponent(data); }
-		)
-	);
+	//ptr->audioObserverIDs.push_back(
+	//	stateManager.registerAudioObserver(
+	//		ptr,
+	//		StateManager::EventType::ComponentDeleted,
+	//		[this](const StateManager::EventData& data) { unregisterComponent(data); }
+	//	)
+	//);
 
-	stateManager.event(ptr, StateManager::EventType::ComponentCreated, ptr);
+	//stateManager.event(ptr, StateManager::EventType::ComponentCreated, ptr);
 
 	return ptr;
 }

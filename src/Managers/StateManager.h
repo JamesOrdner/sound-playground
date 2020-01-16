@@ -6,9 +6,6 @@
 #include <functional>
 #include <variant>
 
-// Forward declarations
-class EComponent;
-
 class StateManager
 {
 public:
@@ -16,16 +13,13 @@ public:
 	// This variant includes all possible callback parameter types
 	typedef std::variant<
 		bool,
-		mat::vec3,
-		EComponent*
+		mat::vec3
 	> EventData;
 
 	typedef std::function<void(const EventData&)> ObserverCallback;
 
 	enum class EventType
 	{
-		ComponentCreated, // EComponent*
-		ComponentDeleted, // EComponent*
 		PositionUpdated, // mat::vec3
 		VelocityUpdated, // mat::vec3
 		RotationUpdated, // mat::vec3
