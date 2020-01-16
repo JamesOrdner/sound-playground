@@ -10,16 +10,19 @@ class StateManager
 {
 public:
 
-	// This variant includes all possible callback parameter types
+	// This variant includes all possible callback parameter types. As each node will
+	// have memory allocated enough for the largest variant type, these should be small
 	typedef std::variant<
 		bool,
-		mat::vec3
+		mat::vec3,
+		class UObject*(*)()
 	> EventData;
 
 	typedef std::function<void(const EventData&)> ObserverCallback;
 
 	enum class EventType
 	{
+		CreateObjectRequest, // UObject*(*)()
 		PositionUpdated, // mat::vec3
 		VelocityUpdated, // mat::vec3
 		RotationUpdated, // mat::vec3

@@ -2,12 +2,19 @@
 
 #include <vector>
 
-// Forward declarations
-class SystemObjectInterface;
-
 class UObject
 {
+public:
+
+	typedef UObject* (*UObjectFactory)();
+
+	template<typename T>
+	static UObject* createObject()
+	{
+		return new T;
+	}
+
 private:
 
-	std::vector<SystemObjectInterface*> systemObjects;
+	// std::vector<class SystemObjectInterface*> systemObjects;
 };
