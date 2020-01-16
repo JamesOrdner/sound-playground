@@ -6,8 +6,7 @@
 #include <SDL.h>
 
 GraphicsSystem::GraphicsSystem() :
-	window(nullptr),
-	render(new Render)
+	window(nullptr)
 {
 }
 
@@ -17,6 +16,8 @@ GraphicsSystem::~GraphicsSystem()
 
 bool GraphicsSystem::init()
 {
+	render = std::make_unique<Render>();
+
 	// Attributes must be set before the window is created
 	render->setAttributes();
 
@@ -39,9 +40,11 @@ bool GraphicsSystem::init()
 
 void GraphicsSystem::deinit()
 {
+	graphicsScenes.clear();
 	render->deinit();
 	SDL_DestroyWindow(window);
 	window = nullptr;
+	render.reset();
 }
 
 void GraphicsSystem::execute(float deltaTime)

@@ -8,6 +8,7 @@ GraphicsScene::GraphicsScene() :
 
 GraphicsScene::~GraphicsScene()
 {
+	graphicsObjects.clear();
 }
 
 SystemObjectInterface* GraphicsScene::addSystemObject(SystemObjectInterface* object)

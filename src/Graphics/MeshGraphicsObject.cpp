@@ -63,7 +63,7 @@ MeshGraphicsObject::MeshGraphicsObject(const UObject* uobject) :
 
 MeshGraphicsObject::~MeshGraphicsObject()
 {
-	if (mesh) mesh->registerWithComponent(this);
+	if (mesh) mesh->unregisterWithComponent(this);
 }
 
 void MeshGraphicsObject::setMesh(std::string filepath)
