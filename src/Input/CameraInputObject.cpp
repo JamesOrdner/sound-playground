@@ -8,6 +8,9 @@ CameraInputObject::CameraInputObject(const UObject* uobject) :
 	bOrbiting(false),
 	movementSpeedMultiplier(2.f)
 {
+	// Update camera with initial configuration
+	broadcastPositionChange();
+	broadcastRotationChange();
 }
 
 void CameraInputObject::handleEvent(const SDL_Event& sdlEvent)
