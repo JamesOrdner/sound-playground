@@ -14,5 +14,5 @@ private:
 
 	std::list<std::unique_ptr<class GraphicsObject>> graphicsObjects;
 
-	SystemObjectInterface* addSystemObject(SystemObjectInterface* object, const UObject* uobject) override;
+	SystemObjectInterface* addSystemObject(SystemObjectInterface* object) override;
 };

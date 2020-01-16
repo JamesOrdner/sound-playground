@@ -1,37 +1,26 @@
 #include "Engine.h"
 #include "UScene.h"
-#include "UObject.h"
+#include "SystemInterface.h"
 #include "../Managers/StateManager.h"
 #include "../Managers/EnvironmentManager.h"
-#include "../Input/InputSystem.h"
-#include "../Graphics/GraphicsSystem.h"
 #include <SDL.h>
 
+// Temporary dependencies
+#include "UObject.h"
+#include "../Input/InputSystem.h"
+#include "../Graphics/GraphicsSystem.h"
 #include "../Input/InputScene.h"
-#include "../Input/InputObject.h"
+#include "../Input/CameraInputObject.h"
 #include "../Graphics/GraphicsScene.h"
 #include "../Graphics/GraphicsObject.h"
 
-Engine::Engine()
+Engine::Engine() :
+	bInitialized(false)
 {
-	if (init()) {
-		setupInitialScene();
-		bInitialized = true;
-	}
-	else {
-		bInitialized = false;
-	}
 }
 
 Engine::~Engine()
 {
-	deinit();
-}
-
-Engine& Engine::instance()
-{
-	static Engine instance;
-	return instance;
 }
 
 bool Engine::init()
@@ -45,14 +34,20 @@ bool Engine::init()
 	inputSystem = std::make_unique<InputSystem>();
 	if (!inputSystem->init()) {
 		printf("Warning: Input system failed to initialize!\n");
+		deinit();
 		return false;
 	}
 
 	graphicsSystem = std::make_unique<GraphicsSystem>();
 	if (!graphicsSystem->init()) {
 		printf("Warning: Graphics system failed to initialize!\n");
+		deinit();
 		return false;
 	}
+
+	setupInitialScene();
+
+	bInitialized = true;
 
 	return true;
 }
@@ -61,21 +56,31 @@ void Engine::deinit()
 {
 	bInitialized = false;
 	scenes.clear();
-	graphicsSystem->deinit();
-	inputSystem->deinit();
+
+	if (graphicsSystem) graphicsSystem->deinit();
+	if (inputSystem) inputSystem->deinit();
+	graphicsSystem.reset();
+	inputSystem.reset();
+
 	SDL_Quit();
 }
 
 void Engine::setupInitialScene()
 {
 	auto* uscene = scenes.emplace_back(std::make_unique<UScene>()).get();
-	auto* inputScene = graphicsSystem->createSystemScene<InputScene>(uscene);
+	auto* inputScene = inputSystem->createSystemScene<InputScene>(uscene);
 	auto* graphicsScene = graphicsSystem->createSystemScene<GraphicsScene>(uscene);
 
-	auto* uobject = uscene->createUniversalObject<UObject>();
-	auto* inputObject = inputScene->createSystemObject<InputObject>(uobject);
-	auto* graphicsObject = graphicsScene->createSystemObject<GraphicsObject>(uobject);
+	auto* uspeaker = uscene->createUniversalObject();
+	auto* graphicsObject = graphicsScene->createSystemObject<GraphicsObject>(uspeaker);
 	graphicsObject->setMesh("res/speaker_small.glb");
+
+	// TEMP
+	auto* inputObject = inputScene->createSystemObject<CameraInputObject>(uspeaker);
+
+	//auto* ucamera = uscene->createUniversalObject();
+	//auto* inputObject = inputScene->createSystemObject<CameraInputObject>(ucamera);
+	//auto* camGraphicsObject = graphicsScene->createSystemObject<GraphicsObject>(ucamera);
 }
 
 void Engine::run()
@@ -83,8 +88,9 @@ void Engine::run()
 	if (!bInitialized) return;
 
 	Uint32 sdlTime = SDL_GetTicks();
+	EnvironmentManager::instance().bQuitRequested = false;
 
-	while (!EnvironmentManager::instance().bQuitRequested) {
+	do {
 		// pump pending OS/input events to SDL's event queue
 		SDL_PumpEvents();
 
@@ -99,5 +105,6 @@ void Engine::run()
 
 		// sync changes across systems
 		StateManager::instance().notifyObservers();
-	}
+
+	} while (!EnvironmentManager::instance().bQuitRequested);
 }

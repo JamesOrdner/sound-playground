@@ -1,6 +1,5 @@
 #include "AudioComponent.h"
 #include "../DSP/ADelayLine.h"
-#include "../../Objects/EObject.h"
 #include "../../Managers/StateManager.h"
 
 AudioComponent::AudioComponent(const EObject* owner) :

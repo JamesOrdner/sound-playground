@@ -5,8 +5,7 @@ UScene::~UScene()
 {
 }
 
-UObject* UScene::addUniversalObject(UObject* object)
+UObject* UScene::createUniversalObject()
 {
-	objects.emplace_back(object);
-	return object;
+	return objects.emplace_back(std::make_unique<UObject>()).get();
 }

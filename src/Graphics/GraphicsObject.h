@@ -6,11 +6,9 @@
 
 class GraphicsObject : public SystemObjectInterface
 {
-	friend class GraphicsSystem;
-
 public:
 
-	GraphicsObject();
+	GraphicsObject(const class UObject* uobject);
 
 	~GraphicsObject();
 

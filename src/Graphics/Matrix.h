@@ -293,6 +293,8 @@ namespace mat // Matrix
 	// Rotate a vector by a given rotation
 	vec3 rotate(const vec3& vector, const vec3& rotation);
 
+	// Calculate the forward vector from an object's rotation
+	vec3 forward(const vec3& objectRotation);
 
 
 	/** Matrix */

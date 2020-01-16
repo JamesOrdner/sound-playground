@@ -10,7 +10,7 @@ StateManager::StateManager()
 {
 }
 
-void StateManager::event(void* subject, EventType event, const EventData& data)
+void StateManager::event(const void* subject, EventType event, const EventData& data)
 {
 	NotifyQueueItem queueItem;
 	queueItem.subject = subject;

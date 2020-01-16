@@ -34,7 +34,7 @@ public:
 	};
 
 	// Called by subjects after modifying shared data
-	void event(void* subject, EventType event, const EventData& data = EventData());
+	void event(const void* subject, EventType event, const EventData& data = EventData());
 
 	typedef unsigned int ObserverID;
 
@@ -74,7 +74,7 @@ private:
 	struct NotifyQueueItem
 	{
 		EventData data;
-		void* subject;
+		const void* subject;
 		EventType event;
 	};
 

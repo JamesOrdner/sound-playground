@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../../Engine/EComponent.h"
 #include "../../Graphics/Matrix.h"
 #include "../../Managers/StateManager.h"
 #include <vector>
@@ -11,7 +10,7 @@
 class EObject;
 class ADelayLine;
 
-class AudioComponent : public EComponent
+class AudioComponent
 {
 	friend class AudioEngine;
 

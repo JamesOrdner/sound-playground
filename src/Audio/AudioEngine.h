@@ -8,7 +8,6 @@
 class AudioComponent;
 class OutputAudioComponent;
 class AuralizingAudioComponent;
-class EObject;
 
 class AudioEngine
 {
@@ -17,12 +16,6 @@ public:
 	AudioEngine();
 
 	~AudioEngine();
-
-	// Create and return an audio component
-	template<class T>
-	T* createAudioComponent(const EObject* owner) {
-		return static_cast<T*>(registerComponent(std::make_unique<T>(owner)));
-	};
 
 	// Set up AudioEngine and open the audio device. Returns success.
 	bool init();

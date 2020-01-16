@@ -29,8 +29,14 @@ void InputSystem::execute(float deltaTime)
 			break;
 		}
 		else {
-			// handleInput(sdlEvent);
+			for (const auto& scene : inputScenes) {
+				scene->handleEvent(sdlEvent);
+			}
 		}
+	}
+
+	for (const auto& scene : inputScenes) {
+		scene->tick(deltaTime);
 	}
 }
 

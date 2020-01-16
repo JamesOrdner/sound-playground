@@ -28,6 +28,11 @@ vec3 mat::rotate(const vec3& vector, const vec3& rotation)
 	return vec3(rz * ry * rx * vec4(vector, 1.f));
 }
 
+vec3 mat::forward(const vec3& objectRotation)
+{
+	return rotate(vec3{ 0.f, 0.f, 1.f }, objectRotation);
+}
+
 mat4 mat::transform(const vec3& loc, const vec3& rot, const vec3& scale) {
 	mat4 s{
 		{ scale[0],        0,        0, 0 },
