@@ -1,11 +1,14 @@
 #pragma once
 
-#include <memory>
 class SystemInterface
 {
 public:
 
-	virtual ~SystemInterface() {};
+	SystemInterface();
+
+	virtual ~SystemInterface();
+
+	class ServiceManagerInterface* serviceManager;
 
 	// Initialize the system
 	virtual bool init() = 0;

@@ -14,8 +14,4 @@ public:
 	virtual void handleEvent(const SDL_Event& sdlEvent);
 
 	virtual void tick(float deltaTime);
-
-private:
-
-
 };

@@ -1,0 +1,23 @@
+#pragma once
+
+#include "../Engine/SystemSceneInterface.h"
+#include "../Util/Matrix.h"
+#include <list>
+#include <memory>
+
+class PhysicsScene : public SystemSceneInterface
+{
+public:
+
+	PhysicsScene(const class SystemInterface* system, const class UScene* uscene);
+
+	~PhysicsScene();
+
+	class UObject* raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit);
+
+private:
+
+	std::list<std::unique_ptr<class PhysicsObject>> physicsObjects;
+
+	SystemObjectInterface* addSystemObject(SystemObjectInterface* object) override;
+};

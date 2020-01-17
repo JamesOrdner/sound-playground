@@ -204,6 +204,7 @@
     <ClCompile Include="src\Input\InputSystem.cpp" />
     <ClCompile Include="src\Managers\AssetManager.cpp" />
     <ClCompile Include="src\Managers\EnvironmentManager.cpp" />
+    <ClCompile Include="src\Managers\ServiceManager.cpp" />
     <ClCompile Include="src\Managers\StateManager.cpp" />
     <ClCompile Include="src\Graphics\GMesh.cpp" />
     <ClCompile Include="lib\gl3w\src\gl3w.c" />
@@ -213,6 +214,9 @@
     <ClCompile Include="src\Graphics\GTexture.cpp" />
     <ClCompile Include="src\Graphics\Render.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Physics\PhysicsObject.cpp" />
+    <ClCompile Include="src\Physics\PhysicsScene.cpp" />
+    <ClCompile Include="src\Physics\PhysicsSystem.cpp" />
     <ClCompile Include="src\UI\UIComponent.cpp" />
     <ClCompile Include="src\UI\UIManager.cpp" />
     <ClCompile Include="src\UI\UIObject.cpp" />
@@ -251,12 +255,18 @@
     <ClInclude Include="src\Managers\AssetManager.h" />
     <ClInclude Include="src\Managers\AssetTypes.h" />
     <ClInclude Include="src\Managers\EnvironmentManager.h" />
+    <ClInclude Include="src\Managers\ServiceManager.h" />
+    <ClInclude Include="src\Managers\ServiceManagerInterface.h" />
     <ClInclude Include="src\Managers\StateManager.h" />
     <ClInclude Include="src\Graphics\GMesh.h" />
     <ClInclude Include="src\Audio\AudioEngine.h" />
     <ClInclude Include="src\engine\Engine.h" />
     <ClInclude Include="src\Graphics\GProgram.h" />
     <ClInclude Include="src\Graphics\GTexture.h" />
+    <ClInclude Include="src\Physics\PhysicsObject.h" />
+    <ClInclude Include="src\Physics\PhysicsScene.h" />
+    <ClInclude Include="src\Physics\PhysicsSystem.h" />
+    <ClInclude Include="src\Physics\PhysicsSystemInterface.h" />
     <ClInclude Include="src\Util\Matrix.h" />
     <ClInclude Include="src\Graphics\Render.h" />
     <ClInclude Include="src\UI\UIComponent.h" />

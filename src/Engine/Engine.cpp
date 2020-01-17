@@ -2,6 +2,7 @@
 #include "UScene.h"
 #include "Loader.h"
 #include "SystemInterface.h"
+#include "../Managers/ServiceManager.h"
 #include "../Managers/StateManager.h"
 #include "../Managers/AssetManager.h"
 #include "../Managers/EnvironmentManager.h"
@@ -9,13 +10,6 @@
 
 // Temporary dependencies
 #include "UObject.h"
-#include "../Input/InputSystem.h"
-#include "../Graphics/GraphicsSystem.h"
-#include "../Input/InputScene.h"
-#include "../Input/CameraInputObject.h"
-#include "../Graphics/GraphicsScene.h"
-#include "../Graphics/CameraGraphicsObject.h"
-#include "../Graphics/MeshGraphicsObject.h"
 
 Engine::Engine() :
 	bInitialized(false)
@@ -34,31 +28,34 @@ bool Engine::init()
 		return false;
 	}
 
-	inputSystem = std::make_unique<InputSystem>();
+	loader = std::make_unique<Loader>();
+
+	auto systems = loader->createSystems();
+	inputSystem = std::move(systems.input);
+	graphicsSystem = std::move(systems.graphics);
+	physicsSystem = std::move(systems.physics);
+
 	if (!inputSystem->init()) {
 		printf("Warning: Input system failed to initialize!\n");
 		deinit();
 		return false;
 	}
 
-	graphicsSystem = std::make_unique<GraphicsSystem>();
 	if (!graphicsSystem->init()) {
 		printf("Warning: Graphics system failed to initialize!\n");
 		deinit();
 		return false;
 	}
 
-	assetManager = std::make_unique<AssetManager>();
-	assetManager->loadAssets();
-
-	assetLoader = std::make_unique<Loader>(
-		assetManager.get(),
-		inputSystem.get(),
-		graphicsSystem.get());
-
-	setupInitialScene();
+	if (!physicsSystem->init()) {
+		printf("Warning: Graphics system failed to initialize!\n");
+		deinit();
+		return false;
+	}
 
 	bInitialized = true;
+
+	setupInitialScene();
 
 	return true;
 }
@@ -68,13 +65,15 @@ void Engine::deinit()
 	bInitialized = false;
 	scenes.clear();
 
-	assetLoader.reset();
-	assetManager.reset();
+	loader.reset();
 
-	if (graphicsSystem) graphicsSystem->deinit();
 	if (inputSystem) inputSystem->deinit();
-	graphicsSystem.reset();
+	if (graphicsSystem) graphicsSystem->deinit();
+	if (physicsSystem) physicsSystem->deinit();
+	
 	inputSystem.reset();
+	graphicsSystem.reset();
+	physicsSystem.reset();
 
 	SDL_Quit();
 }
@@ -85,13 +84,13 @@ void Engine::setupInitialScene()
 	auto* inputScene = inputSystem->createSystemScene(uscene);
 	auto* graphicsScene = graphicsSystem->createSystemScene(uscene);
 
-	assetLoader->createDefaultCamera(uscene);
+	loader->createDefaultCamera(uscene);
 
 	AssetDescriptor asset;
-	if (assetManager->descriptor("Platform", asset)) {
+	if (AssetManager::instance().descriptor("Platform", asset)) {
 		for (int x = -2; x <= 2; x++) {
 			for (int z = -1; z <= 2; z++) {
-				auto* uplatform = assetLoader->createObjectFromAsset(asset, uscene);
+				auto* uplatform = loader->createObjectFromAsset(asset, uscene);
 				uplatform->event(
 					EventType::PositionUpdated,
 					mat::vec3 { static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
@@ -128,7 +127,7 @@ void Engine::run()
 	} while (!EnvironmentManager::instance().bQuitRequested);
 }
 
-const LoaderInterface* Engine::loader() const
+LoaderInterface* Engine::loaderInterface() const
 {
-	return assetLoader.get();
+	return loader.get();
 }

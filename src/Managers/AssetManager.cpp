@@ -4,6 +4,17 @@
 #include <filesystem>
 #include <regex>
 
+AssetManager& AssetManager::instance()
+{
+	static AssetManager instance;
+	return instance;
+}
+
+AssetManager::AssetManager()
+{
+	loadAssets();
+}
+
 void AssetManager::loadAssets()
 {
 	namespace fs = std::filesystem;

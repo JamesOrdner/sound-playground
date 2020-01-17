@@ -40,9 +40,9 @@ void InputSystem::execute(float deltaTime)
 	}
 }
 
-SystemSceneInterface* InputSystem::createSystemScene(const class UScene* uscene)
+SystemSceneInterface* InputSystem::createSystemScene(const UScene* uscene)
 {
-	return inputScenes.emplace_back(std::make_unique<InputScene>(uscene)).get();
+	return inputScenes.emplace_back(std::make_unique<InputScene>(this, uscene)).get();
 }
 
 SystemSceneInterface* InputSystem::findSystemScene(const UScene* uscene)

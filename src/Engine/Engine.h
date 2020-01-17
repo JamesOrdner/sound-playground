@@ -19,20 +19,23 @@ public:
 	void run();
 
 	// Return a pointer to the Loader's public interface
-	const class LoaderInterface* loader() const;
+	class LoaderInterface* loaderInterface() const;
 
 private:
+
+	// Register system interfaces with the managers
+	void registerInterfaces();
 
 	void setupInitialScene();
 
 	// True only after a successful call to init()
 	bool bInitialized;
 
-	std::list<std::unique_ptr<class UScene>> scenes;
+	std::unique_ptr<class Loader> loader;
 
 	std::unique_ptr<class SystemInterface> inputSystem;
 	std::unique_ptr<class SystemInterface> graphicsSystem;
+	std::unique_ptr<class SystemInterface> physicsSystem;
 
-	std::unique_ptr<class AssetManager> assetManager;
-	std::unique_ptr<class Loader> assetLoader;
+	std::list<std::unique_ptr<class UScene>> scenes;
 };

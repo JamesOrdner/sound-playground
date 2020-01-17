@@ -5,11 +5,6 @@
 #include <vector>
 #include <memory>
 
-// Forward declarations
-struct UIObject;
-struct UIData;
-class EObject;
-
 // UIManagerEvent is the return value of handleInput(...), used as a
 // means to communicate the result of an event to dependent processes
 struct UIManagerEvent
@@ -18,8 +13,12 @@ struct UIManagerEvent
 	bool bConsumedInput;
 	
 	// Points to the object spawned by the event, or nullptr if no object spawned
-	EObject* spawned;
+	class InputObject* spawned;
 };
+
+// tempowary
+struct UIObject;
+struct UIData;
 
 class UIManager
 {

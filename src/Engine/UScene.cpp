@@ -23,7 +23,7 @@ UObject* UScene::createUniversalObject()
 		EventType::CreateObjectRequest,
 		[this](const EventData& data) {
 			AssetID id = std::get<AssetID>(data);
-			engine->loader()->createObjectFromAsset(id, this);
+			engine->loaderInterface()->createObjectFromAsset(id, this);
 		}
 	);
 

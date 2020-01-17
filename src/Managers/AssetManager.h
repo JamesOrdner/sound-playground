@@ -7,9 +7,6 @@ class AssetManager
 {
 public:
 
-	// Load all assets from the filesystem
-	void loadAssets();
-
 	// Assigns `id` based on the asset's name (assigns first if multiple found). Returns success.
 	bool assetID(const std::string& name, AssetID& id) const;
 
@@ -21,8 +18,21 @@ public:
 
 private:
 
+	AssetManager();
+
 	std::vector<AssetDescriptor> assets;
+
+	// Load all assets from the filesystem
+	void loadAssets();
 
 	// Parse a line and fill in the appropriate descriptor field
 	bool parseLine(const std::string& line, AssetDescriptor& descriptor);
+
+public:
+
+	static AssetManager& instance();
+
+	// Deleted functions prevent singleton duplication
+	AssetManager(AssetManager const&) = delete;
+	void operator=(AssetManager const&) = delete;
 };

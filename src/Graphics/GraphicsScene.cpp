@@ -1,8 +1,8 @@
 #include "GraphicsScene.h"
 #include "GraphicsObject.h"
 
-GraphicsScene::GraphicsScene(const class UScene* uscene) :
-	SystemSceneInterface(uscene),
+GraphicsScene::GraphicsScene(const SystemInterface* system, const UScene* uscene) :
+	SystemSceneInterface(system, uscene),
 	activeCamera(nullptr)
 {
 }

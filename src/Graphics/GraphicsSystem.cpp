@@ -63,7 +63,7 @@ void GraphicsSystem::execute(float deltaTime)
 
 SystemSceneInterface* GraphicsSystem::createSystemScene(const class UScene* uscene)
 {
-	return graphicsScenes.emplace_back(std::make_unique<GraphicsScene>(uscene)).get();
+	return graphicsScenes.emplace_back(std::make_unique<GraphicsScene>(this, uscene)).get();
 }
 
 SystemSceneInterface* GraphicsSystem::findSystemScene(const UScene* uscene)

@@ -1,15 +1,22 @@
 #pragma once
 
 #include "LoaderInterface.h"
+#include <memory>
 
 class Loader : public LoaderInterface
 {
 public:
 
-	Loader(
-		const class AssetManager* assetManager,
-		class SystemInterface* inputSystem,
-		class SystemInterface* graphicsSystem);
+	Loader();
+
+	struct SystemsWrapper
+	{
+		std::unique_ptr<class SystemInterface> input;
+		std::unique_ptr<class SystemInterface> graphics;
+		std::unique_ptr<class SystemInterface> physics;
+	};
+
+	SystemsWrapper createSystems();
 
 	class UObject* createDefaultCamera(class UScene* uscene);
 
@@ -18,8 +25,8 @@ public:
 
 private:
 
-	const class AssetManager* const assetManager;
+	class AssetManager* assetManager;
 
-	class SystemInterface* const inputSystem;
-	class SystemInterface* const graphicsSystem;
+	class SystemInterface* inputSystem;
+	class SystemInterface* graphicsSystem;
 };

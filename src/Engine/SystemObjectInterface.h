@@ -10,7 +10,5 @@ public:
 
 	virtual ~SystemObjectInterface() {};
 
-protected:
-
 	const class UObject* const uobject;
 };

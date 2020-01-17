@@ -8,7 +8,7 @@ class GraphicsScene : public SystemSceneInterface
 {
 public:
 
-	GraphicsScene(const class UScene* uscene);
+	GraphicsScene(const class SystemInterface* system, const class UScene* uscene);
 
 	~GraphicsScene();
 
