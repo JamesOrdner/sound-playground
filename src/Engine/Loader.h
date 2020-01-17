@@ -25,8 +25,6 @@ public:
 
 private:
 
-	class AssetManager* assetManager;
-
 	class SystemInterface* inputSystem;
 	class SystemInterface* graphicsSystem;
 };

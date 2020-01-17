@@ -1,6 +1,6 @@
 #include "InputSystem.h"
 #include "InputScene.h"
-#include "../Managers/EnvironmentManager.h"
+#include "../../Managers/EnvironmentManager.h"
 #include <SDL_events.h>
 
 InputSystem::InputSystem()

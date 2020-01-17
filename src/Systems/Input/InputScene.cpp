@@ -1,9 +1,9 @@
 #include "InputScene.h"
 #include "InputObject.h"
-#include "../Engine/SystemInterface.h"
-#include "../Engine/UObject.h"
-#include "../Managers/ServiceManagerInterface.h"
-#include "../UI/UIManager.h"
+#include "../SystemInterface.h"
+#include "../../Engine/UObject.h"
+#include "../../Managers/ServiceManagerInterface.h"
+#include "../../UI/UIManager.h"
 
 InputScene::InputScene(const SystemInterface* system, const UScene* uscene) :
 	SystemSceneInterface(system, uscene),

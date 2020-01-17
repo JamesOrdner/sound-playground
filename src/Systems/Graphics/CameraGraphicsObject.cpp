@@ -1,5 +1,5 @@
 #include "CameraGraphicsObject.h"
-#include "../Engine/UObject.h"
+#include "../../Engine/UObject.h"
 
 CameraGraphicsObject::CameraGraphicsObject(const UObject* uobject) :
 	GraphicsObject(uobject)

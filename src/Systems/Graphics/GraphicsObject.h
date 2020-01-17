@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Engine/SystemObjectInterface.h"
+#include "../SystemObjectInterface.h"
 
 class GraphicsObject : public SystemObjectInterface
 {

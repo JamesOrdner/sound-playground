@@ -1,5 +1,5 @@
 #include "MeshGraphicsObject.h"
-#include "../Engine/UObject.h"
+#include "../../Engine/UObject.h"
 #include "GMesh.h"
 
 MeshGraphicsObject::MeshGraphicsObject(const UObject* uobject) :

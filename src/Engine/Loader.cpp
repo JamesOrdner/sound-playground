@@ -4,20 +4,22 @@
 #include "../Managers/AssetManager.h"
 #include "../Managers/ServiceManager.h"
 
-#include "SystemInterface.h"
-#include "SystemSceneInterface.h"
+#include "../Systems/SystemInterface.h"
+#include "../Systems/SystemSceneInterface.h"
 
-#include "../Input/InputSystem.h"
-#include "../Input/CameraInputObject.h"
+#include "../Systems/Input/InputSystem.h"
+#include "../Systems/Input/CameraInputObject.h"
 
-#include "../Graphics/GraphicsSystem.h"
-#include "../Graphics/GraphicsScene.h"
-#include "../Graphics/CameraGraphicsObject.h"
-#include "../Graphics/MeshGraphicsObject.h"
+#include "../Systems/Graphics/GraphicsSystem.h"
+#include "../Systems/Graphics/GraphicsScene.h"
+#include "../Systems/Graphics/CameraGraphicsObject.h"
+#include "../Systems/Graphics/MeshGraphicsObject.h"
 
-#include "../Physics/PhysicsSystem.h"
+#include "../Systems/Physics/PhysicsSystem.h"
 
-Loader::Loader()
+Loader::Loader() :
+	inputSystem(nullptr),
+	graphicsSystem(nullptr)
 {
 }
 
@@ -64,7 +66,7 @@ UObject* Loader::createDefaultCamera(UScene* uscene)
 UObject* Loader::createObjectFromAsset(AssetID asset, UScene* uscene) const
 {
 	AssetDescriptor descriptor;
-	if (assetManager->descriptor(asset, descriptor)) {
+	if (AssetManager::instance().descriptor(asset, descriptor)) {
 		return createObjectFromAsset(descriptor, uscene);
 	}
 	return nullptr;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Engine/SystemSceneInterface.h"
-#include "../Util/Matrix.h"
+#include "../SystemSceneInterface.h"
+#include "../../Util/Matrix.h"
 #include <list>
 #include <memory>
 

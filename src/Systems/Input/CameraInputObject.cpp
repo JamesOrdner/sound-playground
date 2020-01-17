@@ -1,5 +1,5 @@
 #include "CameraInputObject.h"
-#include "../Engine/UObject.h"
+#include "../../Engine/UObject.h"
 
 CameraInputObject::CameraInputObject(const UObject* uobject) :
 	InputObject(uobject),

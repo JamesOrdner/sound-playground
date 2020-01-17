@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Engine/SystemObjectInterface.h"
+#include "../SystemObjectInterface.h"
 #include <SDL_events.h>
 
 class InputObject : public SystemObjectInterface

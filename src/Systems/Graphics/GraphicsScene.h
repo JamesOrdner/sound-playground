@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Engine/SystemSceneInterface.h"
+#include "../SystemSceneInterface.h"
 #include <list>
 #include <memory>
 

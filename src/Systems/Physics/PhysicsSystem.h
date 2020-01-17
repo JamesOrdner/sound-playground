@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Engine/SystemInterface.h"
+#include "../SystemInterface.h"
 #include "PhysicsSystemInterface.h"
 #include <list>
 #include <memory>

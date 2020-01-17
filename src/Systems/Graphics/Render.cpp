@@ -2,7 +2,7 @@
 #include "GProgram.h"
 #include "GMesh.h"
 #include "GTexture.h"
-#include "../UI/UIObject.h"
+#include "../../UI/UIObject.h"
 #include <SDL.h>
 #include <GL/gl3w.h>
 #include <stdio.h>

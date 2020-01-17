@@ -1,16 +1,16 @@
 #pragma once
 
-#include "../Engine/SystemInterface.h"
+#include "../SystemInterface.h"
 #include <list>
 #include <memory>
 
-class InputSystem : public SystemInterface
+class GraphicsSystem : public SystemInterface
 {
 public:
 
-	InputSystem();
+	GraphicsSystem();
 
-	~InputSystem();
+	~GraphicsSystem();
 
 	bool init() override;
 
@@ -24,5 +24,9 @@ public:
 
 private:
 
-	std::list<std::unique_ptr<class InputScene>> inputScenes;
+	struct SDL_Window* window;
+
+	std::unique_ptr<class Render> render;
+
+	std::list<std::unique_ptr<class GraphicsScene>> graphicsScenes;
 };
