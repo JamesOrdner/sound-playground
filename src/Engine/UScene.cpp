@@ -1,5 +1,6 @@
 #include "UScene.h"
 #include "UObject.h"
+#include "../Managers/AssetTypes.h"
 
 UScene::~UScene()
 {
@@ -14,8 +15,8 @@ UObject* UScene::createUniversalObject()
 		object,
 		EventType::CreateObjectRequest,
 		[this](const EventData& data) {
-			UObject::UObjectFactory create = std::get<UObject::UObjectFactory>(data);
-			objects.emplace_back(create());
+			AssetID id = std::get<AssetID>(data);
+			// objects.emplace_back();
 		}
 	);
 

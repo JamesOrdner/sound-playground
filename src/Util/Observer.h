@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../Util/Matrix.h"
+#include "../Managers/AssetTypes.h"
 #include <memory>
 #include <variant>
 #include <functional>
 
 enum class EventType
 {
-	CreateObjectRequest, // EventData type: UObject* (*)()
+	CreateObjectRequest, // EventData type: AssetID
 	PositionUpdated,     // EventData type: mat::vec3
 	VelocityUpdated,     // EventData type: mat::vec3
 	RotationUpdated,     // EventData type: mat::vec3
@@ -17,7 +18,7 @@ enum class EventType
 
 // This variant includes all possible event callback data types. As event data for all event
 // types will have enough memory allocated to store the largest type, these should be small
-typedef std::variant<bool, mat::vec3, class UObject* (*)()> EventData;
+typedef std::variant<bool, mat::vec3, AssetID> EventData;
 
 class ObserverInterface
 {

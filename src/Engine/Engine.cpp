@@ -28,7 +28,7 @@ Engine::~Engine()
 bool Engine::init()
 {
 	// Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
 		return false;
 	}
@@ -88,8 +88,7 @@ void Engine::setupInitialScene()
 				auto* uplatform = uscene->createUniversalObject();
 				auto* pGraphicsObject = graphicsScene->createSystemObject<MeshGraphicsObject>(uplatform);
 				pGraphicsObject->setMesh(asset.modelPath);
-				StateManager::instance().event(
-					uplatform,
+				uplatform->event(
 					EventType::PositionUpdated,
 					mat::vec3 { static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
 			}
