@@ -39,6 +39,14 @@ inline bool setAssetType(const std::string& s, AssetType& type)
 	return true;
 }
 
+inline bool setAudioType(const std::string& s, AudioType& type)
+{
+	if (s == "Speaker") type = AudioType::Speaker;
+	else if (s == "Microphone") type = AudioType::Microphone;
+	else return false;
+	return true;
+}
+
 inline bool setAssetModelPath(const std::string& s, std::string& path)
 {
 	path = "res/models/" + s;
@@ -53,9 +61,11 @@ bool AssetManager::parseLine(const std::string& line, AssetDescriptor& descripto
 		const std::string& val = match.suffix();
 		if (key == "Name")
 			return setAssetName(val, descriptor.name);
-		else if (key == "AssetType")
+		if (key == "AssetType")
 			return setAssetType(val, descriptor.assetType);
-		else if (key == "Model")
+		if (key == "AudioType")
+			return setAudioType(val, descriptor.audioType);
+		if (key == "Model")
 			return setAssetModelPath(val, descriptor.modelPath);
 	}
 

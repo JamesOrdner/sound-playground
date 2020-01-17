@@ -1,0 +1,4 @@
+Name=Speaker
+AssetType=Object
+AudioType=Speaker
+Model=speaker_small.glb
