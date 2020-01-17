@@ -29,4 +29,6 @@ private:
 
 	std::unique_ptr<class SystemInterface> inputSystem;
 	std::unique_ptr<class SystemInterface> graphicsSystem;
+
+	std::unique_ptr<class AssetManager> assetManager;
 };

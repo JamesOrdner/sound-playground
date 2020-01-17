@@ -201,6 +201,7 @@
     <ClCompile Include="src\Input\InputObject.cpp" />
     <ClCompile Include="src\Input\InputScene.cpp" />
     <ClCompile Include="src\Input\InputSystem.cpp" />
+    <ClCompile Include="src\Managers\AssetManager.cpp" />
     <ClCompile Include="src\Managers\EnvironmentManager.cpp" />
     <ClCompile Include="src\Managers\StateManager.cpp" />
     <ClCompile Include="src\Graphics\GMesh.cpp" />
@@ -245,6 +246,7 @@
     <ClInclude Include="src\Input\InputObject.h" />
     <ClInclude Include="src\Input\InputScene.h" />
     <ClInclude Include="src\Input\InputSystem.h" />
+    <ClInclude Include="src\Managers\AssetManager.h" />
     <ClInclude Include="src\Managers\EnvironmentManager.h" />
     <ClInclude Include="src\Managers\StateManager.h" />
     <ClInclude Include="src\Graphics\GMesh.h" />

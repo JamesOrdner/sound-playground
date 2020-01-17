@@ -2,6 +2,7 @@
 #include "UScene.h"
 #include "SystemInterface.h"
 #include "../Managers/StateManager.h"
+#include "../Managers/AssetManager.h"
 #include "../Managers/EnvironmentManager.h"
 #include <SDL.h>
 
@@ -46,6 +47,9 @@ bool Engine::init()
 		return false;
 	}
 
+	assetManager = std::make_unique<AssetManager>();
+	assetManager->load();
+
 	setupInitialScene();
 
 	bInitialized = true;
@@ -72,24 +76,23 @@ void Engine::setupInitialScene()
 	auto* inputScene = inputSystem->createSystemScene<InputScene>(uscene);
 	auto* graphicsScene = graphicsSystem->createSystemScene<GraphicsScene>(uscene);
 
-	auto* uspeaker = uscene->createUniversalObject();
-	auto* graphicsObject = graphicsScene->createSystemObject<MeshGraphicsObject>(uspeaker);
-	graphicsObject->setMesh("res/speaker_small.glb");
-
 	auto* ucamera = uscene->createUniversalObject();
 	auto* inputObject = inputScene->createSystemObject<CameraInputObject>(ucamera);
 	auto* camGraphicsObject = graphicsScene->createSystemObject<CameraGraphicsObject>(ucamera);
 	graphicsScene->activeCamera = camGraphicsObject;
 
-	for (int x = -2; x <= 2; x++) {
-		for (int z = -1; z <= 2; z++) {
-			auto* p = uscene->createUniversalObject();
-			auto* pGraphicsObject = graphicsScene->createSystemObject<MeshGraphicsObject>(p);
-			pGraphicsObject->setMesh("res/platform.glb");
-			StateManager::instance().event(
-				p,
-				EventType::PositionUpdated,
-				mat::vec3 { static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
+	AssetDescriptor asset;
+	if (assetManager->descriptor("Platform", asset)) {
+		for (int x = -2; x <= 2; x++) {
+			for (int z = -1; z <= 2; z++) {
+				auto* uplatform = uscene->createUniversalObject();
+				auto* pGraphicsObject = graphicsScene->createSystemObject<MeshGraphicsObject>(uplatform);
+				pGraphicsObject->setMesh(asset.modelPath);
+				StateManager::instance().event(
+					uplatform,
+					EventType::PositionUpdated,
+					mat::vec3 { static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
+			}
 		}
 	}
 }
