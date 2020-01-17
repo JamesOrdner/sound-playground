@@ -48,7 +48,7 @@ bool Engine::init()
 	}
 
 	assetManager = std::make_unique<AssetManager>();
-	assetManager->load();
+	assetManager->loadAssets();
 
 	setupInitialScene();
 

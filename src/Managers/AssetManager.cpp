@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <regex>
 
-void AssetManager::load()
+void AssetManager::loadAssets()
 {
 	namespace fs = std::filesystem;
 	for (auto& file : fs::directory_iterator("res/assets")) {
@@ -62,7 +62,7 @@ bool AssetManager::parseLine(const std::string& line, AssetDescriptor& descripto
 	return false;
 }
 
-bool AssetManager::assetID(const std::string& name, AssetID& id)
+bool AssetManager::assetID(const std::string& name, AssetID& id) const
 {
 	for (id = 0; id < assets.size(); id++) {
 		if (assets[id].name == name) return true;
@@ -70,7 +70,7 @@ bool AssetManager::assetID(const std::string& name, AssetID& id)
 	return false;
 }
 
-bool AssetManager::descriptor(const std::string& name, AssetDescriptor& descriptor)
+bool AssetManager::descriptor(const std::string& name, AssetDescriptor& descriptor) const
 {
 	for (size_t i = 0; i < assets.size(); i++) {
 		if (assets[i].name == name) {
@@ -81,7 +81,7 @@ bool AssetManager::descriptor(const std::string& name, AssetDescriptor& descript
 	return false;
 }
 
-bool AssetManager::descriptor(AssetID id, AssetDescriptor& descriptor)
+bool AssetManager::descriptor(AssetID id, AssetDescriptor& descriptor) const
 {
 	if (id < assets.size()) {
 		descriptor = assets[id];

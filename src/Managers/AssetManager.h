@@ -32,16 +32,16 @@ class AssetManager
 public:
 
 	// Load all assets from the filesystem
-	void load();
+	void loadAssets();
 
 	// Assigns `id` based on the asset's name (assigns first if multiple found). Returns success.
-	bool assetID(const std::string& name, AssetID& id);
+	bool assetID(const std::string& name, AssetID& id) const;
 
-	// Assigns an asset's descriptor from its name. Returns success
-	bool descriptor(const std::string& name, AssetDescriptor& descriptor);
+	// Assigns `descriptor` from an asset name. Returns success.
+	bool descriptor(const std::string& name, AssetDescriptor& descriptor) const;
 
-	// Assigns an asset's descriptor from its AssetID. Returns success
-	bool descriptor(AssetID id, AssetDescriptor& descriptor);
+	// Assigns `descriptor` from an AssetID. Returns success.
+	bool descriptor(AssetID id, AssetDescriptor& descriptor) const;
 
 private:
 
