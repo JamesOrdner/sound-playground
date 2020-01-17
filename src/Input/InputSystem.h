@@ -18,9 +18,11 @@ public:
 
 	void execute(float deltaTime) override;
 
+	SystemSceneInterface* createSystemScene(const class UScene* uscene) override;
+
+	SystemSceneInterface* findSystemScene(const class UScene* uscene) override;
+
 private:
 
 	std::list<std::unique_ptr<class InputScene>> inputScenes;
-
-	SystemSceneInterface* addSystemScene(SystemSceneInterface* scene, const UScene* uscene) override;
 };

@@ -1,11 +1,6 @@
 #pragma once
 
 #include <memory>
-
-// Forward declarations
-class UScene;
-class SystemSceneInterface;
-
 class SystemInterface
 {
 public:
@@ -22,13 +17,8 @@ public:
 	virtual void execute(float deltaTime) = 0;
 
 	// Create a system scene and associate it with this system
-	template<class T>
-	T* createSystemScene(const UScene* uscene) {
-		return static_cast<T*>(addSystemScene(new T, uscene));
-	};
+	virtual class SystemSceneInterface* createSystemScene(const class UScene* uscene) = 0;
 
-private:
-
-	// Take ownership of newly-created SystemSceneInterface object
-	virtual SystemSceneInterface* addSystemScene(SystemSceneInterface* scene, const UScene* uscene) = 0;
+	// Return the system scene associated with this UScene
+	virtual class SystemSceneInterface* findSystemScene(const class UScene* uscene) = 0;
 };

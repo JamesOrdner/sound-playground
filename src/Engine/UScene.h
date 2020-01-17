@@ -9,6 +9,8 @@ class UScene : public ObserverInterface
 {
 public:
 
+	UScene(const class Engine* engine);
+
 	~UScene();
 
 	// Create a UObject and associate it with this scene
@@ -16,7 +18,7 @@ public:
 
 private:
 
-	std::list<std::unique_ptr<class UObject>> objects;
+	const class Engine* const engine;
 
-	std::vector<class SystemSceneInterface*> systemScenes;
+	std::list<std::unique_ptr<class UObject>> uobjects;
 };

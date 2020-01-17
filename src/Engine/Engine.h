@@ -18,6 +18,9 @@ public:
 	// Main runloop, returns on user exit
 	void run();
 
+	// Return a pointer to the Loader's public interface
+	const class LoaderInterface* loader() const;
+
 private:
 
 	void setupInitialScene();
@@ -31,4 +34,5 @@ private:
 	std::unique_ptr<class SystemInterface> graphicsSystem;
 
 	std::unique_ptr<class AssetManager> assetManager;
+	std::unique_ptr<class Loader> assetLoader;
 };

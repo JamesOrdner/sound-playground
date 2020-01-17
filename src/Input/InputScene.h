@@ -9,6 +9,8 @@ class InputScene : public SystemSceneInterface
 {
 public:
 
+	InputScene(const class UScene* uscene);
+
 	~InputScene();
 
 	void handleEvent(const SDL_Event& sdlEvent);

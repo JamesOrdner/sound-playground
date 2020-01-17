@@ -61,8 +61,15 @@ void GraphicsSystem::execute(float deltaTime)
 	render->swap(window);
 }
 
-SystemSceneInterface* GraphicsSystem::addSystemScene(SystemSceneInterface* scene, const UScene* uscene)
+SystemSceneInterface* GraphicsSystem::createSystemScene(const class UScene* uscene)
 {
-	graphicsScenes.emplace_back(static_cast<GraphicsScene*>(scene));
-	return scene;
+	return graphicsScenes.emplace_back(std::make_unique<GraphicsScene>(uscene)).get();
+}
+
+SystemSceneInterface* GraphicsSystem::findSystemScene(const UScene* uscene)
+{
+	for (const auto& scene : graphicsScenes) {
+		if (scene->uscene == uscene) return scene.get();
+	}
+	return nullptr;
 }

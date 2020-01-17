@@ -7,13 +7,6 @@ class UObject : public SubjectInterface
 {
 public:
 
-	typedef UObject* (*UObjectFactory)();
-
-	template<typename T>
-	static UObject* createObject()
-	{
-		return new T;
-	}
-
-	virtual ~UObject();
+	UObject();
+	
 };

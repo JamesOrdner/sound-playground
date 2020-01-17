@@ -1,6 +1,11 @@
 #include "InputScene.h"
 #include "InputObject.h"
 
+InputScene::InputScene(const UScene* uscene) :
+	SystemSceneInterface(uscene)
+{
+}
+
 InputScene::~InputScene()
 {
 }

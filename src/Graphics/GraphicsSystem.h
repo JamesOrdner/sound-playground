@@ -18,6 +18,10 @@ public:
 
 	void execute(float deltaTime) override;
 
+	SystemSceneInterface* createSystemScene(const class UScene* uscene) override;
+
+	SystemSceneInterface* findSystemScene(const class UScene* uscene) override;
+
 private:
 
 	struct SDL_Window* window;
@@ -25,6 +29,4 @@ private:
 	std::unique_ptr<class Render> render;
 
 	std::list<std::unique_ptr<class GraphicsScene>> graphicsScenes;
-
-	SystemSceneInterface* addSystemScene(SystemSceneInterface* scene, const UScene* uscene) override;
 };

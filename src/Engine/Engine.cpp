@@ -1,5 +1,6 @@
 #include "Engine.h"
 #include "UScene.h"
+#include "Loader.h"
 #include "SystemInterface.h"
 #include "../Managers/StateManager.h"
 #include "../Managers/AssetManager.h"
@@ -50,6 +51,11 @@ bool Engine::init()
 	assetManager = std::make_unique<AssetManager>();
 	assetManager->loadAssets();
 
+	assetLoader = std::make_unique<Loader>(
+		assetManager.get(),
+		inputSystem.get(),
+		graphicsSystem.get());
+
 	setupInitialScene();
 
 	bInitialized = true;
@@ -62,6 +68,9 @@ void Engine::deinit()
 	bInitialized = false;
 	scenes.clear();
 
+	assetLoader.reset();
+	assetManager.reset();
+
 	if (graphicsSystem) graphicsSystem->deinit();
 	if (inputSystem) inputSystem->deinit();
 	graphicsSystem.reset();
@@ -72,22 +81,17 @@ void Engine::deinit()
 
 void Engine::setupInitialScene()
 {
-	auto* uscene = scenes.emplace_back(std::make_unique<UScene>()).get();
-	auto* inputScene = inputSystem->createSystemScene<InputScene>(uscene);
-	auto* graphicsScene = graphicsSystem->createSystemScene<GraphicsScene>(uscene);
+	auto* uscene = scenes.emplace_back(std::make_unique<UScene>(this)).get();
+	auto* inputScene = inputSystem->createSystemScene(uscene);
+	auto* graphicsScene = graphicsSystem->createSystemScene(uscene);
 
-	auto* ucamera = uscene->createUniversalObject();
-	auto* inputObject = inputScene->createSystemObject<CameraInputObject>(ucamera);
-	auto* camGraphicsObject = graphicsScene->createSystemObject<CameraGraphicsObject>(ucamera);
-	graphicsScene->activeCamera = camGraphicsObject;
+	assetLoader->createDefaultCamera(uscene);
 
 	AssetDescriptor asset;
 	if (assetManager->descriptor("Platform", asset)) {
 		for (int x = -2; x <= 2; x++) {
 			for (int z = -1; z <= 2; z++) {
-				auto* uplatform = uscene->createUniversalObject();
-				auto* pGraphicsObject = graphicsScene->createSystemObject<MeshGraphicsObject>(uplatform);
-				pGraphicsObject->setMesh(asset.modelPath);
+				auto* uplatform = assetLoader->createObjectFromAsset(asset, uscene);
 				uplatform->event(
 					EventType::PositionUpdated,
 					mat::vec3 { static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
@@ -122,4 +126,9 @@ void Engine::run()
 		graphicsSystem->execute(deltaTime);
 
 	} while (!EnvironmentManager::instance().bQuitRequested);
+}
+
+const LoaderInterface* Engine::loader() const
+{
+	return assetLoader.get();
 }

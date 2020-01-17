@@ -1,6 +1,13 @@
 #include "UScene.h"
 #include "UObject.h"
+#include "Engine.h"
+#include "LoaderInterface.h"
 #include "../Managers/AssetTypes.h"
+
+UScene::UScene(const Engine* engine) :
+	engine(engine)
+{
+}
 
 UScene::~UScene()
 {
@@ -8,7 +15,7 @@ UScene::~UScene()
 
 UObject* UScene::createUniversalObject()
 {
-	UObject* object = objects.emplace_back(std::make_unique<UObject>()).get();
+	UObject* object = uobjects.emplace_back(std::make_unique<UObject>()).get();
 
 	// register this object to allow the object to spawn new objects
 	registerCallback(
@@ -16,7 +23,7 @@ UObject* UScene::createUniversalObject()
 		EventType::CreateObjectRequest,
 		[this](const EventData& data) {
 			AssetID id = std::get<AssetID>(data);
-			// objects.emplace_back();
+			engine->loader()->createObjectFromAsset(id, this);
 		}
 	);
 

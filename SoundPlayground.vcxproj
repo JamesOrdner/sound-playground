@@ -187,6 +187,7 @@
     <ClCompile Include="src\Audio\Components\OutputAudioComponent.cpp" />
     <ClCompile Include="src\Audio\Components\AMicrophone.cpp" />
     <ClCompile Include="src\Audio\Components\ASpeaker.cpp" />
+    <ClCompile Include="src\Engine\Loader.cpp" />
     <ClCompile Include="src\Engine\SystemInterface.cpp" />
     <ClCompile Include="src\Engine\SystemObjectInterface.cpp" />
     <ClCompile Include="src\Engine\SystemSceneInterface.cpp" />
@@ -212,7 +213,6 @@
     <ClCompile Include="src\Graphics\GTexture.cpp" />
     <ClCompile Include="src\Graphics\Render.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Objects\USpeaker.cpp" />
     <ClCompile Include="src\UI\UIComponent.cpp" />
     <ClCompile Include="src\UI\UIManager.cpp" />
     <ClCompile Include="src\UI\UIObject.cpp" />
@@ -232,6 +232,8 @@
     <ClInclude Include="src\Audio\Components\OutputAudioComponent.h" />
     <ClInclude Include="src\Audio\Components\AMicrophone.h" />
     <ClInclude Include="src\Audio\Components\ASpeaker.h" />
+    <ClInclude Include="src\Engine\Loader.h" />
+    <ClInclude Include="src\Engine\LoaderInterface.h" />
     <ClInclude Include="src\Engine\SystemInterface.h" />
     <ClInclude Include="src\Engine\SystemObjectInterface.h" />
     <ClInclude Include="src\Engine\SystemSceneInterface.h" />
@@ -255,7 +257,6 @@
     <ClInclude Include="src\engine\Engine.h" />
     <ClInclude Include="src\Graphics\GProgram.h" />
     <ClInclude Include="src\Graphics\GTexture.h" />
-    <ClInclude Include="src\Objects\USpeaker.h" />
     <ClInclude Include="src\Util\Matrix.h" />
     <ClInclude Include="src\Graphics\Render.h" />
     <ClInclude Include="src\UI\UIComponent.h" />
