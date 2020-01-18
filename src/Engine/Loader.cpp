@@ -1,5 +1,6 @@
 #include "Loader.h"
 #include "UScene.h"
+#include "UObject.h"
 
 #include "../Managers/AssetManager.h"
 #include "../Managers/ServiceManager.h"
@@ -19,7 +20,8 @@
 
 Loader::Loader() :
 	inputSystem(nullptr),
-	graphicsSystem(nullptr)
+	graphicsSystem(nullptr),
+	physicsSystem(nullptr)
 {
 }
 
@@ -42,6 +44,7 @@ Loader::SystemsWrapper Loader::createSystems()
 	// save pointers for use inside Loader
 	inputSystem = input.get();
 	graphicsSystem = graphics.get();
+	physicsSystem = physics.get();
 
 	// return all system interfaces
 	return SystemsWrapper{
@@ -49,6 +52,27 @@ Loader::SystemsWrapper Loader::createSystems()
 	std::move(graphics),
 	std::move(physics)
 	};
+}
+
+void Loader::loadDefaultScene(UScene* uscene)
+{
+	inputSystem->createSystemScene(uscene);
+	graphicsSystem->createSystemScene(uscene);
+	physicsSystem->createSystemScene(uscene);
+
+	createDefaultCamera(uscene);
+
+	AssetDescriptor asset;
+	if (AssetManager::instance().descriptor("Platform", asset)) {
+		for (int x = -2; x <= 2; x++) {
+			for (int z = -1; z <= 2; z++) {
+				auto* uplatform = createObjectFromAsset(asset, uscene);
+				uplatform->event(
+					EventType::PositionUpdated,
+					mat::vec3 { static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
+			}
+		}
+	}
 }
 
 UObject* Loader::createDefaultCamera(UScene* uscene)

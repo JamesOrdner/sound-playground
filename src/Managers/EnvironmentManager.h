@@ -1,10 +1,12 @@
 #pragma once
 
+#include <atomic>
+
 class EnvironmentManager
 {
 public:
 
-	bool bQuitRequested;
+	std::atomic<bool> bQuitRequested;
 
 private:
 

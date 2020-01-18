@@ -2,14 +2,9 @@
 #include "UScene.h"
 #include "Loader.h"
 #include "../Systems/SystemInterface.h"
-#include "../Managers/ServiceManager.h"
 #include "../Managers/StateManager.h"
-#include "../Managers/AssetManager.h"
 #include "../Managers/EnvironmentManager.h"
 #include <SDL.h>
-
-// Temporary dependencies
-#include "UObject.h"
 
 Engine::Engine() :
 	bInitialized(false)
@@ -81,22 +76,7 @@ void Engine::deinit()
 void Engine::setupInitialScene()
 {
 	auto* uscene = scenes.emplace_back(std::make_unique<UScene>(this)).get();
-	auto* inputScene = inputSystem->createSystemScene(uscene);
-	auto* graphicsScene = graphicsSystem->createSystemScene(uscene);
-
-	loader->createDefaultCamera(uscene);
-
-	AssetDescriptor asset;
-	if (AssetManager::instance().descriptor("Platform", asset)) {
-		for (int x = -2; x <= 2; x++) {
-			for (int z = -1; z <= 2; z++) {
-				auto* uplatform = loader->createObjectFromAsset(asset, uscene);
-				uplatform->event(
-					EventType::PositionUpdated,
-					mat::vec3 { static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
-			}
-		}
-	}
+	loader->loadDefaultScene(uscene);
 }
 
 void Engine::run()

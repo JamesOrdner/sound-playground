@@ -1,7 +1,6 @@
 #include "EnvironmentManager.h"
 
-EnvironmentManager::EnvironmentManager() :
-	bQuitRequested(false)
+EnvironmentManager::EnvironmentManager()
 {
 }
 

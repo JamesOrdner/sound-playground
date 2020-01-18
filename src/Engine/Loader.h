@@ -18,7 +18,7 @@ public:
 
 	SystemsWrapper createSystems();
 
-	class UObject* createDefaultCamera(class UScene* uscene);
+	void loadDefaultScene(class UScene* uscene);
 
 	class UObject* createObjectFromAsset(AssetID asset, class UScene* uscene) const override;
 	class UObject* createObjectFromAsset(const AssetDescriptor& asset, class UScene* uscene) const override;
@@ -27,4 +27,7 @@ private:
 
 	class SystemInterface* inputSystem;
 	class SystemInterface* graphicsSystem;
+	class SystemInterface* physicsSystem;
+
+	class UObject* createDefaultCamera(class UScene* uscene);
 };
