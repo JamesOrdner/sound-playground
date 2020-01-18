@@ -239,6 +239,7 @@
     <ClInclude Include="src\Audio\Components\ASpeaker.h" />
     <ClInclude Include="src\Engine\Loader.h" />
     <ClInclude Include="src\Engine\LoaderInterface.h" />
+    <ClInclude Include="src\Managers\AssetManagerInterface.h" />
     <ClInclude Include="src\Systems\Graphics\GraphicsSystemInterface.h" />
     <ClInclude Include="src\Systems\Physics\PhysicsMesh.h" />
     <ClInclude Include="src\Systems\SystemInterface.h" />

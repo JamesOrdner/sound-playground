@@ -1,20 +1,17 @@
 #pragma once
 
-#include "AssetTypes.h"
+#include "AssetManagerInterface.h"
 #include <vector>
 
-class AssetManager
+class AssetManager : public AssetManagerInterface
 {
 public:
 
-	// Assigns `id` based on the asset's name (assigns first if multiple found). Returns success.
-	bool assetID(const std::string& name, AssetID& id) const;
+	// AssetManagerInterface
 
-	// Assigns `descriptor` from an asset name. Returns success.
-	bool descriptor(const std::string& name, AssetDescriptor& descriptor) const;
-
-	// Assigns `descriptor` from an AssetID. Returns success.
-	bool descriptor(AssetID id, AssetDescriptor& descriptor) const;
+	bool assetID(const std::string& name, AssetID& id) const override;
+	bool descriptor(const std::string& name, AssetDescriptor& descriptor) const override;
+	bool descriptor(AssetID id, AssetDescriptor& descriptor) const override;
 
 private:
 

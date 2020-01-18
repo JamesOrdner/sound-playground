@@ -8,6 +8,7 @@ public:
 
 	virtual ~SystemInterface();
 
+	class AssetManagerInterface* assetManager;
 	class ServiceManagerInterface* serviceManager;
 
 	// Initialize the system

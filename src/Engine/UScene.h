@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-class UScene : public ObserverInterface
+class UScene : public ObserverInterface, public SubjectInterface
 {
 public:
 
