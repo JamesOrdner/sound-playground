@@ -8,7 +8,7 @@
 
 enum class EventType
 {
-	CreateObjectRequest, // EventData type: AssetID
+	CreateObjectRequest, // EventData type: CreateObjectRequestData
 	PositionUpdated,     // EventData type: mat::vec3
 	VelocityUpdated,     // EventData type: mat::vec3
 	RotationUpdated,     // EventData type: mat::vec3
@@ -16,9 +16,18 @@ enum class EventType
 	SelectionUpdated,    // EventData type: bool
 };
 
+// If not nullptr, this function will be called immediately after the UObject is created
+typedef void(*CreateObjectCallback)(class UObject*);
+
+struct CreateObjectRequestData
+{
+	AssetID assetID;
+	CreateObjectCallback callback;
+};
+
 // This variant includes all possible event callback data types. As event data for all event
 // types will have enough memory allocated to store the largest type, these should be small
-typedef std::variant<bool, mat::vec3, AssetID> EventData;
+typedef std::variant<bool, mat::vec3, CreateObjectRequestData> EventData;
 
 class ObserverInterface
 {
