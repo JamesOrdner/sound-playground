@@ -24,7 +24,7 @@ private:
 
 	std::unique_ptr<class UIManager> uiManager;
 
-	std::vector<class InputObject*> selectedObjects;
+	std::vector<const class UObject*> selectedObjects;
 
 	bool bPlacingSelectedObjects;
 

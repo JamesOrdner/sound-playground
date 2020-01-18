@@ -73,3 +73,15 @@ SystemSceneInterface* GraphicsSystem::findSystemScene(const UScene* uscene)
 	}
 	return nullptr;
 }
+
+void GraphicsSystem::screenDimensions(int& x, int& y) const
+{
+	x = 1280;
+	y = 720;
+}
+
+const mat::mat4& GraphicsSystem::screenToWorldTransform(const UScene* uscene) const
+{
+	// TODO: lookup per scene
+	return render->screenToWorldMatrix();
+}

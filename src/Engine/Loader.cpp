@@ -35,6 +35,7 @@ Loader::SystemsWrapper Loader::createSystems()
 
 	// register system services with ServiceManager
 	auto& serviceManager = ServiceManager::instance();
+	serviceManager.graphicsSystem = graphics.get();
 	serviceManager.physicsSystem = physics.get();
 
 	// register manager interfaces with systems

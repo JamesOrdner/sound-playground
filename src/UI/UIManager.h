@@ -13,7 +13,7 @@ struct UIManagerEvent
 	bool bConsumedInput;
 	
 	// Points to the object spawned by the event, or nullptr if no object spawned
-	class InputObject* spawned;
+	const class UObject* spawned;
 };
 
 // tempowary
