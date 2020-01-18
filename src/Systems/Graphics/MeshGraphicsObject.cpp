@@ -2,8 +2,8 @@
 #include "../../Engine/UObject.h"
 #include "GMesh.h"
 
-MeshGraphicsObject::MeshGraphicsObject(const UObject* uobject) :
-	GraphicsObject(uobject),
+MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const UObject* uobject) :
+	GraphicsObject(scene, uobject),
 	bDirtyTransform(true),
 	bDirtySelection(true),
 	mesh(nullptr),

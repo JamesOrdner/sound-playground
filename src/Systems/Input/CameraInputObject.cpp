@@ -1,8 +1,8 @@
 #include "CameraInputObject.h"
 #include "../../Engine/UObject.h"
 
-CameraInputObject::CameraInputObject(const UObject* uobject) :
-	InputObject(uobject),
+CameraInputObject::CameraInputObject(const class SystemSceneInterface* scene, const UObject* uobject) :
+	InputObject(scene, uobject),
 	pivotDistance(5.f),
 	maxPivotDistance(10.f),
 	bOrbiting(false),

@@ -1,7 +1,7 @@
 #include "InputObject.h"
 
-InputObject::InputObject(const UObject* uobject) :
-	SystemObjectInterface(uobject)
+InputObject::InputObject(const SystemSceneInterface* scene, const UObject* uobject) :
+	SystemObjectInterface(scene, uobject)
 {
 }
 

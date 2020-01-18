@@ -7,7 +7,7 @@ class CameraInputObject : public InputObject
 {
 public:
 
-	CameraInputObject(const class UObject* uobject);
+	CameraInputObject(const class SystemSceneInterface* scene, const class UObject* uobject);
 
 	void handleEvent(const SDL_Event& sdlEvent) override;
 

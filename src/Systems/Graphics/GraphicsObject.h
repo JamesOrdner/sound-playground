@@ -6,7 +6,7 @@ class GraphicsObject : public SystemObjectInterface
 {
 public:
 
-	GraphicsObject(const class UObject* uobject);
+	GraphicsObject(const class SystemSceneInterface* scene, const class UObject* uobject);
 
 	virtual ~GraphicsObject();
 };

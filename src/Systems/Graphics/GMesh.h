@@ -7,13 +7,6 @@
 #include <memory>
 #include <list>
 
-// Forward declarations
-namespace tinygltf
-{
-	struct Model;
-	struct Node;
-}
-
 class GMesh
 {
 public:
@@ -44,9 +37,6 @@ public:
 	// Called from the main render loop, draws all models using this mesh
 	void draw();
 
-	// Returns the ray mesh buffer.
-	const std::vector<mat::vec3>& getRayMesh();
-
 private:
 
 	// Stores pointers to all loaded meshes, indexed by path
@@ -60,14 +50,8 @@ private:
 		void* drawByteOffset;
 	};
 
-	// Load the simplified mesh used for raycasting
-	void loadRayMesh(const tinygltf::Model& model, const tinygltf::Node& node);
-
 	// An ordered list of pointers to all GraphicsObjects sharing this mesh
 	std::list<class MeshGraphicsObject*> registeredObjects;
-
-	// The raycasting mesh. Each three vertices forms a triangle.
-	std::vector<mat::vec3> rayMeshBuffer;
 
 	/** OpenGL */
 

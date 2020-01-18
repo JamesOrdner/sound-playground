@@ -1,8 +1,8 @@
 #include "CameraGraphicsObject.h"
 #include "../../Engine/UObject.h"
 
-CameraGraphicsObject::CameraGraphicsObject(const UObject* uobject) :
-	GraphicsObject(uobject)
+CameraGraphicsObject::CameraGraphicsObject(const SystemSceneInterface* scene, const UObject* uobject) :
+	GraphicsObject(scene, uobject)
 {
 	registerCallback(
 		uobject,

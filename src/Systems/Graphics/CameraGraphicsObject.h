@@ -8,7 +8,7 @@ class CameraGraphicsObject : public GraphicsObject, public ObserverInterface
 {
 public:
 
-	CameraGraphicsObject(const class UObject* uobject);
+	CameraGraphicsObject(const class SystemSceneInterface* scene, const class UObject* uobject);
 
 	const mat::vec3& cameraPosition() const;
 

@@ -21,7 +21,7 @@ public:
 	SystemSceneInterface* findSystemScene(const class UScene* uscene) override;
 
 	// PhysicsSystemInterface
-	class UObject* raycast(const class UScene* uscene, const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit) override;
+	const class UObject* raycast(const class UScene* uscene, const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit) const override;
 
 private:
 

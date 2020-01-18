@@ -9,7 +9,7 @@ class MeshGraphicsObject : public GraphicsObject, public ObserverInterface
 {
 public:
 
-	MeshGraphicsObject(const class UObject* uobject);
+	MeshGraphicsObject(const class SystemSceneInterface* scene, const class UObject* uobject);
 
 	~MeshGraphicsObject();
 

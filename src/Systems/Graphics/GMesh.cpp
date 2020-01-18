@@ -38,10 +38,7 @@ GMesh::GMesh(const std::string& filepath)
 	glGenBuffers(1, &vbo_selected);
 
 	for (const Node& node : model.nodes) {
-		if (node.name == "_ray") {
-			loadRayMesh(model, node);
-			continue;
-		}
+		if (node.name == "_ray") continue;
 
 		for (const Primitive& primitive : model.meshes[node.mesh].primitives) {
 			// Store render-time data for primitive
@@ -144,44 +141,6 @@ GMesh::GMesh(const std::string& filepath)
 	}
 }
 
-void GMesh::loadRayMesh(const Model& model, const Node& node)
-{
-	// There should be only one primitive
-	const Primitive& primitive = model.meshes[node.mesh].primitives[0];
-
-	// Index array buffer
-	Accessor idx_accessor = model.accessors[primitive.indices];
-	const BufferView& idx_bufferView = model.bufferViews[idx_accessor.bufferView];
-	const Buffer& idx_buffer = model.buffers[idx_bufferView.buffer];
-
-	for (auto& attrib : primitive.attributes) {
-		if (attrib.first != "POSITION") continue;
-
-		// Vertex buffer
-		const Accessor& vert_accessor = model.accessors[attrib.second];
-		const BufferView& vert_bufferView = model.bufferViews[vert_accessor.bufferView];
-		const Buffer& vert_buffer = model.buffers[vert_bufferView.buffer];
-
-		assert(primitive.mode == GL_TRIANGLES);
-		assert(idx_accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT);
-		assert(vert_accessor.type == TINYGLTF_TYPE_VEC3);
-		assert(vert_accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
-
-		rayMeshBuffer.reserve(idx_accessor.count);
-
-		int idx_stride = idx_accessor.ByteStride(idx_bufferView);
-		int vert_stride = vert_accessor.ByteStride(vert_bufferView);
-		for (size_t i = 0; i < idx_accessor.count; i++) {
-			const unsigned char* iptr = &idx_buffer.data[0] + idx_bufferView.byteOffset + idx_stride * i;
-			int v_idx = static_cast<int>(*((unsigned short*)iptr));
-			const unsigned char* vptr = &vert_buffer.data[0] + vert_bufferView.byteOffset + vert_stride * v_idx;
-			rayMeshBuffer.push_back(mat::vec3((float*)vptr));
-		}
-
-		return;
-	}
-}
-
 GMesh::~GMesh()
 {
 	glDeleteBuffers(1, &vbo_selected);
@@ -191,7 +150,8 @@ GMesh::~GMesh()
 	}
 }
 
-std::map<std::string, std::unique_ptr<GMesh>> GMesh::meshes = std::map<std::string, std::unique_ptr<GMesh>>();
+// Define static variable
+std::map<std::string, std::unique_ptr<GMesh>> GMesh::meshes;
 
 GMesh* GMesh::getSharedMesh(const std::string& filepath)
 {
@@ -268,9 +228,4 @@ void GMesh::draw()
 			static_cast<GLsizei>(registeredObjects.size()));
 	}
 	glBindVertexArray(0);
-}
-
-const std::vector<mat::vec3>& GMesh::getRayMesh()
-{
-	return rayMeshBuffer;
 }

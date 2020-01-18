@@ -1,7 +1,7 @@
 #include "GraphicsObject.h"
 
-GraphicsObject::GraphicsObject(const UObject* uobject) :
-	SystemObjectInterface(uobject)
+GraphicsObject::GraphicsObject(const SystemSceneInterface* scene, const UObject* uobject) :
+	SystemObjectInterface(scene, uobject)
 {
 }
 

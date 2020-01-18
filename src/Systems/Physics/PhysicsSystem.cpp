@@ -37,7 +37,7 @@ SystemSceneInterface* PhysicsSystem::findSystemScene(const UScene* uscene)
 	return nullptr;
 }
 
-UObject* PhysicsSystem::raycast(const UScene* uscene, const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit)
+const UObject* PhysicsSystem::raycast(const UScene* uscene, const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit) const
 {
 	for (const auto& scene : physicsScenes) {
 		if (scene->uscene == uscene) {

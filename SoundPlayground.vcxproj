@@ -188,6 +188,7 @@
     <ClCompile Include="src\Audio\Components\AMicrophone.cpp" />
     <ClCompile Include="src\Audio\Components\ASpeaker.cpp" />
     <ClCompile Include="src\Engine\Loader.cpp" />
+    <ClCompile Include="src\Systems\Physics\PhysicsMesh.cpp" />
     <ClCompile Include="src\Systems\SystemInterface.cpp" />
     <ClCompile Include="src\Systems\SystemObjectInterface.cpp" />
     <ClCompile Include="src\Systems\SystemSceneInterface.cpp" />
@@ -238,6 +239,7 @@
     <ClInclude Include="src\Audio\Components\ASpeaker.h" />
     <ClInclude Include="src\Engine\Loader.h" />
     <ClInclude Include="src\Engine\LoaderInterface.h" />
+    <ClInclude Include="src\Systems\Physics\PhysicsMesh.h" />
     <ClInclude Include="src\Systems\SystemInterface.h" />
     <ClInclude Include="src\Systems\SystemObjectInterface.h" />
     <ClInclude Include="src\Systems\SystemSceneInterface.h" />

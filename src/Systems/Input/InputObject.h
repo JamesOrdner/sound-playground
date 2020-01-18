@@ -7,7 +7,7 @@ class InputObject : public SystemObjectInterface
 {
 public:
 
-	InputObject(const class UObject* uobject);
+	InputObject(const class SystemSceneInterface* scene, const class UObject* uobject);
 
 	virtual ~InputObject();
 

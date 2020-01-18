@@ -13,7 +13,7 @@ public:
 
 	~PhysicsScene();
 
-	class UObject* raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit);
+	const class UObject* raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit) const;
 
 private:
 

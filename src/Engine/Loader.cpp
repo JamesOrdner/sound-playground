@@ -17,6 +17,7 @@
 #include "../Systems/Graphics/MeshGraphicsObject.h"
 
 #include "../Systems/Physics/PhysicsSystem.h"
+#include "../Systems/Physics/PhysicsObject.h"
 
 Loader::Loader() :
 	inputSystem(nullptr),
@@ -98,13 +99,15 @@ UObject* Loader::createObjectFromAsset(AssetID asset, UScene* uscene) const
 
 UObject* Loader::createObjectFromAsset(const AssetDescriptor& asset, UScene* uscene) const
 {
-	auto* inputScene = inputSystem->findSystemScene(uscene);
 	auto* graphicsScene = graphicsSystem->findSystemScene(uscene);
+	auto* physicsScene = physicsSystem->findSystemScene(uscene);
 
 	UObject* uobject = uscene->createUniversalObject();
 	if (asset.assetType == AssetType::Object && !asset.modelPath.empty()) {
 		auto* gobj = graphicsScene->createSystemObject<MeshGraphicsObject>(uobject);
+		auto* pobj = physicsScene->createSystemObject<PhysicsObject>(uobject);
 		gobj->setMesh(asset.modelPath);
+		pobj->setPhysicsMesh(asset.modelPath);
 	}
 	return uobject;
 }
