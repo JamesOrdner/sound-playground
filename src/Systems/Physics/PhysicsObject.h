@@ -15,21 +15,28 @@ public:
 
 	void setPhysicsMesh(std::string filepath);
 
-	float raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit) const;
+	// Returns the world transform matrix of this component
+	const mat::mat4& transformMatrix();
+
+	float raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit);
 
 private:
 
 	// World space local location
-	mat::vec3 position;
+	mat::vec3 position, parentPosition;
 
-	// World space Euler local rotation
-	mat::vec3 rotation;
+	// World space local rotation
+	mat::vec3 rotation, parentRotation;
 
 	// World space local scale
-	mat::vec3 scale;
+	mat::vec3 scale, parentScale;
 
-	// Global model transform, cumulates parent transforms
+	// Global model transform, cumulates parent transforms.
+	// Note: This should never be accessed directly! It is updated lazily and may be out of date.
+	// Use transformMatrix() instead.
 	mat::mat4 transform;
+
+	bool bDirtyTransform;
 
 	// Pointer to shared physics mesh
 	class PhysicsMesh* mesh;

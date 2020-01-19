@@ -41,14 +41,15 @@ private:
 		ObserverInterface::ObserverCallback callback;
 		EventKey key;
 		ObserverID id;
-	};
 
+		ObserverData() : id() {}
+	};
 	std::list<ObserverData> observers;
 
-	// Queue stores pending observers which have requested unregistration
-	LFQueue<ObserverID> removeQueue;
-
 	std::map<EventKey, EventData> eventQueue;
+
+	// Stores pending observers which have requested unregistration
+	LFQueue<ObserverID> removeQueue;
 
 public:
 

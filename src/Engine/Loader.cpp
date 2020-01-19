@@ -69,7 +69,7 @@ void Loader::loadDefaultScene(UScene* uscene)
 		for (int x = -2; x <= 2; x++) {
 			for (int z = -1; z <= 2; z++) {
 				auto* uplatform = createObjectFromAsset(asset, uscene);
-				uplatform->event(
+				uplatform->eventImmediate(
 					EventType::PositionUpdated,
 					mat::vec3 { static_cast<float>(x), 0, static_cast<float>(z) - 0.5f });
 			}

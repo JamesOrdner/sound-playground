@@ -187,7 +187,7 @@ void GMesh::reloadInstanceBuffers()
 	std::vector<mat::mat4> transforms;
 	std::vector<float> selections;
 	for (MeshGraphicsObject* gobject : registeredObjects) {
-		transforms.push_back(t(gobject->componentTransformMatrix()));
+		transforms.push_back(t(gobject->transformMatrix()));
 		selections.push_back(gobject->isSelected() ? 1.f : 0.f);
 		gobject->bDirtyTransform = false;
 		gobject->bDirtySelection = false;
@@ -203,7 +203,7 @@ void GMesh::updateInstanceData()
 	size_t i = 0;
 	for (MeshGraphicsObject* gobject : registeredObjects) {
 		if (gobject->bDirtyTransform) {
-			mat::mat4 transform = t(gobject->componentTransformMatrix());
+			mat::mat4 transform = t(gobject->transformMatrix());
 			glNamedBufferSubData(vbo_instanceTransforms, i * sizeof(mat::mat4), sizeof(mat::mat4), transform.data);
 			gobject->bDirtyTransform = false;
 		}

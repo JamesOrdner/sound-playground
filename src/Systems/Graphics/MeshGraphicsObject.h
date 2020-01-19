@@ -16,7 +16,7 @@ public:
 	void setMesh(std::string filepath);
 
 	// Returns the world transform matrix of this component
-	const mat::mat4& componentTransformMatrix() const;
+	const mat::mat4& transformMatrix();
 
 	bool isSelected() const;
 
@@ -27,16 +27,16 @@ public:
 private:
 
 	// World space local location
-	mat::vec3 position;
+	mat::vec3 position, parentPosition;
 
 	// World space local rotation
-	mat::vec3 rotation;
+	mat::vec3 rotation, parentRotation;
 
 	// World space local scale
-	mat::vec3 scale;
+	mat::vec3 scale, parentScale;
 
 	// Global model matrix. This transform cumulates parent transforms
-	mat::mat4 transformMatrix;
+	mat::mat4 transform;
 
 	// Shared mesh, storing rendering geometry
 	class GMesh* mesh;

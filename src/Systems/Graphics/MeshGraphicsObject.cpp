@@ -8,23 +8,15 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 	bDirtySelection(true),
 	mesh(nullptr),
 	scale(1),
-	transformMatrix(mat::mat4::Identity()),
+	parentScale(1),
 	bSelected(false)
 {
 	registerCallback(
 		uobject,
 		EventType::PositionUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			if (bEventFromParent) {
-				mat::vec3 absPos = position + std::get<mat::vec3>(data);
-				transformMatrix = mat::transform(absPos, rotation, scale);
-				this->uobject->childEventImmediate(EventType::PositionUpdated, absPos);
-			}
-			else {
-				position = std::get<mat::vec3>(data);
-				transformMatrix = mat::transform(position, rotation, scale);
-				this->uobject->childEventImmediate(EventType::PositionUpdated, position);
-			}
+			(bEventFromParent ? parentPosition : position) = std::get<mat::vec3>(data);
+			this->uobject->childEventImmediate(EventType::PositionUpdated, position + parentPosition);
 			bDirtyTransform = true;
 		}
 	);
@@ -33,16 +25,8 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 		uobject,
 		EventType::RotationUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			if (bEventFromParent) {
-				mat::vec3 absRot = rotation + std::get<mat::vec3>(data);
-				transformMatrix = mat::transform(position, absRot, scale);
-				this->uobject->childEventImmediate(EventType::RotationUpdated, absRot);
-			}
-			else {
-				rotation = std::get<mat::vec3>(data);
-				transformMatrix = mat::transform(position, rotation, scale);
-				this->uobject->childEventImmediate(EventType::RotationUpdated, rotation);
-			}
+			(bEventFromParent ? parentRotation : rotation) = std::get<mat::vec3>(data);
+			this->uobject->childEventImmediate(EventType::RotationUpdated, rotation + parentRotation);
 			bDirtyTransform = true;
 		}
 	);
@@ -51,16 +35,8 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 		uobject,
 		EventType::ScaleUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			if (bEventFromParent) {
-				mat::vec3 absScale = scale * std::get<mat::vec3>(data);
-				transformMatrix = mat::transform(position, rotation, absScale);
-				this->uobject->childEventImmediate(EventType::ScaleUpdated, absScale);
-			}
-			else {
-				scale = std::get<mat::vec3>(data);
-				transformMatrix = mat::transform(position, rotation, scale);
-				this->uobject->childEventImmediate(EventType::ScaleUpdated, scale);
-			}
+			(bEventFromParent ? parentScale : scale) = std::get<mat::vec3>(data);
+			this->uobject->childEventImmediate(EventType::ScaleUpdated, scale * parentScale);
 			bDirtyTransform = true;
 		}
 	);
@@ -87,9 +63,13 @@ void MeshGraphicsObject::setMesh(std::string filepath)
 	mesh->registerWithComponent(this);
 }
 
-const mat::mat4& MeshGraphicsObject::componentTransformMatrix() const
+const mat::mat4& MeshGraphicsObject::transformMatrix()
 {
-	return transformMatrix;
+	if (bDirtyTransform) {
+		transform = mat::transform(position + parentPosition, rotation + parentRotation, scale * parentScale);
+		bDirtyTransform = false;
+	}
+	return transform;
 }
 
 bool MeshGraphicsObject::isSelected() const

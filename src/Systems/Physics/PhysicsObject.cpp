@@ -5,22 +5,17 @@
 PhysicsObject::PhysicsObject(const SystemSceneInterface* scene, const UObject* uobject) :
 	SystemObjectInterface(scene, uobject),
 	scale(1),
+	parentScale(1),
+	bDirtyTransform(true),
 	mesh(nullptr)
 {
 	registerCallback(
 		uobject,
 		EventType::PositionUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			if (bEventFromParent) {
-				mat::vec3 absPos = position + std::get<mat::vec3>(data);
-				transform = mat::transform(absPos, rotation, scale);
-				this->uobject->childEventImmediate(EventType::PositionUpdated, absPos);
-			}
-			else {
-				position = std::get<mat::vec3>(data);
-				transform = mat::transform(position, rotation, scale);
-				this->uobject->childEventImmediate(EventType::PositionUpdated, position);
-			}
+			(bEventFromParent ? parentPosition : position) = std::get<mat::vec3>(data);
+			this->uobject->childEventImmediate(EventType::PositionUpdated, position + parentPosition);
+			bDirtyTransform = true;
 		}
 	);
 
@@ -28,16 +23,9 @@ PhysicsObject::PhysicsObject(const SystemSceneInterface* scene, const UObject* u
 		uobject,
 		EventType::RotationUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			if (bEventFromParent) {
-				mat::vec3 absRot = rotation + std::get<mat::vec3>(data);
-				transform = mat::transform(position, absRot, scale);
-				this->uobject->childEventImmediate(EventType::RotationUpdated, absRot);
-			}
-			else {
-				rotation = std::get<mat::vec3>(data);
-				transform = mat::transform(position, rotation, scale);
-				this->uobject->childEventImmediate(EventType::RotationUpdated, rotation);
-			}
+			(bEventFromParent ? parentRotation : rotation) = std::get<mat::vec3>(data);
+			this->uobject->childEventImmediate(EventType::RotationUpdated, rotation + parentRotation);
+			bDirtyTransform = true;
 		}
 	);
 
@@ -45,16 +33,9 @@ PhysicsObject::PhysicsObject(const SystemSceneInterface* scene, const UObject* u
 		uobject,
 		EventType::ScaleUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			if (bEventFromParent) {
-				mat::vec3 absScale = scale * std::get<mat::vec3>(data);
-				transform = mat::transform(position, rotation, absScale);
-				this->uobject->childEventImmediate(EventType::ScaleUpdated, absScale);
-			}
-			else {
-				scale = std::get<mat::vec3>(data);
-				transform = mat::transform(position, rotation, scale);
-				this->uobject->childEventImmediate(EventType::ScaleUpdated, scale);
-			}
+			(bEventFromParent ? parentScale : scale) = std::get<mat::vec3>(data);
+			this->uobject->childEventImmediate(EventType::ScaleUpdated, scale * parentScale);
+			bDirtyTransform = true;
 		}
 	);
 }
@@ -68,13 +49,22 @@ void PhysicsObject::setPhysicsMesh(std::string filepath)
 	mesh = PhysicsMesh::sharedMesh(filepath);
 }
 
-float PhysicsObject::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit) const
+const mat::mat4& PhysicsObject::transformMatrix()
+{
+	if (bDirtyTransform) {
+		transform = mat::transform(position + parentPosition, rotation + parentRotation, scale * parentScale);
+		bDirtyTransform = false;
+	}
+	return transform;
+}
+
+float PhysicsObject::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit)
 {
 	using namespace mat;
 	const std::vector<vec3>& buffer = mesh->buffer();
 
 	// model space origin/direction
-	mat4 iTransform = inverse(transform);
+	mat4 iTransform = inverse(transformMatrix());
 	vec3 originModel = vec3(iTransform * vec4(origin, 1.f));
 	vec3 dirModel = vec3(iTransform * vec4(direction, 0.f));
 
@@ -104,6 +94,6 @@ float PhysicsObject::raycast(const mat::vec3& origin, const mat::vec3& direction
 			}
 		}
 	}
-	hit = vec3(transform * vec4(hit, 1.f));
+	hit = vec3(transformMatrix() * vec4(hit, 1.f));
 	return shortest > 0 ? dist(origin, hit) : -1.f;
 }
