@@ -53,7 +53,11 @@ public:
 
 	virtual ~SubjectInterface();
 
+	// Produce an event to execute asynchronously
 	void event(EventType event, const EventData& data = EventData()) const;
+
+	// Execute an event synchronously
+	void eventImmediate(EventType event, const EventData& data) const;
 
 private:
 

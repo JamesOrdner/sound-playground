@@ -15,6 +15,15 @@ void StateManager::event(const SubjectInterface* subject, EventType event, const
 	eventQueue[EventKey(subject, event)] = data;
 }
 
+void StateManager::eventImmediate(const SubjectInterface* subject, EventType event, const EventData& data)
+{
+	for (const auto& observer : observers) {
+		if (subject == observer.subject && event == observer.event) {
+			observer.callback(data);
+		}
+	}
+}
+
 StateManager::ObserverID tempCounter = 0; // TODO: ID generator
 StateManager::ObserverID StateManager::registerObserver(
 	const SubjectInterface* subject,

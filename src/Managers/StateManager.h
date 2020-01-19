@@ -10,8 +10,11 @@ class StateManager
 {
 public:
 
-	// Called by subjects after modifying shared data
+	// Called by subjects after modifying shared data, executed asynchronously
 	void event(const SubjectInterface* subject, EventType event, const EventData& data = EventData());
+
+	// Called by subjects after modifying shared data, executed immediately
+	void eventImmediate(const SubjectInterface* subject, EventType event, const EventData& data);
 
 	typedef unsigned int ObserverID;
 
@@ -45,8 +48,6 @@ private:
 	LFQueue<ObserverID> removeQueue;
 
 	typedef std::pair<const SubjectInterface*, EventType> EventKey;
-
-	// Stores all pending events
 	std::map<EventKey, EventData> eventQueue;
 
 public:

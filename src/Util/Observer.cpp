@@ -41,3 +41,8 @@ void SubjectInterface::event(EventType event, const EventData& data) const
 {
 	StateManager::instance().event(this, event, data);
 }
+
+void SubjectInterface::eventImmediate(EventType event, const EventData& data) const
+{
+	StateManager::instance().eventImmediate(this, event, data);
+}
