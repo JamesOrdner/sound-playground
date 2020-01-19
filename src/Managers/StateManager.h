@@ -2,6 +2,8 @@
 
 #include "../Util/LFQueue.h"
 #include "../Util/Observer.h"
+#include <utility>
+#include <map>
 #include <list>
 
 class StateManager
@@ -19,21 +21,11 @@ public:
 		EventType event,
 		ObserverInterface::ObserverCallback callback);
 
-	// Register an observer that will be notified after a call to notifyAudioObservers()
-	[[nodiscard]] ObserverID registerAudioObserver(
-		const SubjectInterface* subject,
-		EventType event,
-		ObserverInterface::ObserverCallback callback);
-
 	// Unregister an observer with the given ID
 	void unregisterObserver(ObserverID id);
-	void unregisterAudioObserver(ObserverID id);
 
 	// Iterates pending events and dispatches to registered observers
 	void notifyObservers();
-
-	// Iterates pending events and dispatches to registered observers in the audio thread
-	void notifyAudioObservers();
 
 private:
 
@@ -49,26 +41,13 @@ private:
 
 	std::list<ObserverData> observers;
 
-	// Observers needing notifications on the audio thread are stored here
-	std::list<ObserverData> audioObservers;
-
-	struct NotifyQueueItem
-	{
-		EventData data;
-		const SubjectInterface* subject;
-		EventType event;
-	};
-
-	// Stores all pending events
-	LFQueue<NotifyQueueItem> eventQueue;
-
-	// As the audio thread runs on its own callback-driven thread, it requires a parallel
-	// queue that can be polled separately from the main event queue.
-	LFQueue<NotifyQueueItem> audioEventQueue;
-
 	// Queue stores pending observers which have requested unregistration
 	LFQueue<ObserverID> removeQueue;
-	LFQueue<ObserverID> audioRemoveQueue;
+
+	typedef std::pair<const SubjectInterface*, EventType> EventKey;
+
+	// Stores all pending events
+	std::map<EventKey, EventData> eventQueue;
 
 public:
 

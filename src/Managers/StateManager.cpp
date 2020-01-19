@@ -12,12 +12,7 @@ StateManager::StateManager()
 
 void StateManager::event(const SubjectInterface* subject, EventType event, const EventData& data)
 {
-	NotifyQueueItem queueItem;
-	queueItem.subject = subject;
-	queueItem.event = event;
-	queueItem.data = data;
-	eventQueue.push(queueItem);
-	// audioEventQueue.push(queueItem);
+	eventQueue[EventKey(subject, event)] = data;
 }
 
 StateManager::ObserverID tempCounter = 0; // TODO: ID generator
@@ -34,27 +29,9 @@ StateManager::ObserverID StateManager::registerObserver(
 	return observerData.id;
 }
 
-StateManager::ObserverID StateManager::registerAudioObserver(
-	const SubjectInterface* subject,
-	EventType event,
-	ObserverInterface::ObserverCallback callback)
-{
-	auto& observerData = audioObservers.emplace_back();
-	observerData.subject = subject;
-	observerData.event = event;
-	observerData.callback = callback;
-	observerData.id = tempCounter++;
-	return observerData.id;
-}
-
 void StateManager::unregisterObserver(ObserverID id)
 {
 	removeQueue.push(id);
-}
-
-void StateManager::unregisterAudioObserver(ObserverID id)
-{
-	audioRemoveQueue.push(id);
 }
 
 void StateManager::notifyObservers()
@@ -65,30 +42,12 @@ void StateManager::notifyObservers()
 		observers.remove_if([id](const ObserverData& data) { return data.id == id; });
 	}
 
-	NotifyQueueItem event;
-	while (eventQueue.pop(event)) {
+	for (const auto& event : eventQueue) {
 		for (const auto& observer : observers) {
-			if (event.subject == observer.subject && event.event == observer.event) {
-				observer.callback(event.data);
+			if (event.first.first == observer.subject && event.first.second == observer.event) {
+				observer.callback(event.second);
 			}
 		}
 	}
-}
-
-void StateManager::notifyAudioObservers()
-{
-	// Sticking this here for now, probably should go somewhere else
-	ObserverID id;
-	while (audioRemoveQueue.pop(id)) {
-		audioObservers.remove_if([id](const ObserverData& data) { return data.id == id; });
-	}
-
-	NotifyQueueItem event;
-	while (audioEventQueue.pop(event)) {
-		for (const auto& observer : audioObservers) {
-			if (event.subject == observer.subject && event.event == observer.event) {
-				observer.callback(event.data);
-			}
-		}
-	}
+	eventQueue.clear();
 }
