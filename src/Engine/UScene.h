@@ -21,4 +21,7 @@ private:
 	const class Engine* const engine;
 
 	std::list<std::unique_ptr<class UObject>> uobjects;
+
+	// SubjectInterface
+	void forwardEventImmediate(EventType event, const EventData& data) const override {};
 };

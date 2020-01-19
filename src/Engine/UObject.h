@@ -9,4 +9,10 @@ public:
 
 	UObject();
 	
+	std::vector<UObject*> subobjects;
+
+private:
+
+	// SubjectInterface
+	void forwardEventImmediate(EventType event, const EventData& data) const override;
 };

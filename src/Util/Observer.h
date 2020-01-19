@@ -37,7 +37,7 @@ public:
 
 	virtual ~ObserverInterface();
 
-	typedef std::function<void(const EventData&)> ObserverCallback;
+	typedef std::function<void(const EventData& data, bool bEventFromParent)> ObserverCallback;
 	void registerCallback(const class SubjectInterface* subject, EventType event, ObserverCallback&& callback);
 
 private:
@@ -57,7 +57,10 @@ public:
 	void event(EventType event, const EventData& data = EventData()) const;
 
 	// Execute an event synchronously
-	void eventImmediate(EventType event, const EventData& data) const;
+	void eventImmediate(EventType event, const EventData& data, bool bEventFromParent = false) const;
+
+	// Forward the event to any child SubjectInterface objects using eventImmediate()
+	virtual void forwardEventImmediate(EventType event, const EventData& data) const = 0;
 
 private:
 

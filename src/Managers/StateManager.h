@@ -14,7 +14,7 @@ public:
 	void event(const SubjectInterface* subject, EventType event, const EventData& data = EventData());
 
 	// Called by subjects after modifying shared data, executed immediately
-	void eventImmediate(const SubjectInterface* subject, EventType event, const EventData& data);
+	void eventImmediate(const SubjectInterface* subject, EventType event, const EventData& data, bool bEventFromParent = false);
 
 	typedef unsigned int ObserverID;
 

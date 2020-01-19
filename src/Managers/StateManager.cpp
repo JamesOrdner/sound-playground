@@ -15,11 +15,12 @@ void StateManager::event(const SubjectInterface* subject, EventType event, const
 	eventQueue[EventKey(subject, event)] = data;
 }
 
-void StateManager::eventImmediate(const SubjectInterface* subject, EventType event, const EventData& data)
+void StateManager::eventImmediate(const SubjectInterface* subject, EventType event, const EventData& data, bool bEventFromParent)
 {
 	for (const auto& observer : observers) {
 		if (subject == observer.subject && event == observer.event) {
-			observer.callback(data);
+			observer.callback(data, bEventFromParent);
+			observer.subject->forwardEventImmediate(event, data);
 		}
 	}
 }
@@ -54,7 +55,8 @@ void StateManager::notifyObservers()
 	for (const auto& event : eventQueue) {
 		for (const auto& observer : observers) {
 			if (event.first.first == observer.subject && event.first.second == observer.event) {
-				observer.callback(event.second);
+				observer.callback(event.second, false);
+				observer.subject->forwardEventImmediate(observer.event, event.second);
 			}
 		}
 	}

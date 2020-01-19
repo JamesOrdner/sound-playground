@@ -7,7 +7,7 @@ CameraGraphicsObject::CameraGraphicsObject(const SystemSceneInterface* scene, co
 	registerCallback(
 		uobject,
 		EventType::PositionUpdated,
-		[this](const EventData& data) {
+		[this](const EventData& data, bool bEventFromParent) {
 			position = std::get<mat::vec3>(data);
 		}
 	);
@@ -15,7 +15,7 @@ CameraGraphicsObject::CameraGraphicsObject(const SystemSceneInterface* scene, co
 	registerCallback(
 		uobject,
 		EventType::RotationUpdated,
-		[this](const EventData& data) {
+		[this](const EventData& data, bool bEventFromParent) {
 			rotation = std::get<mat::vec3>(data);
 		}
 	);

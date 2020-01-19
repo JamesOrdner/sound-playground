@@ -10,7 +10,7 @@ PhysicsObject::PhysicsObject(const SystemSceneInterface* scene, const UObject* u
 	registerCallback(
 		uobject,
 		EventType::PositionUpdated,
-		[this](const EventData& data) {
+		[this](const EventData& data, bool bEventFromParent) {
 			position = std::get<mat::vec3>(data);
 			transform = mat::transform(position, rotation, scale);
 		}
@@ -19,7 +19,7 @@ PhysicsObject::PhysicsObject(const SystemSceneInterface* scene, const UObject* u
 	registerCallback(
 		uobject,
 		EventType::RotationUpdated,
-		[this](const EventData& data) {
+		[this](const EventData& data, bool bEventFromParent) {
 			rotation = std::get<mat::vec3>(data);
 			transform = mat::transform(position, rotation, scale);
 		}
@@ -28,7 +28,7 @@ PhysicsObject::PhysicsObject(const SystemSceneInterface* scene, const UObject* u
 	registerCallback(
 		uobject,
 		EventType::ScaleUpdated,
-		[this](const EventData& data) {
+		[this](const EventData& data, bool bEventFromParent) {
 			scale = std::get<mat::vec3>(data);
 			transform = mat::transform(position, rotation, scale);
 		}

@@ -9,7 +9,7 @@ UScene::UScene(const Engine* engine) :
 	registerCallback(
 		this,
 		EventType::CreateObjectRequest,
-		[this](const EventData& data) {
+		[this](const EventData& data, bool bEventFromParent) {
 			auto createObjectRequest = std::get<CreateObjectRequestData>(data);
 			auto* uobject = this->engine->loaderInterface()->createObjectFromAsset(createObjectRequest.assetID, this);
 			if (createObjectRequest.callback) createObjectRequest.callback(uobject);

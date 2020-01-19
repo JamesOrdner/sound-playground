@@ -14,7 +14,7 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 	registerCallback(
 		uobject,
 		EventType::PositionUpdated,
-		[this](const EventData& data) {
+		[this](const EventData& data, bool bEventFromParent) {
 			position = std::get<mat::vec3>(data);
 			transformMatrix = mat::transform(position, rotation, scale);
 			bDirtyTransform = true;
@@ -24,7 +24,7 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 	registerCallback(
 		uobject,
 		EventType::RotationUpdated,
-		[this](const EventData& data) {
+		[this](const EventData& data, bool bEventFromParent) {
 			rotation = std::get<mat::vec3>(data);
 			transformMatrix = mat::transform(position, rotation, scale);
 			bDirtyTransform = true;
@@ -34,7 +34,7 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 	registerCallback(
 		uobject,
 		EventType::ScaleUpdated,
-		[this](const EventData& data) {
+		[this](const EventData& data, bool bEventFromParent) {
 			scale = std::get<mat::vec3>(data);
 			transformMatrix = mat::transform(position, rotation, scale);
 			bDirtyTransform = true;
@@ -44,7 +44,7 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 	registerCallback(
 		uobject,
 		EventType::SelectionUpdated,
-		[this](const EventData& data) {
+		[this](const EventData& data, bool bEventFromParent) {
 			bSelected = std::get<bool>(data);
 			bDirtySelection = true;
 		}
