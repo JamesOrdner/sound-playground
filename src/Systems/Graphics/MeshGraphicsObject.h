@@ -26,16 +26,16 @@ public:
 
 private:
 
-	// World space location
+	// World space local location
 	mat::vec3 position;
 
-	// World space Euler rotation
+	// World space local rotation
 	mat::vec3 rotation;
 
-	// World space scale
+	// World space local scale
 	mat::vec3 scale;
 
-	// Model matrix
+	// Global model matrix. This transform cumulates parent transforms
 	mat::mat4 transformMatrix;
 
 	// Shared mesh, storing rendering geometry

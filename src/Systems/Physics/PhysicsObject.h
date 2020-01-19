@@ -19,16 +19,16 @@ public:
 
 private:
 
-	// World space location
+	// World space local location
 	mat::vec3 position;
 
-	// World space Euler rotation
+	// World space Euler local rotation
 	mat::vec3 rotation;
 
-	// World space scale
+	// World space local scale
 	mat::vec3 scale;
 
-	// Model transform
+	// Global model transform, cumulates parent transforms
 	mat::mat4 transform;
 
 	// Pointer to shared physics mesh

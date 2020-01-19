@@ -11,8 +11,6 @@ public:
 	
 	std::vector<UObject*> subobjects;
 
-private:
-
-	// SubjectInterface
-	void forwardEventImmediate(EventType event, const EventData& data) const override;
+	// Synchronously execute an event on all subobjects
+	void childEventImmediate(EventType event, const EventData& data) const;
 };

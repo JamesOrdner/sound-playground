@@ -15,8 +15,16 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 		uobject,
 		EventType::PositionUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			position = std::get<mat::vec3>(data);
-			transformMatrix = mat::transform(position, rotation, scale);
+			if (bEventFromParent) {
+				mat::vec3 absPos = position + std::get<mat::vec3>(data);
+				transformMatrix = mat::transform(absPos, rotation, scale);
+				this->uobject->childEventImmediate(EventType::PositionUpdated, absPos);
+			}
+			else {
+				position = std::get<mat::vec3>(data);
+				transformMatrix = mat::transform(position, rotation, scale);
+				this->uobject->childEventImmediate(EventType::PositionUpdated, position);
+			}
 			bDirtyTransform = true;
 		}
 	);
@@ -25,8 +33,16 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 		uobject,
 		EventType::RotationUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			rotation = std::get<mat::vec3>(data);
-			transformMatrix = mat::transform(position, rotation, scale);
+			if (bEventFromParent) {
+				mat::vec3 absRot = rotation + std::get<mat::vec3>(data);
+				transformMatrix = mat::transform(position, absRot, scale);
+				this->uobject->childEventImmediate(EventType::RotationUpdated, absRot);
+			}
+			else {
+				rotation = std::get<mat::vec3>(data);
+				transformMatrix = mat::transform(position, rotation, scale);
+				this->uobject->childEventImmediate(EventType::RotationUpdated, rotation);
+			}
 			bDirtyTransform = true;
 		}
 	);
@@ -35,8 +51,16 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 		uobject,
 		EventType::ScaleUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			scale = std::get<mat::vec3>(data);
-			transformMatrix = mat::transform(position, rotation, scale);
+			if (bEventFromParent) {
+				mat::vec3 absScale = scale * std::get<mat::vec3>(data);
+				transformMatrix = mat::transform(position, rotation, absScale);
+				this->uobject->childEventImmediate(EventType::ScaleUpdated, absScale);
+			}
+			else {
+				scale = std::get<mat::vec3>(data);
+				transformMatrix = mat::transform(position, rotation, scale);
+				this->uobject->childEventImmediate(EventType::ScaleUpdated, scale);
+			}
 			bDirtyTransform = true;
 		}
 	);

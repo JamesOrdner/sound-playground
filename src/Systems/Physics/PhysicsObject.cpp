@@ -11,8 +11,16 @@ PhysicsObject::PhysicsObject(const SystemSceneInterface* scene, const UObject* u
 		uobject,
 		EventType::PositionUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			position = std::get<mat::vec3>(data);
-			transform = mat::transform(position, rotation, scale);
+			if (bEventFromParent) {
+				mat::vec3 absPos = position + std::get<mat::vec3>(data);
+				transform = mat::transform(absPos, rotation, scale);
+				this->uobject->childEventImmediate(EventType::PositionUpdated, absPos);
+			}
+			else {
+				position = std::get<mat::vec3>(data);
+				transform = mat::transform(position, rotation, scale);
+				this->uobject->childEventImmediate(EventType::PositionUpdated, position);
+			}
 		}
 	);
 
@@ -20,8 +28,16 @@ PhysicsObject::PhysicsObject(const SystemSceneInterface* scene, const UObject* u
 		uobject,
 		EventType::RotationUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			rotation = std::get<mat::vec3>(data);
-			transform = mat::transform(position, rotation, scale);
+			if (bEventFromParent) {
+				mat::vec3 absRot = rotation + std::get<mat::vec3>(data);
+				transform = mat::transform(position, absRot, scale);
+				this->uobject->childEventImmediate(EventType::RotationUpdated, absRot);
+			}
+			else {
+				rotation = std::get<mat::vec3>(data);
+				transform = mat::transform(position, rotation, scale);
+				this->uobject->childEventImmediate(EventType::RotationUpdated, rotation);
+			}
 		}
 	);
 
@@ -29,8 +45,16 @@ PhysicsObject::PhysicsObject(const SystemSceneInterface* scene, const UObject* u
 		uobject,
 		EventType::ScaleUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
-			scale = std::get<mat::vec3>(data);
-			transform = mat::transform(position, rotation, scale);
+			if (bEventFromParent) {
+				mat::vec3 absScale = scale * std::get<mat::vec3>(data);
+				transform = mat::transform(position, rotation, absScale);
+				this->uobject->childEventImmediate(EventType::ScaleUpdated, absScale);
+			}
+			else {
+				scale = std::get<mat::vec3>(data);
+				transform = mat::transform(position, rotation, scale);
+				this->uobject->childEventImmediate(EventType::ScaleUpdated, scale);
+			}
 		}
 	);
 }

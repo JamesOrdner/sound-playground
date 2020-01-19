@@ -20,7 +20,6 @@ void StateManager::eventImmediate(const SubjectInterface* subject, EventType eve
 	for (const auto& observer : observers) {
 		if (subject == observer.subject && event == observer.event) {
 			observer.callback(data, bEventFromParent);
-			observer.subject->forwardEventImmediate(event, data);
 		}
 	}
 }
@@ -56,7 +55,6 @@ void StateManager::notifyObservers()
 		for (const auto& observer : observers) {
 			if (event.first.first == observer.subject && event.first.second == observer.event) {
 				observer.callback(event.second, false);
-				observer.subject->forwardEventImmediate(observer.event, event.second);
 			}
 		}
 	}

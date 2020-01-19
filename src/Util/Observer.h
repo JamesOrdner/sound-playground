@@ -59,9 +59,6 @@ public:
 	// Execute an event synchronously
 	void eventImmediate(EventType event, const EventData& data, bool bEventFromParent = false) const;
 
-	// Forward the event to any child SubjectInterface objects using eventImmediate()
-	virtual void forwardEventImmediate(EventType event, const EventData& data) const = 0;
-
 private:
 
 	std::unique_ptr<struct SubjectData> data;
