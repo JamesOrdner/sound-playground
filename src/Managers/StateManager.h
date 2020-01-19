@@ -34,11 +34,12 @@ private:
 
 	StateManager();
 
+	typedef std::pair<const SubjectInterface*, EventType> EventKey;
+
 	struct ObserverData
 	{
 		ObserverInterface::ObserverCallback callback;
-		const SubjectInterface* subject;
-		EventType event;
+		EventKey key;
 		ObserverID id;
 	};
 
@@ -47,7 +48,6 @@ private:
 	// Queue stores pending observers which have requested unregistration
 	LFQueue<ObserverID> removeQueue;
 
-	typedef std::pair<const SubjectInterface*, EventType> EventKey;
 	std::map<EventKey, EventData> eventQueue;
 
 public:

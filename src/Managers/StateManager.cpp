@@ -17,8 +17,9 @@ void StateManager::event(const SubjectInterface* subject, EventType event, const
 
 void StateManager::eventImmediate(const SubjectInterface* subject, EventType event, const EventData& data, bool bEventFromParent)
 {
+	EventKey key(subject, event);
 	for (const auto& observer : observers) {
-		if (subject == observer.subject && event == observer.event) {
+		if (observer.key == key) {
 			observer.callback(data, bEventFromParent);
 		}
 	}
@@ -31,8 +32,7 @@ StateManager::ObserverID StateManager::registerObserver(
 	ObserverInterface::ObserverCallback callback)
 {
 	auto& observerData = observers.emplace_back();
-	observerData.subject = subject;
-	observerData.event = event;
+	observerData.key = EventKey(subject, event);
 	observerData.callback = callback;
 	observerData.id = tempCounter++;
 	return observerData.id;
@@ -51,11 +51,10 @@ void StateManager::notifyObservers()
 		observers.remove_if([id](const ObserverData& data) { return data.id == id; });
 	}
 
-	for (const auto& event : eventQueue) {
-		for (const auto& observer : observers) {
-			if (event.first.first == observer.subject && event.first.second == observer.event) {
-				observer.callback(event.second, false);
-			}
+	for (const auto& observer : observers) {
+		const auto it = eventQueue.find(observer.key);
+		if (it != eventQueue.cend()) {
+			observer.callback(it->second, false);
 		}
 	}
 	eventQueue.clear();
