@@ -6,7 +6,7 @@ CameraInputObject::CameraInputObject(const class SystemSceneInterface* scene, co
 	pivotDistance(5.f),
 	maxPivotDistance(10.f),
 	bOrbiting(false),
-	movementSpeedMultiplier(2.f)
+	movementSpeedMultiplier(3.f)
 {
 	// Update camera with initial configuration
 	broadcastPositionChange();

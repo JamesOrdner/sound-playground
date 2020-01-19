@@ -87,22 +87,21 @@ void Engine::run()
 	EnvironmentManager::instance().bQuitRequested = false;
 
 	do {
-		// pump pending OS/input events to SDL's event queue
-		SDL_PumpEvents();
-
 		// calculate deltaTime
 		Uint32 newSdlTime = SDL_GetTicks();
 		float deltaTime = static_cast<float>(newSdlTime - sdlTime) * 0.001f;
 		sdlTime = newSdlTime;
 
-		// execute systems
+		// execute input system on the main thread due to SDL_PollEvent()
 		inputSystem->execute(deltaTime);
+
+		// execute systems
+		physicsSystem->execute(deltaTime);
+		graphicsSystem->execute(deltaTime);
 
 		// sync changes across systems
 		StateManager::instance().notifyObservers();
-
-		// by executing the graphics system after syncing changes, we reduce input lag
-		graphicsSystem->execute(deltaTime);
+		
 
 	} while (!EnvironmentManager::instance().bQuitRequested);
 }

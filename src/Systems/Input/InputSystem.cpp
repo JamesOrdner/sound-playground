@@ -23,7 +23,7 @@ void InputSystem::deinit()
 void InputSystem::execute(float deltaTime)
 {
 	SDL_Event sdlEvent;
-	while (SDL_PeepEvents(&sdlEvent, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
+	while (SDL_PollEvent(&sdlEvent)) {
 		if (sdlEvent.type == SDL_QUIT) {
 			EnvironmentManager::instance().bQuitRequested = true;
 			break;
