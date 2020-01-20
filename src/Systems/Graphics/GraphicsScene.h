@@ -14,6 +14,8 @@ public:
 
 	~GraphicsScene();
 
+	void deleteSystemObject(const class UObject* uobject) override;
+
 	void drawScene(class Render* render);
 
 	class CameraGraphicsObject* activeCamera;

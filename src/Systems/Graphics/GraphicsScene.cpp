@@ -16,6 +16,16 @@ GraphicsScene::~GraphicsScene()
 	graphicsObjects.clear();
 }
 
+void GraphicsScene::deleteSystemObject(const UObject* uobject)
+{
+	for (const auto& graphicsObject : graphicsObjects) {
+		if (graphicsObject->uobject == uobject) {
+			graphicsObjects.remove(graphicsObject);
+			break;
+		}
+	}
+}
+
 void GraphicsScene::drawScene(Render* render)
 {
 	if (activeCamera) render->setCamera(activeCamera->cameraPosition(), activeCamera->cameraForward());

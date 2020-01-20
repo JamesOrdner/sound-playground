@@ -126,3 +126,11 @@ UObject* Loader::createUIObject(UScene* uscene) const
 	graphicsScene->createSystemObject<UIGraphicsObject>(uobject);
 	return uobject;
 }
+
+void Loader::deleteObject(const UObject* uobject, UScene* uscene) const
+{
+	inputSystem->findSystemScene(uscene)->deleteSystemObject(uobject);
+	graphicsSystem->findSystemScene(uscene)->deleteSystemObject(uobject);
+	physicsSystem->findSystemScene(uscene)->deleteSystemObject(uobject);
+	uscene->deleteUniversalObject(uobject);
+}

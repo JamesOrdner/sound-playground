@@ -10,6 +10,7 @@
 enum class EventType
 {
 	CreateObjectRequest, // EventData type: CreateObjectRequestData
+	DeleteObjectRequest, // EventData type: UObject*
 	PositionUpdated,     // EventData type: mat::vec3
 	VelocityUpdated,     // EventData type: mat::vec3
 	RotationUpdated,     // EventData type: mat::vec3
@@ -39,7 +40,7 @@ struct CreateObjectRequestData
 
 // This variant includes all possible event callback data types. As event data for all event
 // types will have enough memory allocated to store the largest type, these should be small
-typedef std::variant<bool, uint32_t, mat::vec2, mat::vec3, AssetID, CreateObjectRequestData> EventData;
+typedef std::variant<bool, uint32_t, mat::vec2, mat::vec3, AssetID, const class UObject*, CreateObjectRequestData> EventData;
 
 class ObserverInterface
 {

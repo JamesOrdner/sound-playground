@@ -15,6 +15,8 @@ public:
 
 	~InputScene();
 
+	void deleteSystemObject(const class UObject* uobject) override;
+
 	void handleEvent(const SDL_Event& sdlEvent);
 
 	// Called by the engine after a UObject creation request has been fulfilled

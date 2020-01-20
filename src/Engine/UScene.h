@@ -16,6 +16,8 @@ public:
 	// Create a UObject and associate it with this scene
 	class UObject* createUniversalObject();
 
+	void deleteUniversalObject(const class UObject* uobject);
+
 private:
 
 	const class Engine* const engine;

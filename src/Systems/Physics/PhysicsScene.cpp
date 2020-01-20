@@ -11,6 +11,16 @@ PhysicsScene::~PhysicsScene()
 	physicsObjects.clear();
 }
 
+void PhysicsScene::deleteSystemObject(const UObject* uobject)
+{
+	for (const auto& physicsObject : physicsObjects) {
+		if (physicsObject->uobject == uobject) {
+			physicsObjects.remove(physicsObject);
+			break;
+		}
+	}
+}
+
 const UObject* PhysicsScene::raycast(
 	const mat::vec3& origin,
 	const mat::vec3& direction,

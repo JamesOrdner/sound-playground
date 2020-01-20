@@ -20,6 +20,8 @@ public:
 		return static_cast<T*>(addSystemObject(new T(this, uobject)));
 	}
 
+	virtual void deleteSystemObject(const class UObject* uobject) = 0;
+
 private:
 
 	// Take ownership of the newly-created SystemObject

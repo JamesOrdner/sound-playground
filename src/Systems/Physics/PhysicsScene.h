@@ -14,6 +14,8 @@ public:
 
 	~PhysicsScene();
 
+	void deleteSystemObject(const class UObject* uobject) override;
+
 	const class UObject* raycast(
 		const mat::vec3& origin,
 		const mat::vec3& direction,

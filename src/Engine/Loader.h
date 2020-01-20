@@ -24,6 +24,8 @@ public:
 	class UObject* createObjectFromAsset(const AssetDescriptor& asset, class UScene* uscene) const override;
 	class UObject* createUIObject(class UScene* uscene) const override;
 
+	void deleteObject(const class UObject* uobject, class UScene* uscene) const override;
+
 private:
 
 	class SystemInterface* inputSystem;

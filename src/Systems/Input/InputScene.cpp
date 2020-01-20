@@ -18,6 +18,16 @@ InputScene::~InputScene()
 {
 }
 
+void InputScene::deleteSystemObject(const UObject* uobject)
+{
+	for (const auto& inputObject : inputObjects) {
+		if (inputObject->uobject == uobject) {
+			inputObjects.remove(inputObject);
+			break;
+		}
+	}
+}
+
 SystemObjectInterface* InputScene::addSystemObject(SystemObjectInterface* object)
 {
 	inputObjects.emplace_back(static_cast<InputObject*>(object));
@@ -77,7 +87,7 @@ void InputScene::handlePlacingInput(const SDL_Event& sdlEvent)
 		bPlacingSelectedObjects = false;
 	}
 	else if (sdlEvent.type == SDL_KEYDOWN && sdlEvent.key.keysym.sym == SDLK_DELETE) {
-		// for (auto* obj : selectedObjects) engine.world().destroyObject(obj);
+		for (auto* obj : selectedObjects) uscene->event(EventType::DeleteObjectRequest, obj);
 		selectedObjects.clear();
 		bPlacingSelectedObjects = false;
 	}
@@ -106,7 +116,7 @@ void InputScene::handleObjectManagementInput(const SDL_Event& sdlEvent)
 	}
 	// Object deletion
 	else if (sdlEvent.type == SDL_KEYDOWN && sdlEvent.key.keysym.sym == SDLK_DELETE) {
-		// for (auto* obj : selectedObjects) engine.world().destroyObject(obj);
+		for (auto* obj : selectedObjects) uscene->event(EventType::DeleteObjectRequest, obj);
 		selectedObjects.clear();
 	}
 }
