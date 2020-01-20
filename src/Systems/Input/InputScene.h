@@ -4,7 +4,7 @@
 #include <SDL_events.h>
 #include <list>
 #include <map>
-#include <vector>
+#include <unordered_set>
 #include <memory>
 
 class InputScene : public SystemSceneInterface
@@ -33,7 +33,7 @@ private:
 
 	// User Interaction (non UI)
 
-	std::vector<const class UObject*> selectedObjects;
+	std::unordered_set<const class UObject*> selectedObjects;
 
 	bool bPlacingSelectedObjects;
 

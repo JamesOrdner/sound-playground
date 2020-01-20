@@ -11,20 +11,25 @@ PhysicsScene::~PhysicsScene()
 	physicsObjects.clear();
 }
 
-const UObject* PhysicsScene::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit) const
+const UObject* PhysicsScene::raycast(
+	const mat::vec3& origin,
+	const mat::vec3& direction,
+	mat::vec3& hit,
+	const std::unordered_set<const UObject*>& ignore) const
 {
 	float shortest = FLT_MAX;
 	const UObject* hitObject = nullptr;
 	for (const auto& obj : physicsObjects) {
-			mat::vec3 objHit;
-			float l = obj->raycast(origin, direction, objHit);
-			if (l > 0) {
-				if (!hitObject || l < shortest) {
-					shortest = l;
-					hit = objHit;
-					hitObject = obj->uobject;
-				}
+		if (ignore.count(obj->uobject) > 0) continue;
+		mat::vec3 objHit;
+		float l = obj->raycast(origin, direction, objHit);
+		if (l > 0) {
+			if (!hitObject || l < shortest) {
+				shortest = l;
+				hit = objHit;
+				hitObject = obj->uobject;
 			}
+		}
 	}
 	return hitObject;
 }

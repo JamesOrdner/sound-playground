@@ -60,7 +60,7 @@ void InputScene::handeUIManagerEvent(const UIManagerEvent& event)
 
 void InputScene::objectCreated(UObject* object)
 {
-	selectedObjects.push_back(object);
+	selectedObjects.emplace(object);
 	bPlacingSelectedObjects = true;
 }
 
@@ -68,7 +68,7 @@ void InputScene::handlePlacingInput(const SDL_Event& sdlEvent)
 {
 	if (sdlEvent.type == SDL_MOUSEMOTION) {
 		mat::vec3 hitLoc;
-		if (system->serviceManager->raycastScreen(uscene, sdlEvent.motion.x, sdlEvent.motion.y, hitLoc)) {
+		if (system->serviceManager->raycastScreen(uscene, sdlEvent.motion.x, sdlEvent.motion.y, hitLoc, selectedObjects)) {
 			for (auto* obj : selectedObjects) obj->event(EventType::PositionUpdated, hitLoc);
 		}
 	}
@@ -93,7 +93,7 @@ void InputScene::handleObjectManagementInput(const SDL_Event& sdlEvent)
 			selectedObjects.clear();
 
 			hitObject->event(EventType::SelectionUpdated, true);
-			selectedObjects.push_back(hitObject);
+			selectedObjects.emplace(hitObject);
 			//auto* uiComp = hitObject->uiComponent();
 			//uiManager->setActiveData(uiComp ? &uiComp->data : nullptr);
 		}

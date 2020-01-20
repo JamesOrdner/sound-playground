@@ -24,24 +24,42 @@ const mat::mat4& ServiceManager::screenToWorldTransform(const UScene* uscene) co
 	return graphicsSystem->screenToWorldTransform(uscene);
 }
 
-const UObject* ServiceManager::raycast(const UScene* uscene, const mat::vec3& origin, const mat::vec3& direction) const
+const UObject* ServiceManager::raycast(
+	const UScene* uscene,
+	const mat::vec3& origin,
+	const mat::vec3& direction,
+	const std::unordered_set<const UObject*>& ignore) const
 {
 	mat::vec3 hit;
-	return raycast(uscene, origin, direction, hit);
+	return raycast(uscene, origin, direction, hit, ignore);
 }
 
-const UObject* ServiceManager::raycast(const UScene* uscene, const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit) const
+const UObject* ServiceManager::raycast(
+	const UScene* uscene,
+	const mat::vec3& origin,
+	const mat::vec3& direction,
+	mat::vec3& hit,
+	const std::unordered_set<const UObject*>& ignore) const
 {
-	return physicsSystem->raycast(uscene, origin, direction, hit);
+	return physicsSystem->raycast(uscene, origin, direction, hit, ignore);
 }
 
-const UObject* ServiceManager::raycastScreen(const UScene* uscene, int x, int y) const
+const UObject* ServiceManager::raycastScreen(
+	const UScene* uscene,
+	int x,
+	int y,
+	const std::unordered_set<const UObject*>& ignore) const
 {
 	mat::vec3 hit;
-	return raycastScreen(uscene, x, y, hit);
+	return raycastScreen(uscene, x, y, hit, ignore);
 }
 
-const UObject* ServiceManager::raycastScreen(const UScene* uscene, int x, int y, mat::vec3& hit) const
+const UObject* ServiceManager::raycastScreen(
+	const UScene* uscene,
+	int x,
+	int y,
+	mat::vec3& hit,
+	const std::unordered_set<const UObject*>& ignore) const
 {
 	int width, height;
 	screenDimensions(width, height);
@@ -62,5 +80,5 @@ const UObject* ServiceManager::raycastScreen(const UScene* uscene, int x, int y,
 	mat::vec4 rayEndWorld = screenToWorldTransform(uscene) * rayEndScreen;
 	mat::vec3 direction = mat::vec3(rayEndWorld) / rayEndWorld.w - origin;
 
-	return raycast(uscene, origin, direction, hit);
+	return raycast(uscene, origin, direction, hit, ignore);
 }

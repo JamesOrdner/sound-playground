@@ -4,6 +4,7 @@
 #include "../../Util/Matrix.h"
 #include <list>
 #include <memory>
+#include <unordered_set>
 
 class PhysicsScene : public SystemSceneInterface
 {
@@ -13,7 +14,11 @@ public:
 
 	~PhysicsScene();
 
-	const class UObject* raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit) const;
+	const class UObject* raycast(
+		const mat::vec3& origin,
+		const mat::vec3& direction,
+		mat::vec3& hit,
+		const std::unordered_set<const class UObject*>& ignore) const;
 
 private:
 

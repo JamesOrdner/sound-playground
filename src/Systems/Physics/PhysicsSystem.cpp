@@ -37,11 +37,16 @@ SystemSceneInterface* PhysicsSystem::findSystemScene(const UScene* uscene)
 	return nullptr;
 }
 
-const UObject* PhysicsSystem::raycast(const UScene* uscene, const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit) const
+const UObject* PhysicsSystem::raycast(
+	const UScene* uscene,
+	const mat::vec3& origin,
+	const mat::vec3& direction,
+	mat::vec3& hit,
+	const std::unordered_set<const UObject*>& ignore) const
 {
 	for (const auto& scene : physicsScenes) {
 		if (scene->uscene == uscene) {
-			return scene->raycast(origin, direction, hit);
+			return scene->raycast(origin, direction, hit, ignore);
 		}
 	}
 	return nullptr;
