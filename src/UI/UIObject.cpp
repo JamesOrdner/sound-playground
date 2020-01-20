@@ -4,14 +4,21 @@ UIObject::UIObject() :
 	anchor(UIAnchor::Center),
 	bAcceptsInput(false),
 	state(UIObjectState::Neutral),
-	animationRate(0.f)
+	animationRate(0.f),
+	userData(nullptr)
 {
 	textureCoords = []() { return mat::vec4(); };
 }
 
+void UIObject::setAnimationTarget(const mat::vec2& position)
+{
+	animationTarget = position;
+	if (animationRate == 0.f) this->position = position;
+}
+
 mat::vec2 UIObject::anchorPosition() const
 {
-	using namespace mat;
+	using mat::vec2;
 	switch (anchor) {
 	case UIAnchor::Center: return vec2{ 0.f, 0.f };
 	case UIAnchor::Top: return vec2{ 0.f, 1.f };
@@ -24,12 +31,6 @@ mat::vec2 UIObject::anchorPosition() const
 	case UIAnchor::BottomRight: return vec2{ 1.f, -1.f };
 	default: return vec2();
 	}
-}
-
-void UIObject::setAnimationTarget(const mat::vec2& position)
-{
-	animationTarget = position;
-	if (animationRate == 0.f) this->position = position;
 }
 
 void UIObject::tick(float deltaTime)

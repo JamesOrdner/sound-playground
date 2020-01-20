@@ -1,7 +1,6 @@
 #pragma once
 
 #include "UITypes.h"
-#include "../Util/Matrix.h"
 #include <string>
 #include <vector>
 #include <functional>
@@ -22,6 +21,9 @@ struct UIObject
 
 	// Subobjects inherit the transform of the parent object
 	std::vector<UIObject> subobjects;
+
+	// Shared data, absolute (parentless), replicated to graphics system
+	UIObjectData replicatedData;
 
 	// Anchor point of the object. This affects both what is considered the "center" point
 	// of the object, as well as where the object is positioned relative to the parent.
@@ -51,12 +53,15 @@ struct UIObject
 	// Rate of object animation. Set to 0 if object does not animate (default).
 	float animationRate;
 
-	// Returns the relative anchor position in normalized device coordinates [-1, 1]
-	mat::vec2 anchorPosition() const;
+	// Arbitrary data assignable by the InputSystem
+	void* userData;
 
 	// Sets the animation target position of the object. If the object does not animate,
 	// it will be set immediately to this position.
 	void setAnimationTarget(const mat::vec2& position);
+
+	// Returns the relative anchor position in normalized device coordinates [-1, 1]
+	mat::vec2 anchorPosition() const;
 
 	// Tick this object and all subobjects
 	void tick(float deltaTime);

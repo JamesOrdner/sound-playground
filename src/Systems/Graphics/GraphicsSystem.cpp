@@ -1,6 +1,5 @@
 #include "GraphicsSystem.h"
 #include "GraphicsObject.h"
-#include "CameraGraphicsObject.h"
 #include "GraphicsScene.h"
 #include "Render.h"
 #include <SDL.h>
@@ -49,15 +48,7 @@ void GraphicsSystem::deinit()
 
 void GraphicsSystem::execute(float deltaTime)
 {
-	for (const auto& scene : graphicsScenes) {
-		if (CameraGraphicsObject* camera = scene->activeCamera) {
-			// loop here doesn't make sense, but eventually we should render per scene
-			render->setCamera(camera->cameraPosition(), camera->cameraForward());
-		}
-	}
-
-	render->drawMeshes();
-	//render->drawUI(*uiManager->root, uiManager->screenBounds);
+	for (const auto& scene : graphicsScenes) scene->drawScene(render.get());
 	render->swap(window);
 }
 

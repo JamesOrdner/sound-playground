@@ -22,6 +22,7 @@ public:
 
 	class UObject* createObjectFromAsset(AssetID asset, class UScene* uscene) const override;
 	class UObject* createObjectFromAsset(const AssetDescriptor& asset, class UScene* uscene) const override;
+	class UObject* createUIObject(class UScene* uscene) const override;
 
 private:
 

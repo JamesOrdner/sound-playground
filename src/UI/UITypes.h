@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../Util/Matrix.h"
+#include "../Managers/AssetTypes.h"
 #include <SDL_keyboard.h>
 #include <string>
 #include <functional>
@@ -49,4 +51,29 @@ struct UIData
 		value{}
 	{
 	}
+};
+
+// This struct contains all the data required to render the object, i.e. all data replicated between Systems.
+// All data is parentless and absolute, relative only to the virtual resolution of the UI
+struct UIObjectData
+{
+	// Position offset of the anchor point of the object, in pixels
+	mat::vec2 position;
+
+	// Absoule size of the object in pixels
+	mat::vec2 bounds;
+
+	// Draw order of this UIObject. Larger order values are drawn on top of lower order values.
+	uint32_t drawOrder;
+
+	// Texture used to render this UI object
+	AssetID textureAsset;
+
+	// UV position of the top left corner of this object in the UI texture, in pixels.
+	mat::vec2 texturePosition;
+
+	// UV bounds of this object in the UI texture, in pixels.
+	mat::vec2 textureBounds;
+
+	UIObjectData() : drawOrder(), textureAsset() {}
 };

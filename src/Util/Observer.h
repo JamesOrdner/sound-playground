@@ -2,6 +2,7 @@
 
 #include "../Util/Matrix.h"
 #include "../Managers/AssetTypes.h"
+#include "../UI/UITypes.h"
 #include <memory>
 #include <variant>
 #include <functional>
@@ -14,20 +15,31 @@ enum class EventType
 	RotationUpdated,     // EventData type: mat::vec3
 	ScaleUpdated,        // EventData type: mat::vec3
 	SelectionUpdated,    // EventData type: bool
+
+	// UI
+	CreateUIObjectRequest,    // EventData type: CreateObjectRequestData
+	UIPositionUpdated,        // EventData type: mat::vec2
+	UIBoundsUpdated,          // EventData type: mat::vec2
+	UIDrawOrderUpdated,       // EventData type: uint32_t
+	UITextureAssetUpdated,    // EventData type: AssetID
+	UITexturePositionUpdated, // EventData type: mat::vec2
+	UITextureBoundsUpdated    // EventData type: mat::vec2
 };
 
 // If not nullptr, this function will be called immediately after the UObject is created
-typedef void(*CreateObjectCallback)(class UObject*);
+// First parameter is the created UObject. Second parameter is the forwarded userData.
+typedef void(*CreateObjectCallback)(class UObject*, void*);
 
 struct CreateObjectRequestData
 {
 	AssetID assetID;
+	void* userData;
 	CreateObjectCallback callback;
 };
 
 // This variant includes all possible event callback data types. As event data for all event
 // types will have enough memory allocated to store the largest type, these should be small
-typedef std::variant<bool, mat::vec3, CreateObjectRequestData> EventData;
+typedef std::variant<bool, uint32_t, mat::vec2, mat::vec3, AssetID, CreateObjectRequestData> EventData;
 
 class ObserverInterface
 {

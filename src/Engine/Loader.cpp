@@ -15,6 +15,7 @@
 #include "../Systems/Graphics/GraphicsScene.h"
 #include "../Systems/Graphics/CameraGraphicsObject.h"
 #include "../Systems/Graphics/MeshGraphicsObject.h"
+#include "../Systems/Graphics/UIGraphicsObject.h"
 
 #include "../Systems/Physics/PhysicsSystem.h"
 #include "../Systems/Physics/PhysicsObject.h"
@@ -39,8 +40,12 @@ Loader::SystemsWrapper Loader::createSystems()
 	serviceManager.physicsSystem = physics.get();
 
 	// register manager interfaces with systems
+	auto& assetManager = AssetManager::instance();
+	input->assetManager = &assetManager;
 	input->serviceManager = &serviceManager;
+	graphics->assetManager = &assetManager;
 	graphics->serviceManager = &serviceManager;
+	physics->assetManager = &assetManager;
 	physics->serviceManager = &serviceManager;
 
 	// save pointers for use inside Loader
@@ -110,5 +115,14 @@ UObject* Loader::createObjectFromAsset(const AssetDescriptor& asset, UScene* usc
 		gobj->setMesh(asset.modelPath);
 		pobj->setPhysicsMesh(asset.modelPath);
 	}
+	return uobject;
+}
+
+UObject* Loader::createUIObject(UScene* uscene) const
+{
+	auto* graphicsScene = graphicsSystem->findSystemScene(uscene);
+
+	UObject* uobject = uscene->createUniversalObject();
+	graphicsScene->createSystemObject<UIGraphicsObject>(uobject);
 	return uobject;
 }

@@ -2,7 +2,7 @@
 #include "GProgram.h"
 #include "GMesh.h"
 #include "GTexture.h"
-#include "../../UI/UIObject.h"
+#include "../../UI/UITypes.h"
 #include <SDL.h>
 #include <GL/gl3w.h>
 #include <stdio.h>
@@ -136,28 +136,15 @@ void Render::drawMeshes()
 	compositeProgram->release();
 }
 
-void Render::drawUI(const UIObject& rootObject, const mat::vec2& virtualScreenBounds)
+void Render::drawUIElement(const UIObjectData& element)
 {
 	uiProgram->use();
-	drawUIRecursive(
-		rootObject,
-		virtualScreenBounds / 2.f,
-		virtualScreenBounds,
-		virtualScreenBounds);
-	uiProgram->release();
-}
 
-void Render::drawUIRecursive(
-	const UIObject& object,
-	const mat::vec2& parentCenterAbs,
-	const mat::vec2& parentBoundsAbs,
-	const mat::vec2& screenBounds)
-{
-	mat::vec2 anchorOffset = (parentBoundsAbs - object.bounds) / 2.f * object.anchorPosition();
-	mat::vec2 center = parentCenterAbs + anchorOffset + object.position; // virtual pixels
+	mat::vec2 screenBounds{ 1280.f, 720.f };
+	mat::vec2 center = element.bounds / 2.f + element.position; // virtual pixels
 
 	mat::vec2 translation = center / screenBounds * 2.f - 1.f; // NDC
-	mat::vec2 scale = object.bounds / screenBounds; // NDC
+	mat::vec2 scale = element.bounds / screenBounds; // NDC
 	mat::mat3 transform{
 		{ scale.x,       0, translation.x },
 		{       0, scale.y, translation.y },
@@ -165,21 +152,18 @@ void Render::drawUIRecursive(
 	};
 	uiProgram->setUniform("transform", transform);
 
-	mat::vec4 texCoords = object.textureCoords();
 	const mat::vec2& texSize = uiTexture->textureSize();
 	mat::vec4 texMapping{
-		texCoords[0] / texSize.x,
-		(texSize.y - texCoords[1] - texCoords[3]) / texSize.y,
-		(texCoords[0] + texCoords[2]) / texSize.x,
-		(texSize.y - texCoords[1]) / texSize.y,
+		element.texturePosition.x / texSize.x,
+		(texSize.y - element.texturePosition.y - element.textureBounds.y) / texSize.y,
+		(element.texturePosition.x + element.textureBounds.x) / texSize.x,
+		(texSize.y - element.texturePosition.y) / texSize.y,
 	};
 	uiProgram->setUniform("uiTexCoord", texMapping);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-
-	for (const auto& child : object.subobjects) {
-		drawUIRecursive(child, center, object.bounds, screenBounds);
-	}
+	
+	uiProgram->release();
 }
 
 void Render::swap(SDL_Window* window)

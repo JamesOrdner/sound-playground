@@ -5,7 +5,6 @@
 
 // Forward declarations
 struct SDL_Window;
-struct UIObject;
 class GProgram;
 class GTexture;
 
@@ -31,8 +30,8 @@ public:
 	// Draw a frame
 	void drawMeshes();
 
-	// Draws the UI on the existing frame, provided the virtual UI screen dimensions
-	void drawUI(const UIObject& rootObject, const mat::vec2& virtualScreenBounds);
+	// Draw a UI element
+	void drawUIElement(const struct UIObjectData& element);
 
 	// Swaps the backbuffer to the window
 	void swap(SDL_Window* window);
@@ -77,10 +76,4 @@ private:
 	bool initUI();
 	std::unique_ptr<GProgram> uiProgram;
 	std::unique_ptr<GTexture> uiTexture;
-
-	void drawUIRecursive(
-		const UIObject& object,
-		const mat::vec2& parentCenterAbs,
-		const mat::vec2& parentBoundsAbs,
-		const mat::vec2& screenBounds);
 };

@@ -12,7 +12,7 @@ StateManager::StateManager()
 
 void StateManager::event(const SubjectInterface* subject, EventType event, const EventData& data)
 {
-	eventQueue[EventKey(subject, event)] = data;
+	eventQueue.push(Event{ EventKey(subject, event) , data });
 }
 
 void StateManager::eventImmediate(const SubjectInterface* subject, EventType event, const EventData& data, bool bEventFromParent)
@@ -51,11 +51,13 @@ void StateManager::notifyObservers()
 		observers.remove_if([id](const ObserverData& data) { return data.id == id; });
 	}
 
-	for (const auto& observer : observers) {
-		const auto it = eventQueue.find(observer.key);
-		if (it != eventQueue.cend()) {
-			observer.callback(it->second, false);
+	while (!eventQueue.empty()) {
+		auto& event = eventQueue.front();
+		for (const auto& observer : observers) {
+			if (observer.key == event.key) {
+				observer.callback(event.data, false);
+			}
 		}
+		eventQueue.pop();
 	}
-	eventQueue.clear();
 }

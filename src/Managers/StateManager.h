@@ -3,7 +3,7 @@
 #include "../Util/LFQueue.h"
 #include "../Util/Observer.h"
 #include <utility>
-#include <map>
+#include <queue>
 #include <list>
 
 class StateManager
@@ -46,7 +46,12 @@ private:
 	};
 	std::list<ObserverData> observers;
 
-	std::map<EventKey, EventData> eventQueue;
+	struct Event
+	{
+		EventKey key;
+		EventData data;
+	};
+	std::queue<Event> eventQueue;
 
 	// Stores pending observers which have requested unregistration
 	LFQueue<ObserverID> removeQueue;
