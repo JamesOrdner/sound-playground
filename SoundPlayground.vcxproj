@@ -281,6 +281,7 @@
     <ClInclude Include="src\UI\UIObject.h" />
     <ClInclude Include="src\Util\LFQueue.h" />
     <ClInclude Include="src\Util\Observer.h" />
+    <ClInclude Include="src\Util\ThreadPool.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
