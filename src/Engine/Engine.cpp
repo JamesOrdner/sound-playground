@@ -29,6 +29,7 @@ bool Engine::init()
 	inputSystem = std::move(systems.input);
 	graphicsSystem = std::move(systems.graphics);
 	physicsSystem = std::move(systems.physics);
+	audioSystem = std::move(systems.audio);
 
 	if (!inputSystem->init()) {
 		printf("Warning: Input system failed to initialize!\n");
@@ -43,7 +44,13 @@ bool Engine::init()
 	}
 
 	if (!physicsSystem->init()) {
-		printf("Warning: Graphics system failed to initialize!\n");
+		printf("Warning: Physics system failed to initialize!\n");
+		deinit();
+		return false;
+	}
+
+	if (!audioSystem->init()) {
+		printf("Warning: Audio system failed to initialize!\n");
 		deinit();
 		return false;
 	}
@@ -65,10 +72,12 @@ void Engine::deinit()
 	if (inputSystem) inputSystem->deinit();
 	if (graphicsSystem) graphicsSystem->deinit();
 	if (physicsSystem) physicsSystem->deinit();
+	if (audioSystem) audioSystem->deinit();
 	
 	inputSystem.reset();
 	graphicsSystem.reset();
 	physicsSystem.reset();
+	audioSystem.reset();
 
 	SDL_Quit();
 }
@@ -92,16 +101,15 @@ void Engine::run()
 		float deltaTime = static_cast<float>(newSdlTime - sdlTime) * 0.001f;
 		sdlTime = newSdlTime;
 
-		// execute input system on the main thread due to SDL_PollEvent()
-		inputSystem->execute(deltaTime);
-
-		// execute systems
+		// execute async systems
 		physicsSystem->execute(deltaTime);
+
+		// execute input and graphics systems on the main thread due to SDL/OpenGL limitations
+		inputSystem->execute(deltaTime);
 		graphicsSystem->execute(deltaTime);
 
 		// sync changes across systems
 		StateManager::instance().notifyObservers();
-		
 
 	} while (!EnvironmentManager::instance().bQuitRequested);
 }

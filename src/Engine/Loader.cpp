@@ -20,44 +20,52 @@
 #include "../Systems/Physics/PhysicsSystem.h"
 #include "../Systems/Physics/PhysicsObject.h"
 
+#include "../Systems/Audio/AudioSystem.h"
+
 Loader::Loader() :
 	inputSystem(nullptr),
 	graphicsSystem(nullptr),
-	physicsSystem(nullptr)
+	physicsSystem(nullptr),
+	audioSystem(nullptr)
 {
 }
 
 Loader::SystemsWrapper Loader::createSystems()
 {
 	// create systems
-	auto input = std::make_unique<InputSystem>();
+	auto input    = std::make_unique<InputSystem>();
 	auto graphics = std::make_unique<GraphicsSystem>();
-	auto physics = std::make_unique<PhysicsSystem>();
+	auto physics  = std::make_unique<PhysicsSystem>();
+	auto audio    = std::make_unique<AudioSystem>();
 
 	// register system services with ServiceManager
 	auto& serviceManager = ServiceManager::instance();
 	serviceManager.graphicsSystem = graphics.get();
-	serviceManager.physicsSystem = physics.get();
+	serviceManager.physicsSystem  = physics.get();
 
 	// register manager interfaces with systems
 	auto& assetManager = AssetManager::instance();
-	input->assetManager = &assetManager;
-	input->serviceManager = &serviceManager;
-	graphics->assetManager = &assetManager;
+	input->assetManager      = &assetManager;
+	input->serviceManager    = &serviceManager;
+	graphics->assetManager   = &assetManager;
 	graphics->serviceManager = &serviceManager;
-	physics->assetManager = &assetManager;
-	physics->serviceManager = &serviceManager;
+	physics->assetManager    = &assetManager;
+	physics->serviceManager  = &serviceManager;
+	audio->assetManager      = &assetManager;
+	audio->serviceManager    = &serviceManager;
 
 	// save pointers for use inside Loader
-	inputSystem = input.get();
+	inputSystem    = input.get();
 	graphicsSystem = graphics.get();
-	physicsSystem = physics.get();
+	physicsSystem  = physics.get();
+	audioSystem    = audio.get();
 
 	// return all system interfaces
 	return SystemsWrapper{
 	std::move(input),
 	std::move(graphics),
-	std::move(physics)
+	std::move(physics),
+	std::move(audio)
 	};
 }
 

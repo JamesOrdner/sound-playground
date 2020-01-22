@@ -171,22 +171,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Audio\Auralization\Auralizer.cpp" />
-    <ClCompile Include="src\Audio\Components\AuralizingAudioComponent.cpp" />
-    <ClCompile Include="src\Audio\Components\GeneratingAudioComponent.cpp" />
-    <ClCompile Include="src\Audio\DSP\AConvolver.cpp">
+    <ClCompile Include="src\Systems\Audio\AudioObject.cpp" />
+    <ClCompile Include="src\Systems\Audio\AudioScene.cpp" />
+    <ClCompile Include="src\Systems\Audio\AudioSystem.cpp" />
+    <ClCompile Include="src\Systems\Audio\Auralization\Auralizer.cpp" />
+    <ClCompile Include="src\Systems\Audio\Components\AuralizingAudioComponent.cpp" />
+    <ClCompile Include="src\Systems\Audio\Components\GeneratingAudioComponent.cpp" />
+    <ClCompile Include="src\Systems\Audio\DSP\AConvolver.cpp">
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</BasicRuntimeChecks>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MaxSpeed</Optimization>
     </ClCompile>
-    <ClCompile Include="src\Audio\DSP\ADelayLine.cpp" />
-    <ClCompile Include="src\Audio\AWAVFile.cpp" />
-    <ClCompile Include="src\Audio\DSP\AInterpParameter.cpp" />
-    <ClCompile Include="src\Audio\Components\AudioComponent.cpp" />
-    <ClCompile Include="src\Audio\Components\OutputAudioComponent.cpp" />
-    <ClCompile Include="src\Audio\Components\AMicrophone.cpp" />
-    <ClCompile Include="src\Audio\Components\ASpeaker.cpp" />
+    <ClCompile Include="src\Systems\Audio\DSP\ADelayLine.cpp" />
+    <ClCompile Include="src\Systems\Audio\AWAVFile.cpp" />
+    <ClCompile Include="src\Systems\Audio\DSP\AInterpParameter.cpp" />
+    <ClCompile Include="src\Systems\Audio\Components\AudioComponent.cpp" />
+    <ClCompile Include="src\Systems\Audio\Components\OutputAudioComponent.cpp" />
+    <ClCompile Include="src\Systems\Audio\Components\AMicrophone.cpp" />
+    <ClCompile Include="src\Systems\Audio\Components\ASpeaker.cpp" />
     <ClCompile Include="src\Engine\Loader.cpp" />
     <ClCompile Include="src\Systems\Graphics\UIGraphicsObject.cpp" />
     <ClCompile Include="src\Systems\Physics\PhysicsMesh.cpp" />
@@ -210,7 +213,7 @@
     <ClCompile Include="src\Managers\StateManager.cpp" />
     <ClCompile Include="src\Systems\Graphics\GMesh.cpp" />
     <ClCompile Include="lib\gl3w\src\gl3w.c" />
-    <ClCompile Include="src\Audio\AudioEngine.cpp" />
+    <ClCompile Include="src\Systems\Audio\AudioEngine.cpp" />
     <ClCompile Include="src\engine\Engine.cpp" />
     <ClCompile Include="src\Systems\Graphics\GProgram.cpp" />
     <ClCompile Include="src\Systems\Graphics\GTexture.cpp" />
@@ -226,18 +229,21 @@
     <ClCompile Include="src\Util\Observer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Audio\Auralization\Auralizer.h" />
-    <ClInclude Include="src\Audio\Components\AuralizingAudioComponent.h" />
-    <ClInclude Include="src\Audio\Components\GeneratingAudioComponent.h" />
-    <ClInclude Include="src\Audio\DSP\AConvolver.h" />
-    <ClInclude Include="src\Audio\DSP\ADelayLine.h" />
-    <ClInclude Include="src\Audio\AWAVFile.h" />
-    <ClInclude Include="src\Audio\DSP\ADSPBase.h" />
-    <ClInclude Include="src\Audio\DSP\AInterpParameter.h" />
-    <ClInclude Include="src\Audio\Components\AudioComponent.h" />
-    <ClInclude Include="src\Audio\Components\OutputAudioComponent.h" />
-    <ClInclude Include="src\Audio\Components\AMicrophone.h" />
-    <ClInclude Include="src\Audio\Components\ASpeaker.h" />
+    <ClInclude Include="src\Systems\Audio\AudioObject.h" />
+    <ClInclude Include="src\Systems\Audio\AudioScene.h" />
+    <ClInclude Include="src\Systems\Audio\AudioSystem.h" />
+    <ClInclude Include="src\Systems\Audio\Auralization\Auralizer.h" />
+    <ClInclude Include="src\Systems\Audio\Components\AuralizingAudioComponent.h" />
+    <ClInclude Include="src\Systems\Audio\Components\GeneratingAudioComponent.h" />
+    <ClInclude Include="src\Systems\Audio\DSP\AConvolver.h" />
+    <ClInclude Include="src\Systems\Audio\DSP\ADelayLine.h" />
+    <ClInclude Include="src\Systems\Audio\AWAVFile.h" />
+    <ClInclude Include="src\Systems\Audio\DSP\ADSPBase.h" />
+    <ClInclude Include="src\Systems\Audio\DSP\AInterpParameter.h" />
+    <ClInclude Include="src\Systems\Audio\Components\AudioComponent.h" />
+    <ClInclude Include="src\Systems\Audio\Components\OutputAudioComponent.h" />
+    <ClInclude Include="src\Systems\Audio\Components\AMicrophone.h" />
+    <ClInclude Include="src\Systems\Audio\Components\ASpeaker.h" />
     <ClInclude Include="src\Engine\Loader.h" />
     <ClInclude Include="src\Engine\LoaderInterface.h" />
     <ClInclude Include="src\Managers\AssetManagerInterface.h" />
@@ -265,7 +271,7 @@
     <ClInclude Include="src\Managers\ServiceManagerInterface.h" />
     <ClInclude Include="src\Managers\StateManager.h" />
     <ClInclude Include="src\Systems\Graphics\GMesh.h" />
-    <ClInclude Include="src\Audio\AudioEngine.h" />
+    <ClInclude Include="src\Systems\Audio\AudioEngine.h" />
     <ClInclude Include="src\engine\Engine.h" />
     <ClInclude Include="src\Systems\Graphics\GProgram.h" />
     <ClInclude Include="src\Systems\Graphics\GTexture.h" />

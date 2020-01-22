@@ -14,6 +14,7 @@ public:
 		std::unique_ptr<class SystemInterface> input;
 		std::unique_ptr<class SystemInterface> graphics;
 		std::unique_ptr<class SystemInterface> physics;
+		std::unique_ptr<class SystemInterface> audio;
 	};
 
 	SystemsWrapper createSystems();
@@ -31,6 +32,7 @@ private:
 	class SystemInterface* inputSystem;
 	class SystemInterface* graphicsSystem;
 	class SystemInterface* physicsSystem;
+	class SystemInterface* audioSystem;
 
 	class UObject* createDefaultCamera(class UScene* uscene);
 };

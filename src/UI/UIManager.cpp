@@ -56,6 +56,32 @@ void UIManager::setupMenuBar()
 	speaker.anchor = UIAnchor::Center;
 	speaker.bounds = mat::vec2{ 60, 60 };
 	speaker.textureCoords = []() { return mat::vec4{ 162, 101, 60, 60 }; };
+
+	// microphone
+
+	UIObject& micButton = createUIObject(menuBar);
+	micButton.anchor = UIAnchor::Left;
+	micButton.bounds = mat::vec2{ 80, 80 };
+	micButton.position = mat::vec2{ 100, 0 };
+	micButton.bAcceptsInput = true;
+	AssetID micID;
+	if (assetManager->assetID("Microphone", micID)) {
+		micButton.callback = [micID](UIManagerEvent& uiEvent) {
+			uiEvent.type = UIManagerEvent::Type::SpawnObject;
+			uiEvent.spawnID = micID;
+		};
+	}
+	micButton.textureCoords = [&state = micButton.state]() {
+		switch (state) {
+		case UIObjectState::Hovered:  return mat::vec4{ 81, 101, 80, 80 };
+		default:                      return mat::vec4{ 0, 101, 80, 80 };
+		}
+	};
+
+	UIObject& mic = createUIObject(micButton);
+	mic.anchor = UIAnchor::Center;
+	mic.bounds = mat::vec2{ 60, 60 };
+	mic.textureCoords = []() { return mat::vec4{ 162, 101, 60, 60 }; };
 }
 
 void UIManager::setupProperties()
@@ -151,7 +177,7 @@ UIManagerEvent UIManager::handeInput(const SDL_Event& event)
 				updateAllReplicatedData();
 			}
 
-			if (obj) {
+			if (obj && obj->state != UIObjectState::Hovered) {
 				obj->state = UIObjectState::Hovered;
 				updateAllReplicatedData();
 			}

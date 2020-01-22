@@ -1,0 +1,4 @@
+Name=Microphone
+AssetType=Object
+AudioType=Microphone
+Model=mic.glb

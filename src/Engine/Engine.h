@@ -36,6 +36,7 @@ private:
 	std::unique_ptr<class SystemInterface> inputSystem;
 	std::unique_ptr<class SystemInterface> graphicsSystem;
 	std::unique_ptr<class SystemInterface> physicsSystem;
+	std::unique_ptr<class SystemInterface> audioSystem;
 
 	std::list<std::unique_ptr<class UScene>> scenes;
 };
