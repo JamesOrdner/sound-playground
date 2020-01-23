@@ -72,6 +72,11 @@ void AudioScene::connectAudioComponent(AudioComponent* component)
 
 	for (const auto& input : component->inputs) {
 		input->source->outputs.push_back(input);
+
+		// register this component with the other component's audio generator if necessary
+		if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(input->source)) {
+			input->genID = gComp->addConsumer();
+		}
 	}
 
 	// If OutputAudioComponent, setup indirect connections to this object

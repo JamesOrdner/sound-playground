@@ -47,8 +47,10 @@ size_t ASpeaker::process(size_t n)
 		for (const auto& output : outputs) {
 			float gain = 1.f / mat::dist(position, output->dest->position) * 0.2f;
 			float final = gen * gain;
-			written += output->write(&final, 1);
+			output->write(&final, 1);
 		}
+
+		written++;
 	}
 	
 	return n;
