@@ -32,6 +32,8 @@ void AudioScene::deleteSystemObject(const UObject* uobject)
 
 void AudioScene::processSceneAudio(float* buffer, size_t frames)
 {
+	if (outputComponents.empty()) return;
+
 	std::vector<size_t> outputProcessedCount(outputComponents.size());
 	std::vector<size_t> auralizeProcessedCount(auralizingComponents.size());
 
@@ -64,24 +66,12 @@ void AudioScene::processSceneAudio(float* buffer, size_t frames)
 
 void AudioScene::connectAudioComponent(AudioComponent* component)
 {
-	// Setup delay lines
-	for (AudioComponent* compOther : components) {
-		// outputs
-		if (component->bAcceptsOutput && compOther->bAcceptsInput) {
-			auto output = std::make_shared<ADelayLine>(component, compOther);
-			component->outputs.push_back(output);
-			compOther->inputs.push_back(output);
-			if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component)) {
-				output->genID = gComp->addConsumer();
-			}
-		}
+	for (const auto& output : component->outputs) {
+		output->dest->inputs.push_back(output);
+	}
 
-		// inputs
-		if (component->bAcceptsInput && compOther->bAcceptsOutput) {
-			auto input = std::make_shared<ADelayLine>(compOther, component);
-			compOther->outputs.push_back(input);
-			component->inputs.push_back(input);
-		}
+	for (const auto& input : component->inputs) {
+		input->source->outputs.push_back(input);
 	}
 
 	// If OutputAudioComponent, setup indirect connections to this object
@@ -106,7 +96,6 @@ void AudioScene::connectAudioComponent(AudioComponent* component)
 		}
 	}
 
-	// TODO: Sort by dependency for performance
 	components.push_back(component);
 }
 
@@ -141,6 +130,27 @@ SystemObjectInterface* AudioScene::addSystemObject(SystemObjectInterface* object
 
 AudioComponent* AudioScene::addAudioComponentToObject(std::unique_ptr<class AudioComponent> component, AudioObject* object)
 {
+	// setup delay lines to other components, without modifying the other components
+	for (AudioComponent* compOther : components) {
+		// outputs
+		if (component->bAcceptsOutput && compOther->bAcceptsInput) {
+			auto output = std::make_shared<ADelayLine>(component.get(), compOther);
+			component->outputs.push_back(output);
+
+			// register this output send with the audio generator if necessary
+			if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component.get())) {
+				output->genID = gComp->addConsumer();
+			}
+		}
+
+		// inputs
+		if (component->bAcceptsInput && compOther->bAcceptsOutput) {
+			auto input = std::make_shared<ADelayLine>(compOther, component.get());
+			component->inputs.push_back(input);
+		}
+	}
+
+	// attach component to AudioObject and pass to AudioEngine
 	object->audioComponent = component.get();
 	audioEngine->registerComponent(std::move(component), this);
 	return object->audioComponent;

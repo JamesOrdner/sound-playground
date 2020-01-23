@@ -31,7 +31,7 @@ public:
 	void tick(float deltaTime);
 
 	// Registers and takes ownership of an audio component
-	class AudioComponent* registerComponent(std::unique_ptr<AudioComponent> component, class AudioScene* scene);
+	void registerComponent(std::unique_ptr<class AudioComponent> component, class AudioScene* scene);
 
 	// Signal that a component is ready for removal from the audio graph and deletion
 	void unregisterComponent(class AudioComponent* component, class AudioScene* scene);
