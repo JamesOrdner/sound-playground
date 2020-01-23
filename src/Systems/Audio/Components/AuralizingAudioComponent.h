@@ -28,23 +28,20 @@ struct IndirectSend
 	void auralize() {}
 };
 
-// Forward declarations
-class OutputAudioComponent;
-
 class AuralizingAudioComponent : public AudioComponent, public GeneratingAudioComponent
 {
 public:
 
-	AuralizingAudioComponent(const EObject* owner);
+	AuralizingAudioComponent();
 
 	virtual ~AuralizingAudioComponent();
 
 	// Register a receiving component with this component. Called outside the audio thread.
 	// Returns a pointer to the created IndirectSend object.
-	IndirectSend* registerIndirectReceiver(OutputAudioComponent* receiver);
+	IndirectSend* registerIndirectReceiver(class OutputAudioComponent* receiver);
 
 	// Unregister a receiving component from this component. Called outside the audio thread.
-	void unregisterIndirectReceiver(const OutputAudioComponent* receiver);
+	void unregisterIndirectReceiver(const class OutputAudioComponent* receiver);
 
 	// Contribute `n` frames to interleaved buffer `buffer`. Samples should be constructively
 	// added to `buffer`, rather than overridden, as `buffer` is shared by all output components.

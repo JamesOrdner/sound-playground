@@ -1,8 +1,7 @@
 #include "AuralizingAudioComponent.h"
 #include "OutputAudioComponent.h"
 
-AuralizingAudioComponent::AuralizingAudioComponent(const EObject* owner) :
-	AudioComponent(owner)
+AuralizingAudioComponent::AuralizingAudioComponent()
 {
 	genID = GeneratingAudioComponent::addConsumer();
 }

@@ -21,6 +21,10 @@
 #include "../Systems/Physics/PhysicsObject.h"
 
 #include "../Systems/Audio/AudioSystem.h"
+#include "../Systems/Audio/AudioScene.h"
+#include "../Systems/Audio/AudioObject.h"
+#include "../Systems/Audio/Components/AMicrophone.h"
+#include "../Systems/Audio/Components/ASpeaker.h"
 
 Loader::Loader() :
 	inputSystem(nullptr),
@@ -74,6 +78,7 @@ void Loader::loadDefaultScene(UScene* uscene)
 	inputSystem->createSystemScene(uscene);
 	graphicsSystem->createSystemScene(uscene);
 	physicsSystem->createSystemScene(uscene);
+	audioSystem->createSystemScene(uscene);
 
 	createDefaultCamera(uscene);
 
@@ -123,6 +128,18 @@ UObject* Loader::createObjectFromAsset(const AssetDescriptor& asset, UScene* usc
 		gobj->setMesh(asset.modelPath);
 		pobj->setPhysicsMesh(asset.modelPath);
 	}
+	if (asset.audioType != AudioType::None) {
+		auto* audioScene = static_cast<AudioScene*>(audioSystem->findSystemScene(uscene));
+		auto* aobj = audioScene->createSystemObject<AudioObject>(uobject);
+		switch (asset.audioType) {
+		case AudioType::Microphone:
+			audioScene->setAudioComponentForObject<AMicrophone>(aobj);
+			break;
+		case AudioType::Speaker:
+			audioScene->setAudioComponentForObject<ASpeaker>(aobj);
+			break;
+		}
+	}
 	return uobject;
 }
 
@@ -140,5 +157,6 @@ void Loader::deleteObject(const UObject* uobject, UScene* uscene) const
 	inputSystem->findSystemScene(uscene)->deleteSystemObject(uobject);
 	graphicsSystem->findSystemScene(uscene)->deleteSystemObject(uobject);
 	physicsSystem->findSystemScene(uscene)->deleteSystemObject(uobject);
+	audioSystem->findSystemScene(uscene)->deleteSystemObject(uobject);
 	uscene->deleteUniversalObject(uobject);
 }

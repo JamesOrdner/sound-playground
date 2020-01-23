@@ -1,17 +1,13 @@
 #pragma once
 
 #include "AuralizingAudioComponent.h"
-
 #include <memory>
-
-// Forward declarations
-class AConvolver;
 
 class ASpeaker : public AudioComponent // AuralizingAudioComponent
 {
 public:
 
-	ASpeaker(const EObject* owner);
+	ASpeaker();
 
 	// AudioComponent interface
 	// void init(float sampleRate) override;
@@ -21,7 +17,7 @@ public:
 private:
 
 	// Convolves the speaker signal with the speaker IR
-	std::unique_ptr<AConvolver> convolver;
+	std::unique_ptr<class AConvolver> convolver;
 
 	// Buffer required for process()
 	std::vector<float> processingBuffer;

@@ -1,12 +1,13 @@
 #include "OutputAudioComponent.h"
 #include "AuralizingAudioComponent.h"
 
-OutputAudioComponent::OutputAudioComponent(const EObject* owner) :
-	AudioComponent(owner)
+OutputAudioComponent::OutputAudioComponent()
 {
 }
 
-OutputAudioComponent::~OutputAudioComponent() = default;
+OutputAudioComponent::~OutputAudioComponent()
+{
+}
 
 void OutputAudioComponent::registerIndirectSend(IndirectSend* send)
 {

@@ -1,4 +1,5 @@
 #include "AudioEngine.h"
+#include "AudioScene.h"
 #include "DSP/ADelayLine.h"
 #include "Components/AudioComponent.h"
 #include "Components/GeneratingAudioComponent.h"
@@ -6,7 +7,7 @@
 #include "Components/OutputAudioComponent.h"
 #include <portaudio.h>
 #include <pa_win_wasapi.h>
-#include <stdio.h>
+#include <algorithm>
 
 int pa_callback(
 	const void* input,
@@ -69,7 +70,7 @@ bool AudioEngine::init()
 		}
 	}
 
-	for (const auto& comp : components) comp->init(sampleRate);
+	for (const auto& c : audioComponents) c->init(sampleRate);
 	return true;
 }
 
@@ -80,7 +81,7 @@ void AudioEngine::deinit()
 		audioStream = nullptr;
 	}
 	Pa_Terminate();
-	for (const auto& c : components) c->deinit();
+	for (const auto& c : audioComponents) c->deinit();
 }
 
 bool AudioEngine::start()
@@ -110,140 +111,59 @@ void AudioEngine::process_float(float* buffer, size_t frames)
 	// zero output buffer
 	std::fill_n(buffer, frames * channels, 0.f);
 
-	std::vector<size_t> outputProcessedCount(outputComponents.size());
-	std::vector<size_t> auralizeProcessedCount(auralizingComponents.size());
+	// process audio for all scenes
+	for (auto* scene : scenes) scene->processSceneAudio(buffer, frames);
 
-	size_t i;
-	while (true) {
-		size_t maxRemaining = 0;
-		i = 0;
-		for (auto* c : outputComponents) {
-			size_t processed = outputProcessedCount[i];
-			processed += c->processOutput(buffer + processed, frames - processed);
-			if (frames - processed > maxRemaining) maxRemaining = frames - processed;
-			outputProcessedCount[i++] = processed;
-		}
-
-		i = 0;
-		for (auto* c : auralizingComponents) {
-			size_t processed = auralizeProcessedCount[i];
-			processed += c->processIndirect(buffer + processed, frames - processed);
-			if (frames - processed > maxRemaining) maxRemaining = frames - processed;
-			auralizeProcessedCount[i++] = processed;
-		}
-
-		if (maxRemaining == 0) break;
-
-		for (auto* c : components) {
-			c->process(maxRemaining);
+	// handle pending external changes to audio objects
+	ExternalAudioEngineEvent event;
+	while (externalEventQueue.pop(event)) {
+		switch (event.type) {
+		case ExternalAudioEngineEvent::Type::ComponentAdded:
+			event.scene->connectAudioComponent(event.component);
+			event.component->init(sampleRate);
+			break;
+		case ExternalAudioEngineEvent::Type::ComponentRemoved:
+			event.scene->disconnectAudioComponent(event.component);
+			event.component->deinit();
+			internalEventQueue.push(InternalAudioEngineEvent{ InternalAudioEngineEvent::Type::DeleteComponent, event.component, event.scene });
 		}
 	}
-
-	// handle pending changes to audio objects
-	// StateManager::instance().notifyAudioObservers();
 }
 
-//AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> component)
-//{
-//	AudioComponent* ptr = component.get();
-//	audioComponents.push_back(std::move(component));
-//
-//	auto& stateManager = StateManager::instance();
-//	ptr->audioObserverIDs.push_back(
-//		stateManager.registerAudioObserver(
-//			ptr,
-//			StateManager::EventType::ComponentCreated,
-//			[this](const StateManager::EventData& data) { registerComponent(data); }
-//		)
-//	);
-//
-//	ptr->audioObserverIDs.push_back(
-//		stateManager.registerAudioObserver(
-//			ptr,
-//			StateManager::EventType::ComponentDeleted,
-//			[this](const StateManager::EventData& data) { unregisterComponent(data); }
-//		)
-//	);
-//
-//	stateManager.event(ptr, StateManager::EventType::ComponentCreated, ptr);
-//
-//	return ptr;
-//}
-//
-//void AudioEngine::registerComponent(const StateManager::EventData& data)
-//{
-//	auto* component = static_cast<AudioComponent*>(std::get<EComponent*>(data));
-//	if (audioStream) component->init(sampleRate);
-//
-//	// Setup delay lines
-//	for (AudioComponent* compOther : components) {
-//		// outputs
-//		if (component->bAcceptsOutput && compOther->bAcceptsInput) {
-//			auto output = std::make_shared<ADelayLine>(component, compOther);
-//			output->init(sampleRate);
-//			component->outputs.push_back(output);
-//			compOther->inputs.push_back(output);
-//			if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component)) {
-//				output->genID = gComp->addConsumer();
-//			}
-//		}
-//
-//		// inputs
-//		if (component->bAcceptsInput && compOther->bAcceptsOutput) {
-//			auto input = std::make_shared<ADelayLine>(compOther, component);
-//			input->init(sampleRate);
-//			compOther->outputs.push_back(input);
-//			component->inputs.push_back(input);
-//		}
-//	}
-//
-//	// If OutputAudioComponent, setup indirect connections to this object
-//	if (auto* oComp = dynamic_cast<OutputAudioComponent*>(component)) {
-//		outputComponents.push_back(oComp);
-//		for (AudioComponent* compOther : components) {
-//			if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(compOther)) {
-//				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
-//				oComp->registerIndirectSend(sendPtr);
-//			}
-//		}
-//	}
-//
-//	// If AuralizingAudioComponent, setup indirect connections from this object
-//	if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(component)) {
-//		auralizingComponents.push_back(aComp);
-//		for (AudioComponent* compOther : components) {
-//			if (auto* oComp = dynamic_cast<OutputAudioComponent*>(compOther)) {
-//				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
-//				oComp->registerIndirectSend(sendPtr);
-//			}
-//		}
-//	}
-//
-//	// TODO: Sort by dependency for performance
-//	components.push_back(component);
-//}
-//
-//void AudioEngine::unregisterComponent(const StateManager::EventData& data)
-//{
-//	auto* component = static_cast<AudioComponent*>(std::get<EComponent*>(data));
-//
-//	for (const auto& input : component->inputs) {
-//		input->source->outputs.remove(input);
-//	}
-//
-//	for (const auto& output : component->outputs) {
-//		output->dest->inputs.remove(output);
-//		if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component)) {
-//			gComp->removeConsumer(output->genID);
-//		}
-//	}
-//
-//	// Only deinit if engine is running
-//	if (audioStream) component->deinit();
-//
-//	components.remove(component);
-//	outputComponents.remove(dynamic_cast<OutputAudioComponent*>(component));
-//	auralizingComponents.remove(dynamic_cast<AuralizingAudioComponent*>(component));
-//	
-//	audioComponents.remove_if([component](const auto& data) { return data.get() == component; });
-//}
+void AudioEngine::tick(float deltaTime)
+{
+	// handle pending changes created on the audio thread
+	InternalAudioEngineEvent event;
+	while (internalEventQueue.pop(event)) {
+		if (event.type == InternalAudioEngineEvent::Type::DeleteComponent) {
+			for (auto it = audioComponents.cbegin(); it != audioComponents.cend(); it++) {
+				if (it->get() == event.component) {
+					audioComponents.erase(it);
+					break;
+				}
+			}
+			if (!event.scene->registeredComponentCount()) {
+				// remove scene if no components remain
+				scenes.erase(std::remove(scenes.begin(), scenes.end(), event.scene), scenes.end());
+			}
+		}
+	}
+}
+
+AudioComponent* AudioEngine::registerComponent(std::unique_ptr<AudioComponent> component, AudioScene* scene)
+{
+	AudioComponent* ptr = component.get();
+	audioComponents.push_back(std::move(component));
+	externalEventQueue.push(ExternalAudioEngineEvent{ ExternalAudioEngineEvent::Type::ComponentAdded, ptr, scene });
+	for (const auto* knownScene : scenes) {
+		// add scene if not present in running scenes
+		if (knownScene = scene) return ptr;
+	}
+	scenes.push_back(scene);
+	return ptr;
+}
+
+void AudioEngine::unregisterComponent(AudioComponent* component, AudioScene* scene)
+{
+	externalEventQueue.push(ExternalAudioEngineEvent{ ExternalAudioEngineEvent::Type::ComponentRemoved, component, scene });
+}

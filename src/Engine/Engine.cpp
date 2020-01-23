@@ -103,6 +103,7 @@ void Engine::run()
 
 		// execute async systems
 		physicsSystem->execute(deltaTime);
+		audioSystem->execute(deltaTime);
 
 		// execute input and graphics systems on the main thread due to SDL/OpenGL limitations
 		inputSystem->execute(deltaTime);

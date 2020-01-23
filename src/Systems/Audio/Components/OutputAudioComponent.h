@@ -2,24 +2,21 @@
 
 #include "AudioComponent.h"
 
-// Forward declarations
-struct IndirectSend;
-
 // OutputAudioComponent is an AudioComponent which will be used to fill
 // the final output buffer, to be sent directly to the output device
 class OutputAudioComponent : public AudioComponent
 {
 public:
 
-	OutputAudioComponent(const EObject* owner);
+	OutputAudioComponent();
 
 	virtual ~OutputAudioComponent();
 
 	// Register a receiving component with this component. Called outside the audio thread.
-	void registerIndirectSend(IndirectSend* send);
+	void registerIndirectSend(struct IndirectSend* send);
 
 	// Unregister a receiving component from this component. Called outside the audio thread.
-	void unregisterIndirectSend(IndirectSend* send);
+	void unregisterIndirectSend(struct IndirectSend* send);
 
 	// Contribute `n` frames to interleaved buffer `buffer`. Samples should be constructively
 	// added to `buffer`, rather than overridden, as `buffer` is shared by all output components.

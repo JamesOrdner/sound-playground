@@ -22,4 +22,6 @@ public:
 private:
 
 	std::list<std::unique_ptr<class AudioScene>> audioScenes;
+
+	std::unique_ptr<class AudioEngine> audioEngine;
 };

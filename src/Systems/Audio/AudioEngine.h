@@ -1,12 +1,8 @@
 #pragma once
 
-#include <list>
+#include <vector>
 #include <memory>
-
-// Forward declarations
-class AudioComponent;
-class OutputAudioComponent;
-class AuralizingAudioComponent;
+#include "../../Util/LFQueue.h"
 
 class AudioEngine
 {
@@ -31,6 +27,15 @@ public:
 	// Internal callback called by the unscoped SDL callback
 	void process_float(float* buffer, size_t frames);
 
+	// This function is called at a regular interval outside of the audio thread
+	void tick(float deltaTime);
+
+	// Registers and takes ownership of an audio component
+	class AudioComponent* registerComponent(std::unique_ptr<AudioComponent> component, class AudioScene* scene);
+
+	// Signal that a component is ready for removal from the audio graph and deletion
+	void unregisterComponent(class AudioComponent* component, class AudioScene* scene);
+
 private:
 
 	// Pointer to the active stream (may be null)
@@ -42,28 +47,32 @@ private:
 	// Current number of channels
 	int channels;
 
-	// Contains all existing AudioComponents and is responsible for their deallocation
-	std::list<std::unique_ptr<AudioComponent>> audioComponents;
+	struct ExternalAudioEngineEvent
+	{
+		enum class Type {
+			ComponentAdded,
+			ComponentRemoved
+		} type;
+		class AudioComponent* component;
+		class AudioScene* scene;
+	};
+	// This queue takes events from outside the audio thread and is parsed on the audio thread
+	LFQueue<ExternalAudioEngineEvent> externalEventQueue;
 
-	// This list contains all active audio components, sorted from least dependent to most dependent.
-	// Dependency is determined from the input buffers. Components with longer input buffers
-	// are considered less dependent, while components with shorter length input buffers
-	// are more dependent. Components with no input buffers are the least dependent.
-	std::list<AudioComponent*> components;
+	struct InternalAudioEngineEvent
+	{
+		enum class Type {
+			DeleteComponent
+		} type;
+		class AudioComponent* component;
+		class AudioScene* scene;
+	};
+	// This queue takes events from the audio thread and is parsed outside the audio thread
+	LFQueue<InternalAudioEngineEvent> internalEventQueue;
 
-	// This list contains all OuputAudioComponents. Pointers to
-	// these objects also exists in the `components` list.
-	std::list<OutputAudioComponent*> outputComponents;
+	// Contains all existing AudioComponents across all scenes, and is responsible for their deallocation
+	std::vector<std::unique_ptr<class AudioComponent>> audioComponents;
 
-	// This list contains all AuralizingAudioComponents. Pointers to
-	// these objects also exists in the `components` list.
-	std::list<AuralizingAudioComponent*> auralizingComponents;
-
-	//// Registers an audio component with the engine for processing
-	//AudioComponent* registerComponent(std::unique_ptr<AudioComponent> component);
-	//void destroyComponent();
-
-	//// Called in the audio thread. Registers a component for active processing.
-	//void registerComponent(const StateManager::EventData& data);
-	//void unregisterComponent(const StateManager::EventData& data);
+	// All audio scenes
+	std::vector<class AudioScene*> scenes;
 };

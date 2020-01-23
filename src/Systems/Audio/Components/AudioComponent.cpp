@@ -1,35 +1,13 @@
 #include "AudioComponent.h"
 #include "../DSP/ADelayLine.h"
+#include "../AudioObject.h"
 
-AudioComponent::AudioComponent(const EObject* owner) :
+AudioComponent::AudioComponent() :
 	bAcceptsInput(false),
 	bAcceptsOutput(false),
 	sampleRate(0.f),
 	bInitialized(false)
 {
-	//auto& stateManager = StateManager::instance();
-
-	//audioObserverIDs.push_back(
-	//	stateManager.registerAudioObserver(
-	//		owner,
-	//		StateManager::EventType::PositionUpdated,
-	//		[this](const StateManager::EventData& data) {
-	//			position = std::get<mat::vec3>(data);
-	//			transformUpdated();
-	//		}
-	//	)
-	//);
-
-	//audioObserverIDs.push_back(
-	//	stateManager.registerAudioObserver(
-	//		owner,
-	//		StateManager::EventType::VelocityUpdated,
-	//		[this](const StateManager::EventData& data) {
-	//			velocity = std::get<mat::vec3>(data);
-	//			velocityUpdated();
-	//		}
-	//	)
-	//);
 }
 
 AudioComponent::~AudioComponent()
@@ -49,19 +27,9 @@ void AudioComponent::deinit()
 	bInitialized = false;
 }
 
-const mat::vec3& AudioComponent::componentPosition() const
-{
-	return position;
-}
-
-const mat::vec3& AudioComponent::componentVelocity() const
-{
-	return velocity;
-}
-
 mat::vec3 AudioComponent::forward() const
 {
-	return mat::vec3{ 0, 0, 1 };
+	return mat::forward(rotation);
 }
 
 void AudioComponent::transformUpdated()
@@ -77,13 +45,13 @@ void AudioComponent::transformUpdated()
 void AudioComponent::velocityUpdated()
 {
 	for (const auto& output : outputs) {
-		mat::vec3 relPos = mat::normal(output->dest->componentPosition() - position);
-		mat::vec3 relVel = velocity - output->dest->componentVelocity();
+		mat::vec3 relPos = mat::normal(output->dest->position - position);
+		mat::vec3 relVel = velocity - output->dest->velocity;
 		output->velocity = mat::dot(relPos, relVel);
 	}
 	for (const auto& input : inputs) {
-		mat::vec3 relPos = mat::normal(position - input->dest->componentPosition());
-		mat::vec3 relVel = input->dest->componentVelocity() - velocity;
+		mat::vec3 relPos = mat::normal(position - input->dest->position);
+		mat::vec3 relVel = input->dest->velocity - velocity;
 		input->velocity = mat::dot(relPos, relVel);
 	}
 }

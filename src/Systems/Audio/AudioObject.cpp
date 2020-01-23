@@ -1,10 +1,9 @@
 #include "AudioObject.h"
 #include "../../Engine/UObject.h"
+#include "Components/AudioComponent.h"
 
 AudioObject::AudioObject(const SystemSceneInterface* scene, const UObject* uobject) :
-	SystemObjectInterface(scene, uobject),
-	scale(1),
-	parentScale(1)
+	SystemObjectInterface(scene, uobject)
 {
 	registerCallback(
 		uobject,
@@ -21,15 +20,6 @@ AudioObject::AudioObject(const SystemSceneInterface* scene, const UObject* uobje
 		[this](const EventData& data, bool bEventFromParent) {
 			(bEventFromParent ? parentRotation : rotation) = std::get<mat::vec3>(data);
 			this->uobject->childEventImmediate(EventType::RotationUpdated, rotation + parentRotation);
-		}
-	);
-
-	registerCallback(
-		uobject,
-		EventType::ScaleUpdated,
-		[this](const EventData& data, bool bEventFromParent) {
-			(bEventFromParent ? parentScale : scale) = std::get<mat::vec3>(data);
-			this->uobject->childEventImmediate(EventType::ScaleUpdated, scale * parentScale);
 		}
 	);
 }

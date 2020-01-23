@@ -101,7 +101,7 @@ ADelayLine::ADelayLine(AudioComponent* source, AudioComponent* dest) :
 
 void ADelayLine::init(float sampleRate)
 {
-	float dist = mat::dist(source->componentPosition(), dest->componentPosition());
+	float dist = mat::dist(source->position, dest->position);
 	float fMaxSampleDelay = sampleRate * maximumDistance * soundSpeed;
 	float fInitSampleDelay = sampleRate * dist * soundSpeed;
 	size_t maxSampleDelay = static_cast<size_t>(fMaxSampleDelay);

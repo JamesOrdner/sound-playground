@@ -7,7 +7,7 @@ class AMicrophone : public OutputAudioComponent
 {
 public:
 
-	AMicrophone(const EObject* owner);
+	AMicrophone();
 
 	// AudioComponent interface
 	void init(float sampleRate) override;

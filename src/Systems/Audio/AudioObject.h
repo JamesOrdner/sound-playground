@@ -12,6 +12,8 @@ public:
 
 	virtual ~AudioObject();
 
+	class AudioComponent* audioComponent;
+
 private:
 
 	// World space local location
@@ -20,6 +22,6 @@ private:
 	// World space local rotation
 	mat::vec3 rotation, parentRotation;
 
-	// World space local scale
-	mat::vec3 scale, parentScale;
+	// World space velocity
+	mat::vec3 velocity, parentVelocity;
 };
