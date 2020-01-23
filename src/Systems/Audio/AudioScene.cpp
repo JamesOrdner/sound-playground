@@ -5,6 +5,7 @@
 #include "Components/AuralizingAudioComponent.h"
 #include "Components/OutputAudioComponent.h"
 #include "DSP/ADelayLine.h"
+#include <queue>
 
 AudioScene::AudioScene(const SystemInterface* system, AudioEngine* audioEngine, const UScene* uscene) :
 	SystemSceneInterface(system, uscene),
@@ -37,31 +38,37 @@ void AudioScene::processSceneAudio(float* buffer, size_t frames)
 	std::vector<size_t> outputProcessedCount(outputComponents.size());
 	std::vector<size_t> auralizeProcessedCount(auralizingComponents.size());
 
-	size_t i;
-	while (true) {
-		size_t maxRemaining = 0;
-		i = 0;
-		for (auto* c : outputComponents) {
-			size_t processed = outputProcessedCount[i];
-			processed += c->processOutput(buffer + processed, frames - processed);
-			if (frames - processed > maxRemaining) maxRemaining = frames - processed;
-			outputProcessedCount[i++] = processed;
-		}
-
-		i = 0;
-		for (auto* c : auralizingComponents) {
-			size_t processed = auralizeProcessedCount[i];
-			processed += c->processIndirect(buffer + processed, frames - processed);
-			if (frames - processed > maxRemaining) maxRemaining = frames - processed;
-			auralizeProcessedCount[i++] = processed;
-		}
-
-		if (maxRemaining == 0) break;
-
-		for (auto* c : components) {
-			c->process(maxRemaining);
+	std::queue<std::pair<ADelayLine*, size_t>> processQueue;
+	for (auto* c : outputComponents) {
+		for (const auto& input : c->inputs) {
+			processQueue.push({ input.get(), frames });
 		}
 	}
+	for (auto* c : auralizingComponents) {
+		for (const auto& input : c->inputs) {
+			processQueue.push({ input.get(), frames });
+		}
+	}
+
+	while (!processQueue.empty()) {
+		auto& dependency = processQueue.front();
+		size_t n = dependency.first->source->process(dependency.first, dependency.second);
+		if (n < dependency.second) {
+			// some input(s) prevented this dependency from producing all required samples
+			dependency.second -= n;
+			for (const auto& sourceInput : dependency.first->source->inputs) {
+				if (sourceInput->readable() < dependency.second) {
+					// This input is holding us up, add to queue
+					processQueue.push({ sourceInput.get(), dependency.second - sourceInput->readable() });
+				}
+			}
+			processQueue.push(dependency);
+		}
+		processQueue.pop();
+	}
+
+	for (auto* c : outputComponents) c->processOutput(buffer, frames);
+	for (auto* c : auralizingComponents) c->processIndirect(buffer, frames);
 }
 
 void AudioScene::connectAudioComponent(AudioComponent* component)

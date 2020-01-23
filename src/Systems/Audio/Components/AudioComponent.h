@@ -23,11 +23,10 @@ public:
 	// bInput == true if this is an input to the called AudioComponent, == false if output.
 	virtual void otherTransformUpdated(const class ADelayLine& connection, bool bInput) {};
 
-	// Pull from the input delay lines and attempt to fill output buffers and
-	// and output delay lines with n samples. Returns the number of outputted
-	// samples, which will often be less than n due to full output buffers or
-	// running out of input samples.
-	virtual size_t process(size_t n) { return n; };
+	// Attempt to fill the provided output with `n` samples. Returns the number
+	// of outputted samples, which will often be less than n due to full output
+	// buffers or running out of input samples.
+	virtual size_t process(ADelayLine* output, size_t n) { return n; };
 
 	// Should this component accept input from other components?
 	bool bAcceptsInput;

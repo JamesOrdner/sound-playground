@@ -3,16 +3,16 @@
 #include "AuralizingAudioComponent.h"
 #include <memory>
 
-class ASpeaker : public AudioComponent // AuralizingAudioComponent
+class ASpeaker : public AuralizingAudioComponent
 {
 public:
 
 	ASpeaker();
 
 	// AudioComponent interface
-	// void init(float sampleRate) override;
-	// void deinit() override;
-	size_t process(size_t n) override;
+	 void init(float sampleRate) override;
+	 void deinit() override;
+	size_t process(ADelayLine* output, size_t n) override;
 
 private:
 
@@ -23,5 +23,5 @@ private:
 	std::vector<float> processingBuffer;
 
 	// GeneratingAudioComponent interface
-	// size_t generateImpl(float* buffer, size_t count) override;
+	size_t generateImpl(float* buffer, size_t count) override;
 };
