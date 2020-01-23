@@ -45,7 +45,9 @@ size_t ASpeaker::process(size_t n)
 
 		float gen = static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f;
 		for (const auto& output : outputs) {
-			written += output->write(&gen, 1);
+			float gain = 1.f / mat::dist(position, output->dest->position) * 0.2f;
+			float final = gen * gain;
+			written += output->write(&final, 1);
 		}
 	}
 	
