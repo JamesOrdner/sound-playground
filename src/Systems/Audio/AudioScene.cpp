@@ -35,9 +35,6 @@ void AudioScene::processSceneAudio(float* buffer, size_t frames)
 {
 	if (outputComponents.empty()) return;
 
-	std::vector<size_t> outputProcessedCount(outputComponents.size());
-	std::vector<size_t> auralizeProcessedCount(auralizingComponents.size());
-
 	std::queue<std::pair<ADelayLine*, size_t>> processQueue;
 	for (auto* c : outputComponents) {
 		for (const auto& input : c->inputs) {
@@ -73,6 +70,7 @@ void AudioScene::processSceneAudio(float* buffer, size_t frames)
 
 void AudioScene::connectAudioComponent(AudioComponent* component)
 {
+	// direct connections
 	for (const auto& output : component->outputs) {
 		output->dest->inputs.push_back(output);
 	}
@@ -86,25 +84,18 @@ void AudioScene::connectAudioComponent(AudioComponent* component)
 		}
 	}
 
-	// If OutputAudioComponent, setup indirect connections to this object
-	if (auto* oComp = dynamic_cast<OutputAudioComponent*>(component)) {
-		outputComponents.push_back(oComp);
-		for (AudioComponent* compOther : components) {
-			if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(compOther)) {
-				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
-				oComp->registerIndirectSend(sendPtr);
-			}
+	// indirect connections
+	if (auto* outComp = dynamic_cast<OutputAudioComponent*>(component)) {
+		outputComponents.push_back(outComp);
+		for (const auto& indirectSend : outComp->indirectSends) {
+			indirectSend->sender->indirectSends.push_back(indirectSend);
 		}
 	}
 
-	// If AuralizingAudioComponent, setup indirect connections from this object
-	if (auto* aComp = dynamic_cast<AuralizingAudioComponent*>(component)) {
-		auralizingComponents.push_back(aComp);
-		for (AudioComponent* compOther : components) {
-			if (auto* oComp = dynamic_cast<OutputAudioComponent*>(compOther)) {
-				IndirectSend* sendPtr = aComp->registerIndirectReceiver(oComp);
-				oComp->registerIndirectSend(sendPtr);
-			}
+	if (auto* auralComp = dynamic_cast<AuralizingAudioComponent*>(component)) {
+		auralizingComponents.push_back(auralComp);
+		for (const auto& indirectSend : auralComp->indirectSends) {
+			indirectSend->receiver->indirectSends.push_back(indirectSend);
 		}
 	}
 
@@ -113,20 +104,34 @@ void AudioScene::connectAudioComponent(AudioComponent* component)
 
 void AudioScene::disconnectAudioComponent(AudioComponent* component)
 {
-	for (const auto& input : component->inputs) {
-		input->source->outputs.remove(input);
-	}
-
+	// direct connections
 	for (const auto& output : component->outputs) {
 		output->dest->inputs.remove(output);
-		if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component)) {
-			gComp->removeConsumer(output->genID);
+	}
+
+	for (const auto& input : component->inputs) {
+		input->source->outputs.remove(input);
+		if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(input->source)) {
+			gComp->removeConsumer(input->genID);
+		}
+	}
+
+	// indirect connections
+	if (auto* outComp = dynamic_cast<OutputAudioComponent*>(component)) {
+		outputComponents.remove(outComp);
+		for (const auto& indirectSend : outComp->indirectSends) {
+			indirectSend->sender->indirectSends.remove(indirectSend);
+		}
+	}
+
+	if (auto* auralComp = dynamic_cast<AuralizingAudioComponent*>(component)) {
+		auralizingComponents.remove(auralComp);
+		for (const auto& indirectSend : auralComp->indirectSends) {
+			indirectSend->receiver->indirectSends.remove(indirectSend);
 		}
 	}
 
 	components.remove(component);
-	outputComponents.remove(dynamic_cast<OutputAudioComponent*>(component));
-	auralizingComponents.remove(dynamic_cast<AuralizingAudioComponent*>(component));
 }
 
 size_t AudioScene::registeredComponentCount() const
@@ -143,22 +148,40 @@ SystemObjectInterface* AudioScene::addSystemObject(SystemObjectInterface* object
 AudioComponent* AudioScene::addAudioComponentToObject(std::unique_ptr<class AudioComponent> component, AudioObject* object)
 {
 	// setup delay lines to other components, without modifying the other components
-	for (AudioComponent* compOther : components) {
-		// outputs
-		if (component->bAcceptsOutput && compOther->bAcceptsInput) {
-			auto output = std::make_shared<ADelayLine>(component.get(), compOther);
-			component->outputs.push_back(output);
+	auto* genComp = dynamic_cast<GeneratingAudioComponent*>(component.get());
+	auto* auralComp = dynamic_cast<AuralizingAudioComponent*>(component.get());
+	auto* outComp = dynamic_cast<OutputAudioComponent*>(component.get());
 
-			// register this output send with the audio generator if necessary
-			if (auto* gComp = dynamic_cast<GeneratingAudioComponent*>(component.get())) {
-				output->genID = gComp->addConsumer();
+	for (AudioComponent* otherComp : components) {
+		// outputs
+		if (component->bAcceptsOutput && otherComp->bAcceptsInput) {
+			// direct send
+			auto output = std::make_shared<ADelayLine>(component.get(), otherComp);
+			if (genComp) output->genID = genComp->addConsumer();
+			component->outputs.push_back(output);
+			
+			// indirect send
+			if (auto* otherOutComp = dynamic_cast<OutputAudioComponent*>(otherComp)) {
+				if (auralComp) {
+					auto&& indirectSend = std::make_shared<IndirectSend>(auralComp, otherOutComp);
+					auralComp->indirectSends.push_back(indirectSend);
+				}
 			}
 		}
 
 		// inputs
-		if (component->bAcceptsInput && compOther->bAcceptsOutput) {
-			auto input = std::make_shared<ADelayLine>(compOther, component.get());
+		if (component->bAcceptsInput && otherComp->bAcceptsOutput) {
+			// direct receive
+			auto input = std::make_shared<ADelayLine>(otherComp, component.get());
 			component->inputs.push_back(input);
+
+			// indirect receive
+			if (auto* otherAuralComp = dynamic_cast<AuralizingAudioComponent*>(otherComp)) {
+				if (outComp) {
+					auto&& indirectSend = std::make_shared<IndirectSend>(otherAuralComp, outComp);
+					outComp->indirectSends.push_back(indirectSend);
+				}
+			}
 		}
 	}
 

@@ -23,7 +23,7 @@ struct IndirectSend
 	// One convolver per receiver output channel.
 	std::vector<AConvolver> convolvers;
 
-	IndirectSend() : sender(nullptr), receiver(nullptr) {}
+	IndirectSend(class AuralizingAudioComponent* sender, class OutputAudioComponent* receiver);
 
 	void auralize() {}
 };
@@ -36,12 +36,8 @@ public:
 
 	virtual ~AuralizingAudioComponent();
 
-	// Register a receiving component with this component. Called outside the audio thread.
-	// Returns a pointer to the created IndirectSend object.
-	IndirectSend* registerIndirectReceiver(class OutputAudioComponent* receiver);
-
-	// Unregister a receiving component from this component. Called outside the audio thread.
-	void unregisterIndirectReceiver(const class OutputAudioComponent* receiver);
+	// Sends to OutputAudioComponents receiving indirect sound from this component
+	std::list<std::shared_ptr<IndirectSend>> indirectSends;
 
 	// Contribute `n` frames to interleaved buffer `buffer`. Samples should be constructively
 	// added to `buffer`, rather than overridden, as `buffer` is shared by all output components.
@@ -53,9 +49,6 @@ public:
 	virtual void deinit() override;
 
 private:
-
-	// Sends to OutputAudioComponents receiving indirect sound from this component
-	std::list<std::unique_ptr<IndirectSend>> indirectReceivers;
 
 	// This buffer is required for processIndirect()
 	std::vector<float> processingBuffer;
