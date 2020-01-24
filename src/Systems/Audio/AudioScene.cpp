@@ -36,28 +36,34 @@ void AudioScene::processSceneAudio(float* buffer, size_t frames)
 {
 	if (outputComponents.empty()) return;
 
-	std::queue<std::pair<ADelayLine*, size_t>> processQueue;
+	struct ProcessQueueItem
+	{
+		ADelayLine* delayline;
+		size_t remaining;
+	};
+	std::queue<ProcessQueueItem> processQueue;
+
 	for (auto* c : outputComponents) {
 		for (const auto& input : c->inputs) {
-			processQueue.push({ input.get(), frames });
+			processQueue.push({ input.get(), std::min(frames - input->readable(), frames) });
 		}
 	}
 	for (auto* c : auralizingComponents) {
 		for (const auto& input : c->inputs) {
-			processQueue.push({ input.get(), frames });
+			processQueue.push({ input.get(), std::min(frames - input->readable(), frames) });
 		}
 	}
 
 	while (!processQueue.empty()) {
 		auto& dependency = processQueue.front();
-		size_t n = dependency.first->source->process(dependency.first, dependency.second);
-		if (n < dependency.second) {
-			// some input(s) prevented this dependency from producing all required samples
-			dependency.second -= n;
-			for (const auto& sourceInput : dependency.first->source->inputs) {
-				if (sourceInput->readable() < dependency.second) {
+		size_t n = dependency.delayline->source->process(dependency.delayline, dependency.remaining);
+		if (n < dependency.remaining) {
+			// we haven't processed all required samples yet
+			dependency.remaining -= n;
+			for (const auto& dependencyInput : dependency.delayline->source->inputs) {
+				if (dependencyInput->readable() < dependency.remaining) {
 					// This input is holding us up, add to queue
-					processQueue.push({ sourceInput.get(), dependency.second - sourceInput->readable() });
+					processQueue.push({ dependencyInput.get(), dependency.remaining - dependencyInput->readable() });
 				}
 			}
 			processQueue.push(dependency);

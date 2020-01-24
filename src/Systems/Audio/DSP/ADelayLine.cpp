@@ -115,25 +115,26 @@ void ADelayLine::init(float sampleRate)
 	buffer.init(maxSampleDelay, initSampleDelay);
 }
 
-size_t ADelayLine::write(float* samples, size_t n)
+size_t ADelayLine::write(float* samples, size_t& n)
 {
-	size_t i = 0;
-	while (buffer.writeable() && i < n) {
+	size_t inputCount = n;
+	size_t writeCount = n = 0;
+	while (buffer.writeable() && n < inputCount) {
 		if (sampleInterpOffset < 1.f) {
 			// clamp lower bound, don't allow going back in time
 			sampleInterpOffset += std::max(1.f - velocity() * soundSpeed, 0.f);
 		}
 		
-		while (sampleInterpOffset >= 1.f && i < n) {
+		while (sampleInterpOffset >= 1.f && n < inputCount) {
 			b[0] = b[1];
 			b[1] = b[2];
 			b[2] = b[3];
-			b[3] = samples[i++];
+			b[3] = samples[n++];
 			sampleInterpOffset--;
 		}
 
 		// out of input samples
-		if (sampleInterpOffset >= 1.f) return i;
+		if (sampleInterpOffset >= 1.f) break;
 		
 		// cubic interp
 		float t = sampleInterpOffset;
@@ -142,9 +143,9 @@ size_t ADelayLine::write(float* samples, size_t n)
 		float a2 = b[2] - b[0];
 		float a3 = b[1];
 		float result = a0 * t * t * t + a1 * t * t + a2 * t + a3;
-		buffer.write(result);
+		writeCount += buffer.write(result);
 	}
-	return i;
+	return writeCount;
 }
 
 bool ADelayLine::writeable()

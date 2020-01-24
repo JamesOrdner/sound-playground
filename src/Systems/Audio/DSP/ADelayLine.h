@@ -85,8 +85,10 @@ public:
 	// Init must be called with the session sample rate before use
 	void init(float sampleRate);
 
-	// Push samples to the delay line. Returns the number of saved samples, which may be less than `n`
-	size_t write(float* samples, size_t n = 1);
+	// Push samples to the delay line. Returns the number of samples outputted to the delay line,
+	// which may be more or less than `n` due to doppler effects or the output buffer filling up.
+	// The number of input samples consumed is assigned to `n`, and may be less than `n`
+	size_t write(float* samples, size_t& n);
 
 	// Return true if this buffer is not full
 	bool writeable();

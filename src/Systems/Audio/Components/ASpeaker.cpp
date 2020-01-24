@@ -37,7 +37,7 @@ size_t ASpeaker::process(ADelayLine* output, size_t n)
 	convolver->process(processingBuffer.data(), processingBuffer.data(), count);
 
 	size_t written = output->write(processingBuffer.data(), count);
-	GeneratingAudioComponent::seekGenerated(output->genID, written);
+	GeneratingAudioComponent::seekGenerated(output->genID, count);
 	return written;
 }
 
@@ -47,7 +47,7 @@ size_t ASpeaker::generateImpl(float* buffer, size_t count)
 	for (size_t i = 0; i < count; i++) {
 		buffer[i] = sinf(t++ * 2.f * mat::pi * 500.f / sampleRate); // sin wave
 		// buffer[i] = static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f; // white noise.
-		// buffer[i] *= 0.3f;
+		buffer[i] *= 0.3f;
 	}
 
 	return count;
