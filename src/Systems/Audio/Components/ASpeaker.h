@@ -10,8 +10,10 @@ public:
 	ASpeaker();
 
 	// AudioComponent interface
-	 void init(float sampleRate) override;
-	 void deinit() override;
+	void init(float sampleRate) override;
+	void deinit() override;
+	void initDelayLineData(class ADelayLine* delayline, float sampleRate, bool bIsSource) override;
+	void deinitDelayLineData(class ADelayLine* delayline, bool bIsSource) override;
 	size_t process(ADelayLine* output, size_t n) override;
 
 private:
@@ -24,4 +26,5 @@ private:
 
 	// GeneratingAudioComponent interface
 	size_t generateImpl(float* buffer, size_t count) override;
+	size_t sinGeneratorPhase;
 };

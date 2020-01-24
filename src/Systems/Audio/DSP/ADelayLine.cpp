@@ -91,10 +91,13 @@ size_t ReadWriteBuffer::readable()
 
 ADelayLine::ADelayLine(AudioComponent* source, AudioComponent* dest) :
 	source(source),
+	sourceData(nullptr),
 	dest(dest),
+	destData(nullptr),
 	genID(0),
 	b{},
-	sampleInterpOffset(0.f)
+	sampleInterpOffset(0.f),
+	bInitialized(false)
 {
 }
 
@@ -107,12 +110,29 @@ float ADelayLine::velocity()
 
 void ADelayLine::init(float sampleRate)
 {
+	if (bInitialized) return;
+	bInitialized = true;
+
 	float dist = mat::dist(source->position, dest->position);
 	float fMaxSampleDelay = sampleRate * maximumDistance * soundSpeed;
 	float fInitSampleDelay = sampleRate * dist * soundSpeed;
 	size_t maxSampleDelay = static_cast<size_t>(fMaxSampleDelay);
 	size_t initSampleDelay = static_cast<size_t>(fInitSampleDelay);
 	buffer.init(maxSampleDelay, initSampleDelay);
+
+	source->initDelayLineData(this, sampleRate, true);
+	dest->initDelayLineData(this, sampleRate, false);
+}
+
+void ADelayLine::deinit()
+{
+	if (!bInitialized) return;
+
+	buffer.init(0, 0);
+	source->deinitDelayLineData(this, true);
+	dest->deinitDelayLineData(this, false);
+
+	bInitialized = false;
 }
 
 size_t ADelayLine::write(float* samples, size_t& n)
@@ -146,6 +166,12 @@ size_t ADelayLine::write(float* samples, size_t& n)
 		writeCount += buffer.write(result);
 	}
 	return writeCount;
+
+	// DEBUG no doppler
+	//size_t inputCount = n;
+	//size_t writeCount = n = 0;
+	//while (buffer.writeable() && n < inputCount) writeCount += buffer.write(samples[n++]);
+	//return writeCount;
 }
 
 bool ADelayLine::writeable()

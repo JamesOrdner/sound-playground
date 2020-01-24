@@ -22,13 +22,16 @@ public:
 	// Remove a consumer from this generator
 	void removeConsumer(unsigned int consumer);
 
-	// Read `n` samples into a consumer's buffer and move the read pointer
+	// Read `n` samples into a consumer's buffer and move the read pointer.
+	// Returns the number of samples successfully written to `buffer`.
 	size_t readGenerated(unsigned int consumer, float* buffer, size_t n);
 
-	// Read `n` samples into a consumer's buffer without moving the read pointer
+	// Read `n` samples into a consumer's buffer without moving the read pointer.
+	// Returns the number of samples successfully written to `buffer`.
 	size_t peekGenerated(unsigned int consumer, float* buffer, size_t n);
 
-	// Move the consumer's read pointer by `n` samples
+	// Move the consumer's read pointer by `n` samples.
+	// Returns the number of samples successfully seeked.
 	size_t seekGenerated(unsigned int consumer, size_t n);
 
 	// The number of samples available for this consumer to read

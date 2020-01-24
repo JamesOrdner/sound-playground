@@ -82,8 +82,11 @@ public:
 	// Velocity is positive if distance is increasing, or negative if decreasing.
 	float velocity();
 
-	// Init must be called with the session sample rate before use
+	// Init must be called with the session sample rate before use. It is safe to call multiple times.
 	void init(float sampleRate);
+
+	// Clean up internals and delete any memory allocated in init(). It is safe to call multiple times.
+	void deinit();
 
 	// Push samples to the delay line. Returns the number of samples outputted to the delay line,
 	// which may be more or less than `n` due to doppler effects or the output buffer filling up.
@@ -102,11 +105,20 @@ public:
 	// Source audio component
 	AudioComponent* const source;
 
+	// Arbitrary optional data owned by the source AudioComponent
+	void* sourceData;
+
 	// Destination audio component
 	AudioComponent* const dest;
 
+	// Arbitrary optional data owned by the destination AudioComponent
+	void* destData;
+
 	// This is a unique ID which associates this delay line with a GeneratingAudioComponent
 	unsigned int genID;
+
+	// True after init() has been called and before deinit() has been called
+	bool bInitialized;
 
 private:
 

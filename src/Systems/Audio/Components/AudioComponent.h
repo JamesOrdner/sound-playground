@@ -19,6 +19,12 @@ public:
 	// Clean up internals and delete any memory allocated in init()
 	virtual void deinit();
 
+	// Initialize any per-delay data for this component.
+	virtual void initDelayLineData(class ADelayLine* delayline, float sampleRate, bool bIsSource) {};
+
+	// Clean up any per-delay data for this component
+	virtual void deinitDelayLineData(class ADelayLine* delayline, bool bIsSource) {};
+
 	// Called when a connected object updates its transform. Called in the audio thread.
 	// bInput == true if this is an input to the called AudioComponent, == false if output.
 	virtual void otherTransformUpdated(const class ADelayLine& connection, bool bInput) {};
