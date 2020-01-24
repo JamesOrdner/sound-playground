@@ -19,6 +19,7 @@ bool AudioSystem::init()
 
 void AudioSystem::deinit()
 {
+	for (auto& scene : audioScenes) audioEngine->unregisterScene(scene.get());
 	audioScenes.clear();
 	audioEngine->deinit();
 	audioEngine.reset();
@@ -31,7 +32,10 @@ void AudioSystem::execute(float deltaTime)
 
 SystemSceneInterface* AudioSystem::createSystemScene(const class UScene* uscene)
 {
-	return audioScenes.emplace_back(std::make_unique<AudioScene>(this, audioEngine.get(), uscene)).get();
+	auto audioScene = std::make_shared<AudioScene>(this, audioEngine.get(), uscene);
+	audioScenes.push_back(audioScene);
+	audioEngine->registerScene(audioScene);
+	return audioScene.get();
 }
 
 SystemSceneInterface* AudioSystem::findSystemScene(const UScene* uscene)

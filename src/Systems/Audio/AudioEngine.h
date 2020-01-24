@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../../Util/LFQueue.h"
 #include <vector>
 #include <memory>
-#include "../../Util/LFQueue.h"
 
 class AudioEngine
 {
@@ -30,6 +30,12 @@ public:
 	// This function is called at a regular interval outside of the audio thread
 	void tick(float deltaTime);
 
+	// Register a scene with the engine for processing
+	void registerScene(std::shared_ptr<class AudioScene> scene);
+
+	// Remove a scene from active processing
+	void unregisterScene(class AudioScene* scene);
+
 	// Registers and takes ownership of an audio component
 	void registerComponent(std::unique_ptr<class AudioComponent> component, class AudioScene* scene);
 
@@ -40,7 +46,7 @@ private:
 
 	// Pointer to the active stream (may be null)
 	void* audioStream;
-	
+
 	// Current audio device sample rate
 	float sampleRate;
 
@@ -50,6 +56,8 @@ private:
 	struct ExternalAudioEngineEvent
 	{
 		enum class Type {
+			SceneAdded,
+			SceneRemoved,
 			ComponentAdded,
 			ComponentRemoved
 		} type;
@@ -62,6 +70,7 @@ private:
 	struct InternalAudioEngineEvent
 	{
 		enum class Type {
+			DeleteScene,
 			DeleteComponent
 		} type;
 		class AudioComponent* component;
@@ -73,6 +82,9 @@ private:
 	// Contains all existing AudioComponents across all scenes, and is responsible for their deallocation
 	std::vector<std::unique_ptr<class AudioComponent>> audioComponents;
 
-	// All audio scenes
-	std::vector<class AudioScene*> scenes;
+	// All existing audio scenes
+	std::vector<std::shared_ptr<class AudioScene>> scenes;
+
+	// All scenes registered for active processing
+	std::vector<class AudioScene*> activeScenes;
 };

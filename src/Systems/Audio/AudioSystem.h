@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../SystemInterface.h"
-#include <list>
+#include <vector>
 #include <memory>
 
 class AudioSystem : public SystemInterface
@@ -21,7 +21,8 @@ public:
 
 private:
 
-	std::list<std::unique_ptr<class AudioScene>> audioScenes;
+	// AudioScene objects are shared by AudioEngine
+	std::vector<std::shared_ptr<class AudioScene>> audioScenes;
 
 	std::unique_ptr<class AudioEngine> audioEngine;
 };

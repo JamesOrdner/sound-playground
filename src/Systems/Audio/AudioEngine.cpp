@@ -112,12 +112,19 @@ void AudioEngine::process_float(float* buffer, size_t frames)
 	std::fill_n(buffer, frames * channels, 0.f);
 
 	// process audio for all scenes
-	for (auto* scene : scenes) scene->processSceneAudio(buffer, frames);
+	for (const auto& scene : scenes) scene->processSceneAudio(buffer, frames);
 
-	// handle pending external changes to audio objects
+	// handle pending changes to audio objects from outside the audio thread
 	ExternalAudioEngineEvent event;
 	while (externalEventQueue.pop(event)) {
 		switch (event.type) {
+		case ExternalAudioEngineEvent::Type::SceneAdded:
+			activeScenes.push_back(event.scene);
+			break;
+		case ExternalAudioEngineEvent::Type::SceneRemoved:
+			internalEventQueue.push(InternalAudioEngineEvent{ InternalAudioEngineEvent::Type::DeleteScene, nullptr, event.scene });
+			activeScenes.erase(std::remove(activeScenes.begin(), activeScenes.end(), event.scene), activeScenes.end());
+			break;
 		case ExternalAudioEngineEvent::Type::ComponentAdded:
 			event.scene->connectAudioComponent(event.component);
 			break;
@@ -130,10 +137,18 @@ void AudioEngine::process_float(float* buffer, size_t frames)
 
 void AudioEngine::tick(float deltaTime)
 {
-	// handle pending changes created on the audio thread
+	// handle pending changes pushed from the audio thread
 	InternalAudioEngineEvent event;
 	while (internalEventQueue.pop(event)) {
-		if (event.type == InternalAudioEngineEvent::Type::DeleteComponent) {
+		if (event.type == InternalAudioEngineEvent::Type::DeleteScene) {
+			for (auto it = scenes.cbegin(); it != scenes.cend(); it++) {
+				if (it->get() == event.scene) {
+					scenes.erase(it);
+					break;
+				}
+			}
+		}
+		else if (event.type == InternalAudioEngineEvent::Type::DeleteComponent) {
 			event.component->deinit();
 			for (auto it = audioComponents.cbegin(); it != audioComponents.cend(); it++) {
 				if (it->get() == event.component) {
@@ -141,33 +156,44 @@ void AudioEngine::tick(float deltaTime)
 					break;
 				}
 			}
-			if (!event.scene->registeredComponentCount()) {
-				// remove scene if no components remain
-				scenes.erase(std::remove(scenes.begin(), scenes.end(), event.scene), scenes.end());
-			}
 		}
 	}
+}
+
+void AudioEngine::registerScene(std::shared_ptr<AudioScene> scene)
+{
+	scenes.push_back(scene);
+
+	ExternalAudioEngineEvent event;
+	event.type = ExternalAudioEngineEvent::Type::SceneAdded;
+	event.scene = scene.get();
+	externalEventQueue.push(event);
+}
+
+void AudioEngine::unregisterScene(AudioScene* scene)
+{
+	ExternalAudioEngineEvent event;
+	event.type = ExternalAudioEngineEvent::Type::SceneRemoved;
+	event.scene = scene;
+	externalEventQueue.push(event);
 }
 
 void AudioEngine::registerComponent(std::unique_ptr<AudioComponent> component, AudioScene* scene)
 {
 	component->init(sampleRate);
-	externalEventQueue.push(
-		ExternalAudioEngineEvent{
-			ExternalAudioEngineEvent::Type::ComponentAdded,
-			audioComponents.emplace_back(std::move(component)).get(),
-			scene
-		}
-	);
 
-	// add scene if not present in running scenes
-	for (const auto* knownScene : scenes) {
-		if (knownScene == scene) return;
-	}
-	scenes.push_back(scene);
+	ExternalAudioEngineEvent event;
+	event.type = ExternalAudioEngineEvent::Type::ComponentAdded;
+	event.component = audioComponents.emplace_back(std::move(component)).get();
+	event.scene = scene;
+	externalEventQueue.push(event);
 }
 
 void AudioEngine::unregisterComponent(AudioComponent* component, AudioScene* scene)
 {
-	externalEventQueue.push(ExternalAudioEngineEvent{ ExternalAudioEngineEvent::Type::ComponentRemoved, component, scene });
+	ExternalAudioEngineEvent event;
+	event.type = ExternalAudioEngineEvent::Type::ComponentRemoved;
+	event.component = component;
+	event.scene = scene;
+	externalEventQueue.push(event);
 }

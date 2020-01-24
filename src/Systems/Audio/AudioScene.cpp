@@ -16,6 +16,7 @@ AudioScene::AudioScene(const SystemInterface* system, AudioEngine* audioEngine, 
 AudioScene::~AudioScene()
 {
 	audioObjects.clear();
+	for (auto* component : components) audioEngine->unregisterComponent(component, this);
 }
 
 void AudioScene::deleteSystemObject(const UObject* uobject)

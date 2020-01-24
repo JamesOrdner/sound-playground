@@ -105,12 +105,14 @@ void Engine::run()
 		physicsSystem->execute(deltaTime);
 		audioSystem->execute(deltaTime);
 
-		// execute input and graphics systems on the main thread due to SDL/OpenGL limitations
+		// execute input on the main thread due to SDL limitations
 		inputSystem->execute(deltaTime);
-		graphicsSystem->execute(deltaTime);
 
 		// sync changes across systems
 		StateManager::instance().notifyObservers();
+
+		// execute graphics on the main thread due to OpenGL limitations
+		graphicsSystem->execute(deltaTime);
 
 	} while (!EnvironmentManager::instance().bQuitRequested);
 }
