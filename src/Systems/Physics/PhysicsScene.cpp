@@ -21,6 +21,13 @@ void PhysicsScene::deleteSystemObject(const UObject* uobject)
 	}
 }
 
+void PhysicsScene::tick(float deltaTime)
+{
+	for (const auto& physicsObject : physicsObjects) {
+		physicsObject->updateVelocity(deltaTime);
+	}
+}
+
 const UObject* PhysicsScene::raycast(
 	const mat::vec3& origin,
 	const mat::vec3& direction,

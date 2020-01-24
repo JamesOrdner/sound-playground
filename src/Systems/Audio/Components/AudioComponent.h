@@ -26,7 +26,7 @@ public:
 	// Attempt to fill the provided output with `n` samples. Returns the number
 	// of outputted samples, which will often be less than n due to full output
 	// buffers or running out of input samples.
-	virtual size_t process(ADelayLine* output, size_t n) { return n; };
+	virtual size_t process(class ADelayLine* output, size_t n) { return n; };
 
 	// Should this component accept input from other components?
 	bool bAcceptsInput;
@@ -35,10 +35,10 @@ public:
 	bool bAcceptsOutput;
 
 	// Inputs from other AudioComponents
-	std::list<std::shared_ptr<ADelayLine>> inputs;
+	std::list<std::shared_ptr<class ADelayLine>> inputs;
 
 	// Outputs to other AudioComponents
-	std::list<std::shared_ptr<ADelayLine>> outputs;
+	std::list<std::shared_ptr<class ADelayLine>> outputs;
 
 	// World space position
 	mat::vec3 position;
@@ -52,6 +52,9 @@ public:
 	// Returns the world space forward vector of the owning object
 	mat::vec3 forward() const;
 
+	// Called externally after setting position
+	virtual void transformUpdated();
+
 protected:
 
 	// Sample rate of the current session
@@ -59,7 +62,4 @@ protected:
 
 	// True after init() has been called, false after deinit()
 	bool bInitialized;
-
-	virtual void transformUpdated();
-	virtual void velocityUpdated();
 };

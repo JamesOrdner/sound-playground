@@ -21,7 +21,7 @@ void PhysicsSystem::deinit()
 
 void PhysicsSystem::execute(float deltaTime)
 {
-
+	for (auto& scene : physicsScenes) scene->tick(deltaTime);
 }
 
 SystemSceneInterface* PhysicsSystem::createSystemScene(const class UScene* uscene)

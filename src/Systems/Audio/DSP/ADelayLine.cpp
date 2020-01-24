@@ -90,13 +90,19 @@ size_t ReadWriteBuffer::readable()
 }
 
 ADelayLine::ADelayLine(AudioComponent* source, AudioComponent* dest) :
-	velocity(0.f),
 	source(source),
 	dest(dest),
 	genID(0),
 	b{},
 	sampleInterpOffset(0.f)
 {
+}
+
+float ADelayLine::velocity()
+{
+	mat::vec3 sourceToDestDir = mat::normal(dest->position - source->position);
+	mat::vec3 sourceToDestVel = dest->velocity - source->velocity;
+	return mat::dot(sourceToDestDir, sourceToDestVel);
 }
 
 void ADelayLine::init(float sampleRate)
@@ -115,7 +121,7 @@ size_t ADelayLine::write(float* samples, size_t n)
 	while (buffer.writeable() && i < n) {
 		if (sampleInterpOffset < 1.f) {
 			// clamp lower bound, don't allow going back in time
-			sampleInterpOffset += std::max(1.f - velocity * soundSpeed, 0.f);
+			sampleInterpOffset += std::max(1.f - velocity() * soundSpeed, 0.f);
 		}
 		
 		while (sampleInterpOffset >= 1.f && i < n) {

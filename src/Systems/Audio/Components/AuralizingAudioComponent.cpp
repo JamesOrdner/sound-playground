@@ -60,7 +60,7 @@ size_t AuralizingAudioComponent::processIndirect(float* buffer, size_t n)
 		size_t channels = indirectSend->convolvers.size();
 		for (size_t ch = 0; ch < channels; ch++) {
 			indirectSend->convolvers[ch].process(processingBuffer.data(), processingBuffer.data(), n);
-			for (size_t i = 0; i < n; i++) buffer[i * channels + ch] += processingBuffer[i];
+			// for (size_t i = 0; i < n; i++) buffer[i * channels + ch] += processingBuffer[i];
 		}
 	}
 

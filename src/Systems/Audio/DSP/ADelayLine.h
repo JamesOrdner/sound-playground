@@ -80,7 +80,7 @@ public:
 
 	// Relative velocity of distance between source and destination, in meters per second.
 	// Velocity is positive if distance is increasing, or negative if decreasing.
-	float velocity;
+	float velocity();
 
 	// Init must be called with the session sample rate before use
 	void init(float sampleRate);

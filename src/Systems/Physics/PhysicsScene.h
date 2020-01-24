@@ -16,6 +16,8 @@ public:
 
 	void deleteSystemObject(const class UObject* uobject) override;
 
+	void tick(float deltaTime);
+
 	const class UObject* raycast(
 		const mat::vec3& origin,
 		const mat::vec3& direction,

@@ -18,6 +18,9 @@ public:
 	// Returns the world transform matrix of this component
 	const mat::mat4& transformMatrix();
 
+	// Called regularly, sets object's velocity based on its previous location
+	void updateVelocity(float deltaTime);
+
 	float raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit);
 
 private:
@@ -30,6 +33,9 @@ private:
 
 	// World space local scale
 	mat::vec3 scale, parentScale;
+
+	// Used by the velocity system to determine object velocity
+	mat::vec3 previousPosition;
 
 	// Global model transform, cumulates parent transforms.
 	// Note: This should never be accessed directly! It is updated lazily and may be out of date.

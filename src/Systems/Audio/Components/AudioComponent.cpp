@@ -41,17 +41,3 @@ void AudioComponent::transformUpdated()
 		input->dest->otherTransformUpdated(*input, false);
 	}
 }
-
-void AudioComponent::velocityUpdated()
-{
-	for (const auto& output : outputs) {
-		mat::vec3 relPos = mat::normal(output->dest->position - position);
-		mat::vec3 relVel = velocity - output->dest->velocity;
-		output->velocity = mat::dot(relPos, relVel);
-	}
-	for (const auto& input : inputs) {
-		mat::vec3 relPos = mat::normal(position - input->dest->position);
-		mat::vec3 relVel = input->dest->velocity - velocity;
-		input->velocity = mat::dot(relPos, relVel);
-	}
-}

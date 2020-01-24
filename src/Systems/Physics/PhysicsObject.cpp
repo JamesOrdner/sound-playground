@@ -58,6 +58,14 @@ const mat::mat4& PhysicsObject::transformMatrix()
 	return transform;
 }
 
+void PhysicsObject::updateVelocity(float deltaTime)
+{
+	auto currentPosition = position + parentPosition;
+	auto velocity = (currentPosition - previousPosition) / deltaTime;
+	previousPosition = currentPosition;
+	uobject->event(EventType::VelocityUpdated, velocity);
+}
+
 float PhysicsObject::raycast(const mat::vec3& origin, const mat::vec3& direction, mat::vec3& hit)
 {
 	using namespace mat;
