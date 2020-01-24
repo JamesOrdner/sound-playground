@@ -50,23 +50,14 @@ size_t ASpeaker::process(ADelayLine* output, size_t n)
 
 	// process raw generated samples
 	AInterpParameter* gain = static_cast<AInterpParameter*>(output->sourceData);
-	gain->target = 1.f / mat::dist(position, output->dest->position) * 0.2f;
-	float initialGain = gain->current; // save gain in order to rewind interp parameter if necessary
-
+	gain->target = 0.3f / mat::dist(position, output->dest->position);
 	for (size_t i = 0; i < count; i++) processingBuffer[i] *= gain->update();
-	convolver->process(processingBuffer.data(), processingBuffer.data(), count);
 
 	// write processed generated samples
 	size_t written = output->write(processingBuffer.data(), count);
 	
 	// notify generator of how many generated samples we ended up using
 	seekGenerated(output->genID, count);
-
-	// rewind AInterpParameter if fewer samples were consumed than processed
-	if (count < n) {
-		gain->current = initialGain;
-		gain->update(count);
-	}
 
 	return written;
 }
@@ -78,6 +69,6 @@ size_t ASpeaker::generateImpl(float* buffer, size_t count)
 		// buffer[i] = static_cast<float>(rand()) / RAND_MAX * 2.f - 1.f; // white noise.
 		buffer[i] *= 0.3f;
 	}
-
+	convolver->process(buffer, buffer, count);
 	return count;
 }
