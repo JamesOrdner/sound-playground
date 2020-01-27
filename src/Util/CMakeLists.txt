@@ -1,0 +1,9 @@
+target_sources(SoundPlayground
+  PRIVATE
+    LFQueue.h
+    Matrix.cpp
+    Matrix.h
+    Observer.cpp
+    Observer.h
+    ThreadPool.h
+)

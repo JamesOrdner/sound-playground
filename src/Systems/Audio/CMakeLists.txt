@@ -1,0 +1,32 @@
+target_sources(SoundPlayground
+  PRIVATE
+    AudioEngine.cpp
+    AudioEngine.h
+    AudioObject.cpp
+    AudioObject.h
+    AudioScene.cpp
+    AudioScene.h
+    AudioSystem.cpp
+    AudioSystem.h
+    AWAVFile.cpp
+    AWAVFile.h
+    Components/AMicrophone.cpp
+    Components/AMicrophone.h
+    Components/ASpeaker.cpp
+    Components/ASpeaker.h
+    Components/AudioComponent.cpp
+    Components/AudioComponent.h
+    Components/AuralizingAudioComponent.cpp
+    Components/AuralizingAudioComponent.h
+    Components/GeneratingAudioComponent.cpp
+    Components/GeneratingAudioComponent.h
+    Components/OutputAudioComponent.cpp
+    Components/OutputAudioComponent.h
+    DSP/AConvolver.cpp
+    DSP/AConvolver.h
+    DSP/ADelayLine.cpp
+    DSP/ADelayLine.h
+    DSP/ADSPBase.h
+    DSP/AInterpParameter.cpp
+    DSP/AInterpParameter.h
+)

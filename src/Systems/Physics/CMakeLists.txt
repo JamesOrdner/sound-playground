@@ -1,0 +1,12 @@
+target_sources(SoundPlayground
+  PRIVATE
+    PhysicsMesh.cpp
+    PhysicsMesh.h
+    PhysicsObject.cpp
+    PhysicsObject.h
+    PhysicsScene.cpp
+    PhysicsScene.h
+    PhysicsSystem.cpp
+    PhysicsSystem.h
+    PhysicsSystemInterface.h
+)

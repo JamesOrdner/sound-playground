@@ -1,0 +1,10 @@
+target_sources(SoundPlayground
+  PRIVATE
+    UIComponent.cpp
+    UIComponent.h
+    UIManager.cpp
+    UIManager.h
+    UIObject.cpp
+    UIObject.h
+    UITypes.h
+)

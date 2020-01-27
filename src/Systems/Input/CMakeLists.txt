@@ -1,0 +1,11 @@
+target_sources(SoundPlayground
+  PRIVATE
+    CameraInputObject.cpp
+    CameraInputObject.h
+    InputObject.cpp
+    InputObject.h
+    InputScene.cpp
+    InputScene.h
+    InputSystem.cpp
+    InputSystem.h
+)
