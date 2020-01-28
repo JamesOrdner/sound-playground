@@ -75,7 +75,8 @@ mat4 mat::transform(const vec3& loc, const vec3& rot, const vec3& scale) {
 mat4 mat::inverse(const mat4& matrix)
 {
 	// TODO: Current implementation copied from glu, and not super efficient
-	const float* m = &t(matrix).data[0][0];
+    mat4 transposed = t(matrix);
+	const float* m = &transposed.data[0][0];
 	mat4 mtemp;
 	float* inv = &mtemp.data[0][0];
 

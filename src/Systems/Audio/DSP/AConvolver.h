@@ -71,5 +71,5 @@ private:
 	void unloadIR();
 
 	// If condition is true, return true. Otherwise, call deinit() and return false
-	inline bool assert(bool condition);
+	bool convassert(bool condition);
 };

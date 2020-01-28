@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 struct AInterpParameter
 {
 	// Target parameter value

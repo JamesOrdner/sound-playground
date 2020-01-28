@@ -6,8 +6,11 @@
 #include "Components/AuralizingAudioComponent.h"
 #include "Components/OutputAudioComponent.h"
 #include <portaudio.h>
-#include <pa_win_wasapi.h>
 #include <algorithm>
+
+#ifdef WIN32
+#include <pa_win_wasapi.h>
+#endif
 
 int pa_callback(
 	const void* input,

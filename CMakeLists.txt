@@ -40,8 +40,23 @@ ExternalProject_Add(FFTW
   INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
 )
 target_include_directories(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/include)
-target_link_libraries(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/lib/fftw3f.lib)
+if (WIN32)
+  target_link_libraries(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/lib/fftw3f.lib)
+elseif(APPLE)
+  target_link_libraries(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/lib/libfftw3f.dylib)
+endif()
 
+# ---------- PortAudio
+
+ExternalProject_Add(PortAudio
+  URL http://www.portaudio.com/archives/pa_stable_v190600_20161030.tgz
+  PREFIX ${DEPENDENCIES_DIR}
+  CMAKE_ARGS ${DEPENDENCY_CMAKE_ARGS}
+  INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
+)
+if (APPLE)
+  target_link_libraries(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/lib/libportaudio.dylib)
+endif()
 
 # ---------- SDL2
 
@@ -56,7 +71,7 @@ if (WIN32) # use precompiled binaries
       COMMAND ${CMAKE_COMMAND} -E copy_directory ${DEPENDENCIES_DIR}/src/SDL2/include ${DEPENDENCIES_DIR}/include/SDL2
   )
   target_link_libraries(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/lib/SDL2.lib ${DEPENDENCIES_DIR}/lib/SDL2main.lib)
-else() # build from source
+elseif(APPLE) # build from source
   set(SDL2_CACHE_ARGS
     -DSDL_STATIC:BOOL=FALSE
     -DSDL_SHARED:BOOL=TRUE
@@ -78,6 +93,7 @@ else() # build from source
     CMAKE_CACHE_ARGS ${SDL2_CACHE_ARGS}
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
   )
+  target_link_libraries(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/lib/libSDL2.dylib ${DEPENDENCIES_DIR}/lib/libSDL2main.a)
 endif()
 target_include_directories(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/include/SDL2)
 
@@ -101,8 +117,8 @@ endif()
 
 # copy resources
 
-add_custom_command(TARGET SoundPlayground POST_BUILD 
+add_custom_command(TARGET SoundPlayground POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  "${CMAKE_CURRENT_SOURCE_DIR}/res"              
-  ${CMAKE_BINARY_DIR}/res
+  ${CMAKE_CURRENT_SOURCE_DIR}/res
+  $<TARGET_FILE_DIR:SoundPlayground>/res
 )

@@ -70,7 +70,7 @@ void AConvolver::loadIR()
 
 	float* fftIn = fftwf_alloc_real(N);
 	complex* fftOut = reinterpret_cast<complex*>(fftwf_alloc_complex(N));
-	if (!assert(fftIn && fftOut)) return;
+	if (!convassert(fftIn && fftOut)) return;
 	fftwf_plan p = fftwf_plan_dft_r2c_1d(N, fftIn, reinterpret_cast<fftwf_complex*>(fftOut), FFTW_ESTIMATE);
 	std::fill_n(fftIn + blockSize, blockSize, 0.f); // zero pad input
 
@@ -80,13 +80,13 @@ void AConvolver::loadIR()
 
 		// save IR FFT partition
 		complex* arr = reinterpret_cast<complex*>(fftwf_alloc_complex(blockSize + 1));
-		if (!assert(arr)) return;
+		if (!convassert(arr)) return;
 		std::copy_n(&fftOut[0], blockSize + 1, &arr[0]);
 		impulseResponseFFTs.push_back(arr);
 
 		// push input FDL buffer
 		complex* fdlBuffer = reinterpret_cast<complex*>(fftwf_alloc_complex(blockSize + 1));
-		if (!assert(fdlBuffer)) return;
+		if (!convassert(fdlBuffer)) return;
 		std::fill_n(&fdlBuffer[0], blockSize + 1, 0.f);
 		freqDelayLine.push_back(fdlBuffer);
 	}
@@ -97,19 +97,19 @@ void AConvolver::loadIR()
 
 	// Input buffer filled from process() input
 	inputBuffer = fftwf_alloc_real(N);
-	if (!assert(inputBuffer)) return;
+	if (!convassert(inputBuffer)) return;
 
 	// Result of the real to complex FFT on the input stream
 	fftResult = reinterpret_cast<complex*>(fftwf_alloc_complex(N));
-	if (!assert(fftResult)) return;
+	if (!convassert(fftResult)) return;
 
 	// Result and final output of the IFFT
 	outputBuffer = fftwf_alloc_real(N);
-	if (!assert(outputBuffer)) return;
+	if (!convassert(outputBuffer)) return;
 
 	// Input to the IFFT
 	ifftInput = reinterpret_cast<complex*>(fftwf_alloc_complex(N));
-	if (!assert(ifftInput)) return;
+	if (!convassert(ifftInput)) return;
 
 	fftPlan = fftwf_plan_dft_r2c_1d(
 		N,
@@ -191,7 +191,7 @@ void AConvolver::process(float* outbuffer, const float* inbuffer, size_t n)
 	}
 }
 
-bool AConvolver::assert(bool condition)
+bool AConvolver::convassert(bool condition)
 {
 	if (!condition) deinit();
 	return condition;
