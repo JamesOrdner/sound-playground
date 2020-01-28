@@ -31,7 +31,7 @@ void AuralizingAudioComponent::transformUpdated()
 void AuralizingAudioComponent::init(float sampleRate)
 {
 	AudioComponent::init(sampleRate);
-	processingBuffer.resize(512); // TEMP
+	processingBuffer.resize(2048); // TEMP
 	for (const auto& indirectSend : indirectSends) {
 		for (auto& convolver : indirectSend->convolvers) {
 			convolver.init(sampleRate);

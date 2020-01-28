@@ -2,7 +2,7 @@
 #include "../DSP/ADelayLine.h"
 
 AMicrophone::AMicrophone() :
-	processingBuffer(512) // TEMP
+	processingBuffer(2048) // TEMP
 {
 	bAcceptsInput = true;
 	bAcceptsOutput = false;

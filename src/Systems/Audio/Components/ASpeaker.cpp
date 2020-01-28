@@ -16,7 +16,7 @@ void ASpeaker::init(float sampleRate)
 	AuralizingAudioComponent::init(sampleRate);
 	convolver->init(sampleRate);
 	processingBuffer.clear();
-	processingBuffer.resize(512); // TEMP
+	processingBuffer.resize(2048); // TEMP
 }
 
 void ASpeaker::deinit()

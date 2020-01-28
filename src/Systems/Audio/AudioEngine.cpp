@@ -8,10 +8,6 @@
 #include <portaudio.h>
 #include <algorithm>
 
-#ifdef WIN32
-#include <pa_win_wasapi.h>
-#endif
-
 int pa_callback(
 	const void* input,
 	void* output,
@@ -44,34 +40,22 @@ bool AudioEngine::init()
 		return false;
 	}
 
-	PaDeviceIndex deviceCount = Pa_GetDeviceCount();
-	for (PaDeviceIndex i = 0; i < deviceCount; i++) {
-		const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
-		if (Pa_GetHostApiInfo(deviceInfo->hostApi)->type == paWASAPI && deviceInfo->maxOutputChannels >= 2) {
-			sampleRate = static_cast<float>(deviceInfo->defaultSampleRate);
+	PaDeviceIndex defaultDevice = Pa_GetDefaultOutputDevice();
+	const PaDeviceInfo* defaultDeviceInfo = Pa_GetDeviceInfo(defaultDevice);
 
-			PaStreamParameters outputParams = {};
-			outputParams.device = i;
-			outputParams.channelCount = channels;
-			outputParams.sampleFormat = paFloat32;
-			outputParams.suggestedLatency = deviceInfo->defaultHighOutputLatency;
-			err = Pa_OpenStream(
-				&audioStream,
-				nullptr,
-				&outputParams,
-				sampleRate,
-				paFramesPerBufferUnspecified,
-				paNoFlag,
-				pa_callback,
-				this);
+	PaStreamParameters outputParams = {};
+	outputParams.device = defaultDevice;
+	outputParams.channelCount = channels;
+	outputParams.sampleFormat = paFloat32;
+	outputParams.suggestedLatency = defaultDeviceInfo->defaultLowOutputLatency;
+	err = Pa_OpenStream(&audioStream, nullptr, &outputParams, sampleRate, paFramesPerBufferUnspecified, paNoFlag, pa_callback, this);
 
-			if (err != paNoError) {
-				printf("PortAudio error: %s\n", Pa_GetErrorText(err));
-				return false;
-			}
-			break;
-		}
+	if (err != paNoError) {
+		printf("PortAudio error: %s\n", Pa_GetErrorText(err));
+		return false;
 	}
+
+	sampleRate = static_cast<float>(defaultDeviceInfo->defaultSampleRate);
 
 	for (const auto& c : audioComponents) c->init(sampleRate);
 	return true;
