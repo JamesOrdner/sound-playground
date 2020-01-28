@@ -16,28 +16,88 @@ source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${TARGET_SOURCE_FILES})
 
 # external dependencies
 
-set(DEPENDENCIES_DIR ${PROJECT_SOURCE_DIR}/dependencies)
 add_subdirectory(lib)
 
-# copy dlls
-
-add_custom_command(TARGET SoundPlayground POST_BUILD 
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-  "${DEPENDENCIES_DIR}/bin/fftw3f.dll"              
-  $<TARGET_FILE_DIR:SoundPlayground>
+include(ExternalProject)
+set(DEPENDENCIES_DIR ${PROJECT_SOURCE_DIR}/dependencies)
+set(DEPENDENCY_CMAKE_ARGS
+  -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+  -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+  -DCMAKE_BUILD_TYPE=Release
 )
 
-add_custom_command(TARGET SoundPlayground POST_BUILD 
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-  "${CMAKE_CURRENT_SOURCE_DIR}/lib/portaudio/lib/portaudio_x64.dll"              
-  $<TARGET_FILE_DIR:SoundPlayground>
-)
+# ---------- FFTW
 
-add_custom_command(TARGET SoundPlayground POST_BUILD 
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-  "${DEPENDENCIES_DIR}/bin/SDL2.dll"              
-  $<TARGET_FILE_DIR:SoundPlayground>
+set(FFTW_CACHE_ARGS
+  -DENABLE_FLOAT:BOOL=TRUE
+  -DBUILD_TESTS:BOOL=FALSE
 )
+ExternalProject_Add(FFTW
+  URL http://www.fftw.org/fftw-3.3.8.tar.gz
+  PREFIX ${DEPENDENCIES_DIR}
+  CMAKE_ARGS ${DEPENDENCY_CMAKE_ARGS}
+  CMAKE_CACHE_ARGS ${FFTW_CACHE_ARGS}
+  INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
+)
+target_include_directories(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/include)
+target_link_libraries(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/lib/fftw3f.lib)
+
+
+# ---------- SDL2
+
+if (WIN32) # use precompiled binaries
+  ExternalProject_Add(SDL2
+    URL https://www.libsdl.org/release/SDL2-devel-2.0.10-VC.zip
+    PREFIX ${DEPENDENCIES_DIR}
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${DEPENDENCIES_DIR}/src/SDL2/lib/x64 ${DEPENDENCIES_DIR}/lib
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${DEPENDENCIES_DIR}/src/SDL2/include ${DEPENDENCIES_DIR}/include/SDL2
+  )
+  target_link_libraries(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/lib/SDL2.lib ${DEPENDENCIES_DIR}/lib/SDL2main.lib)
+else() # build from source
+  set(SDL2_CACHE_ARGS
+    -DSDL_STATIC:BOOL=FALSE
+    -DSDL_SHARED:BOOL=TRUE
+    -DSDL_Audio:BOOL=FALSE
+    -DSDL_File:BOOL=FALSE
+    -DSDL_Filesystem:BOOL=FALSE
+    -DSDL_Threads:BOOL=FALSE
+    -DSDL_Joystick:BOOL=FALSE
+    -DSDL_Haptic:BOOL=FALSE
+    -DSDL_Atomic:BOOL=FALSE
+    -DSDL_Render:BOOL=FALSE
+    -DSDL_Sensor:BOOL=FALSE
+    -DDIRECTX:BOOL=FALSE
+  )
+  ExternalProject_Add(SDL2
+    URL http://www.libsdl.org/release/SDL2-2.0.10.tar.gz
+    PREFIX ${DEPENDENCIES_DIR}
+    CMAKE_ARGS ${DEPENDENCY_CMAKE_ARGS}
+    CMAKE_CACHE_ARGS ${SDL2_CACHE_ARGS}
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
+  )
+endif()
+target_include_directories(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/include/SDL2)
+
+if (WIN32) # copy dlls
+  add_custom_command(TARGET SoundPlayground POST_BUILD 
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${DEPENDENCIES_DIR}/bin/fftw3f.dll"              
+    $<TARGET_FILE_DIR:SoundPlayground>
+  )
+  add_custom_command(TARGET SoundPlayground POST_BUILD 
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${DEPENDENCIES_DIR}/lib/SDL2.dll"              
+    $<TARGET_FILE_DIR:SoundPlayground>
+  )
+  add_custom_command(TARGET SoundPlayground POST_BUILD 
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_CURRENT_SOURCE_DIR}/lib/portaudio/lib/portaudio_x64.dll"              
+    $<TARGET_FILE_DIR:SoundPlayground>
+  )
+endif()
 
 # copy resources
 
