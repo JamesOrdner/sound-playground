@@ -52,6 +52,7 @@ bool AudioEngine::init()
 
 	if (err != paNoError) {
 		printf("PortAudio error: %s\n", Pa_GetErrorText(err));
+		Pa_Terminate();
 		return false;
 	}
 
@@ -65,9 +66,9 @@ void AudioEngine::deinit()
 {
 	if (audioStream) {
 		Pa_CloseStream(audioStream);
+		Pa_Terminate();
 		audioStream = nullptr;
 	}
-	Pa_Terminate();
 	for (const auto& c : audioComponents) c->deinit();
 }
 
