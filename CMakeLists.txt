@@ -48,13 +48,13 @@ endif()
 
 # ---------- PortAudio
 
-ExternalProject_Add(PortAudio
-  URL http://www.portaudio.com/archives/pa_stable_v190600_20161030.tgz
-  PREFIX ${DEPENDENCIES_DIR}
-  CMAKE_ARGS ${DEPENDENCY_CMAKE_ARGS}
-  INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
-)
 if (APPLE)
+  ExternalProject_Add(PortAudio
+    URL http://www.portaudio.com/archives/pa_stable_v190600_20161030.tgz
+    PREFIX ${DEPENDENCIES_DIR}
+    CMAKE_ARGS ${DEPENDENCY_CMAKE_ARGS}
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
+  )
   target_link_libraries(SoundPlayground PRIVATE ${DEPENDENCIES_DIR}/lib/libportaudio.dylib)
 endif()
 
@@ -117,8 +117,16 @@ endif()
 
 # copy resources
 
-add_custom_command(TARGET SoundPlayground POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/res
-  $<TARGET_FILE_DIR:SoundPlayground>/res
-)
+if(WIN32)
+  add_custom_command(TARGET SoundPlayground POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/res
+    ${CMAKE_BINARY_DIR}/res
+  )
+else()
+  add_custom_command(TARGET SoundPlayground POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/res
+    $<TARGET_FILE_DIR:SoundPlayground>/res
+  )
+endif()
