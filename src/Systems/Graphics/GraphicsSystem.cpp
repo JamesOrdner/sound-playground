@@ -1,7 +1,7 @@
 #include "GraphicsSystem.h"
 #include "GraphicsObject.h"
 #include "GraphicsScene.h"
-#include "Render.h"
+#include "Vulkan/VulkanInstance.h"
 #include <SDL.h>
 
 GraphicsSystem::GraphicsSystem() :
@@ -15,22 +15,19 @@ GraphicsSystem::~GraphicsSystem()
 
 bool GraphicsSystem::init()
 {
-	render = std::make_unique<Render>();
-
-	// Attributes must be set before the window is created
-	render->setAttributes();
-
 	// Create window
 	window = SDL_CreateWindow("Sound Playground", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+		1280, 720, SDL_WINDOW_VULKAN | SDL_WINDOW_SHOWN);
 
 	if (!window) {
 		printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
 		return false;
 	}
 
-	if (!render->init(window)) {
-		printf("Warning: Render failed to initialize!\n");
+	try {
+		vulkan = std::make_unique<VulkanInstance>(window);
+	} catch(std::exception& e) {
+		printf("Vulkan error! %s\n", e.what());
 		return false;
 	}
 
@@ -40,16 +37,16 @@ bool GraphicsSystem::init()
 void GraphicsSystem::deinit()
 {
 	graphicsScenes.clear();
-	render->deinit();
+	vulkan.reset();
 	SDL_DestroyWindow(window);
 	window = nullptr;
-	render.reset();
 }
 
 void GraphicsSystem::execute(float deltaTime)
 {
-	for (const auto& scene : graphicsScenes) scene->drawScene(render.get());
-	render->swap(window);
+	// TODO: Scene rendering
+//	for (const auto& scene : graphicsScenes) scene->drawScene(vulkan.get());
+//	vulkan->swap(window);
 }
 
 SystemSceneInterface* GraphicsSystem::createSystemScene(const class UScene* uscene)
@@ -71,8 +68,9 @@ void GraphicsSystem::screenDimensions(int& x, int& y) const
 	y = 720;
 }
 
-const mat::mat4& GraphicsSystem::screenToWorldTransform(const UScene* uscene) const
+mat::mat4 GraphicsSystem::screenToWorldTransform(const UScene* uscene) const
 {
 	// TODO: lookup per scene
-	return render->screenToWorldMatrix();
+	return mat::mat4::Identity();
+//	return vulkan->screenToWorldMatrix();
 }

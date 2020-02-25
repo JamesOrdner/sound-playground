@@ -22,3 +22,5 @@ target_sources(SoundPlayground
     UIGraphicsObject.cpp
     UIGraphicsObject.h
 )
+
+add_subdirectory(Vulkan)

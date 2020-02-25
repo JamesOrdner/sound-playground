@@ -8,8 +8,3 @@ endif()
 # ---------- TinyGLTF
 
 target_include_directories(SoundPlayground PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tinygltf)
-
-# ---------- GL3W
-
-target_include_directories(SoundPlayground PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/gl3w/include)
-target_sources(SoundPlayground PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/gl3w/src/gl3w.c)
