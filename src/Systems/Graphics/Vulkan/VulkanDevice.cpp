@@ -1,5 +1,7 @@
 #include "VulkanDevice.h"
+#include "VulkanAllocator.h"
 #include <array>
+#include <optional>
 
 const std::array<const char*, 1> requiredDeviceExtensions{
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -91,10 +93,13 @@ VulkanDevice::VulkanDevice(VkInstance instance, VkSurfaceKHR surface, const std:
 	queues.present.familyIndex = queueFamilyIndices.presentFamily.value();
 	vkGetDeviceQueue(device, queues.graphics.familyIndex, 0, &queues.graphics.queue);
 	vkGetDeviceQueue(device, queues.present.familyIndex, 0, &queues.present.queue);
+	
+	vulkanAllocator = std::make_unique<VulkanAllocator>(device, physicalDevice);
 }
 
 VulkanDevice::~VulkanDevice()
 {
+	vulkanAllocator.reset();
 	vkDestroyDevice(device, nullptr);
 }
 
@@ -149,4 +154,46 @@ VkPhysicalDevice VulkanDevice::optimalPhysicalDevice(VkInstance instance, VkSurf
 	}
 
 	return selectedDevice;
+}
+
+VkSurfaceCapabilitiesKHR VulkanDevice::surfaceCapabilities(VkSurfaceKHR surface) const
+{
+	VkSurfaceCapabilitiesKHR capabilities = {};
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
+	return capabilities;
+}
+
+std::vector<VkSurfaceFormatKHR> VulkanDevice::surfaceFormats(VkSurfaceKHR surface) const
+{
+	uint32_t formatCount;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
+	std::vector<VkSurfaceFormatKHR> formats(formatCount);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, formats.data());
+	return formats;
+}
+
+std::vector<VkPresentModeKHR> VulkanDevice::surfacePresentModes(VkSurfaceKHR surface) const
+{
+	uint32_t modeCount;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &modeCount, nullptr);
+	std::vector<VkPresentModeKHR> modes(modeCount);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &modeCount, modes.data());
+	return modes;
+}
+
+VkFormat VulkanDevice::firstSupportedFormat(const std::vector<VkFormat>& formats, VkImageTiling tiling, VkFormatFeatureFlags features) const
+{
+	for (VkFormat format : formats) {
+		VkFormatProperties formatProperties;
+		vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &formatProperties);
+
+		if (tiling == VK_IMAGE_TILING_LINEAR && (formatProperties.linearTilingFeatures & features) == features) {
+			return format;
+		}
+		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (formatProperties.optimalTilingFeatures & features) == features) {
+			return format;
+		}
+	}
+
+	return VK_FORMAT_UNDEFINED;
 }

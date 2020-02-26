@@ -1,5 +1,6 @@
 #include "VulkanInstance.h"
 #include "VulkanDevice.h"
+#include "VulkanSwapchain.h"
 #include <SDL_vulkan.h>
 #include <stdexcept>
 
@@ -37,10 +38,13 @@ VulkanInstance::VulkanInstance(SDL_Window* window)
 	}
 
 	device = std::make_unique<VulkanDevice>(instance, surface, validationLayers);
+	swapchain = std::make_unique<VulkanSwapchain>(device.get(), surface);
 }
 
 VulkanInstance::~VulkanInstance()
 {
+	vkDeviceWaitIdle(device->vkDevice());
+	swapchain.reset();
 	device.reset();
 	vkDestroySurfaceKHR(instance, surface, nullptr);
 	vkDestroyInstance(instance, nullptr);

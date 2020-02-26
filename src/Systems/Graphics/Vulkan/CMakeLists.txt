@@ -1,7 +1,11 @@
 target_sources(SoundPlayground
   PRIVATE
+    VulkanAllocator.cpp
+    VulkanAllocator.h
     VulkanDevice.cpp
     VulkanDevice.h
     VulkanInstance.cpp
     VulkanInstance.h
+    VulkanSwapchain.cpp
+    VulkanSwapchain.h
 )
