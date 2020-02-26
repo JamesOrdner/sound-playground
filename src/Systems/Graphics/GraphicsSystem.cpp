@@ -16,8 +16,7 @@ GraphicsSystem::~GraphicsSystem()
 bool GraphicsSystem::init()
 {
 	// Create window
-	window = SDL_CreateWindow("Sound Playground", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		1280, 720, SDL_WINDOW_VULKAN | SDL_WINDOW_SHOWN);
+	window = SDL_CreateWindow("Sound Playground", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_VULKAN);
 
 	if (!window) {
 		printf("Window could not be created! SDL Error: %s\n", SDL_GetError());

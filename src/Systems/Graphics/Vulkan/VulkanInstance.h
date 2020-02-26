@@ -1,13 +1,15 @@
 #pragma once
 
+#include <SDL_video.h>
 #include <vulkan/vulkan.h>
+#include <memory>
 #include <vector>
 
 class VulkanInstance
 {
 public:
 	
-	VulkanInstance(struct SDL_Window* window);
+	VulkanInstance(SDL_Window* window);
 	
 	~VulkanInstance();
 	
@@ -15,6 +17,8 @@ private:
 	
 	VkInstance instance;
 	VkSurfaceKHR surface;
-	
-	void initInstance();
+
+	std::unique_ptr<class VulkanDevice> device;
+
+	std::vector<const char*> requiredInstanceExtensions(SDL_Window* window);
 };
