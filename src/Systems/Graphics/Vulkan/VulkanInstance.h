@@ -23,7 +23,11 @@ private:
 	std::unique_ptr<class VulkanDevice> device;
 	std::unique_ptr<class VulkanSwapchain> swapchain;
 	
-	void initCommandPool(VkSurfaceKHR surface);
+	VkCommandPool commandPool;
+	std::vector<VkCommandBuffer> commandBuffers;
+	
+	void initInstance(SDL_Window* window);
+	void initCommandPool();
 	void initCommandBuffers();
 	void initSynchronization();
 
