@@ -6,6 +6,12 @@ target_sources(SoundPlayground
     VulkanDevice.h
     VulkanInstance.cpp
     VulkanInstance.h
+    VulkanMaterial.cpp
+    VulkanMaterial.h
+    VulkanMesh.cpp
+    VulkanMesh.h
+    VulkanShader.cpp
+    VulkanShader.h
     VulkanSwapchain.cpp
     VulkanSwapchain.h
 )

@@ -4,18 +4,18 @@
 #include <vector>
 #include <memory>
 
+struct VulkanQueue {
+	VkQueue queue;
+	uint32_t familyIndex;
+};
+
+struct VulkanQueues {
+	VulkanQueue graphics;
+	VulkanQueue present;
+};
+
 class VulkanDevice
 {
-	struct VulkanQueue {
-		VkQueue queue;
-		uint32_t familyIndex;
-	};
-
-	struct VulkanQueues {
-		VulkanQueue graphics;
-		VulkanQueue present;
-	};
-
 public:
 
 	VulkanDevice(VkInstance instance, VkSurfaceKHR surface, const std::vector<const char*>& validationLayers);
@@ -23,7 +23,8 @@ public:
 	~VulkanDevice();
 	
 	inline VkDevice vkDevice() const { return device; }
-	inline class VulkanAllocator* allocator() const { return vulkanAllocator.get(); }
+	inline class VulkanAllocator& allocator() const { return *vulkanAllocator; }
+	inline const VulkanQueues& queues() const { return vulkanQueues; }
 	
 	/// Returns the surface capabilities of the active device
 	VkSurfaceCapabilitiesKHR surfaceCapabilities(VkSurfaceKHR surface) const;
@@ -42,7 +43,7 @@ private:
 
 	VkDevice device;
 	VkPhysicalDevice physicalDevice;
-	VulkanQueues queues;
+	VulkanQueues vulkanQueues;
 	
 	std::unique_ptr<class VulkanAllocator> vulkanAllocator;
 

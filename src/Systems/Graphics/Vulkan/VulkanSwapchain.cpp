@@ -23,7 +23,7 @@ VulkanSwapchain::~VulkanSwapchain()
 	vkDestroyRenderPass(device->vkDevice(), renderPass, nullptr);
 	
 	vkDestroyImageView(device->vkDevice(), depthImageView, nullptr);
-	device->allocator()->destroyImage(depthImage);
+	device->allocator().destroyImage(depthImage);
 	
 	vkDestroySwapchainKHR(device->vkDevice(), swapchain, nullptr);
 }
@@ -130,7 +130,7 @@ void VulkanSwapchain::initDepthImage()
         .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
     };
     VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-    depthImage = device->allocator()->createImage(imageInfo, properties);
+    depthImage = device->allocator().createImage(imageInfo, properties);
 
 	VkImageViewCreateInfo imageViewInfo{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,

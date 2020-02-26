@@ -89,10 +89,10 @@ VulkanDevice::VulkanDevice(VkInstance instance, VkSurfaceKHR surface, const std:
 	}
 
 	// VkQueue(s)
-	queues.graphics.familyIndex = queueFamilyIndices.graphicsFamily.value();
-	queues.present.familyIndex = queueFamilyIndices.presentFamily.value();
-	vkGetDeviceQueue(device, queues.graphics.familyIndex, 0, &queues.graphics.queue);
-	vkGetDeviceQueue(device, queues.present.familyIndex, 0, &queues.present.queue);
+	vulkanQueues.graphics.familyIndex = queueFamilyIndices.graphicsFamily.value();
+	vulkanQueues.present.familyIndex = queueFamilyIndices.presentFamily.value();
+	vkGetDeviceQueue(device, vulkanQueues.graphics.familyIndex, 0, &vulkanQueues.graphics.queue);
+	vkGetDeviceQueue(device, vulkanQueues.present.familyIndex, 0, &vulkanQueues.present.queue);
 	
 	vulkanAllocator = std::make_unique<VulkanAllocator>(device, physicalDevice);
 }

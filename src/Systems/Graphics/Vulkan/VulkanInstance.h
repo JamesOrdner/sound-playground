@@ -22,6 +22,10 @@ private:
 
 	std::unique_ptr<class VulkanDevice> device;
 	std::unique_ptr<class VulkanSwapchain> swapchain;
+	
+	void initCommandPool(VkSurfaceKHR surface);
+	void initCommandBuffers();
+	void initSynchronization();
 
 	std::vector<const char*> requiredInstanceExtensions(SDL_Window* window);
 };
