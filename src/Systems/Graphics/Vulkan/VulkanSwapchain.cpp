@@ -1,5 +1,6 @@
 #include "VulkanSwapchain.h"
 #include "VulkanDevice.h"
+#include <stdexcept>
 
 VulkanSwapchain::VulkanSwapchain(const VulkanDevice* device, VkSurfaceKHR surface) :
 	device(device)

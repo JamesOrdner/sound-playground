@@ -2,6 +2,7 @@
 #include "VulkanDevice.h"
 #include "VulkanShader.h"
 #include "VulkanMesh.h"
+#include <stdexcept>
 
 VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const VkExtent2D& swapchainExtent, VkRenderPass renderPass) :
 	device(device)
