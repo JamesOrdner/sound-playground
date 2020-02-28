@@ -19,7 +19,7 @@ public:
 	void bindPipeline(VkPipeline pipeline, VkPipelineBindPoint pipelineBindPoint);
 	
 	/// Draw a list of models using the currently-bound pipeline
-	void draw(const std::vector<std::unique_ptr<class VulkanModel>>& models);
+	void draw(const class VulkanModel* model);
 	
 	/// End recording commands and submit to the graphics queue. Returns the
 	/// semaphore which will be signaled when the command buffer finishes execution.

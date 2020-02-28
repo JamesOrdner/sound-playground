@@ -75,11 +75,9 @@ void VulkanFrame::bindPipeline(VkPipeline pipeline, VkPipelineBindPoint pipeline
 	vkCmdBindPipeline(commandBuffer, pipelineBindPoint, pipeline);
 }
 
-void VulkanFrame::draw(const std::vector<std::unique_ptr<class VulkanModel>>& models)
+void VulkanFrame::draw(const VulkanModel* model)
 {
-	for (const auto& model : models) {
-		// bind buffers and draw
-	}
+	// bind buffers and draw
 }
 
 VkSemaphore VulkanFrame::endFrame(VkSemaphore acquireSemaphore)
