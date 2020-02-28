@@ -5,7 +5,9 @@
 #include <stdexcept>
 
 VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) :
-	device(device)
+	device(device),
+	renderPass(VK_NULL_HANDLE),
+	renderArea({})
 {
 	VkCommandBufferAllocateInfo commandBufferInfo{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -42,12 +44,18 @@ VulkanFrame::~VulkanFrame()
 	vkDestroyFence(device->vkDevice(), completeFence, nullptr);
 }
 
-VkSemaphore VulkanFrame::draw(VkFramebuffer framebuffer, VkSemaphore acquireSemaphore, const std::vector<std::unique_ptr<class VulkanModel>>& models)
+void VulkanFrame::updateRenderDependencies(VkRenderPass renderPass, const VkRect2D& renderArea)
+{
+	this->renderPass = renderPass;
+	this->renderArea = renderArea;
+}
+
+VkSemaphore VulkanFrame::render(VkFramebuffer framebuffer, VkSemaphore acquireSemaphore, const std::vector<std::unique_ptr<class VulkanModel>>& models)
 {
 	vkWaitForFences(device->vkDevice(), 1, &completeFence, VK_TRUE, UINT64_MAX);
 	vkResetFences(device->vkDevice(), 1, &completeFence);
 	
-	recordCommandBuffer();
+	recordCommandBuffer(framebuffer);
 	
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT };
 	VkSubmitInfo submitInfo{
@@ -66,14 +74,31 @@ VkSemaphore VulkanFrame::draw(VkFramebuffer framebuffer, VkSemaphore acquireSema
 	return completeSemaphore;
 }
 
-void VulkanFrame::recordCommandBuffer()
+void VulkanFrame::recordCommandBuffer(VkFramebuffer framebuffer)
 {
 	VkCommandBufferBeginInfo commandBufferBeginInfo{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
 	};
 	
-	vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+	VkClearValue clearValues[] = {
+		{.color = {.float32 = { 0.0f, 0.0f, 0.0f, 1.0f }}},
+		{.depthStencil = { 1.f, 0 }}
+	};
 	
+	VkRenderPassBeginInfo renderPassBeginInfo{
+		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+		.renderPass = renderPass,
+		.framebuffer = framebuffer,
+		.renderArea = renderArea,
+		.clearValueCount = 2,
+		.pClearValues = clearValues
+	};
+	
+	vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	
+	
+	vkCmdEndRenderPass(commandBuffer);
 	vkEndCommandBuffer(commandBuffer);
 }

@@ -12,6 +12,13 @@ public:
 	
 	~VulkanSwapchain();
 	
+	const VkFormat& presentFormat() const { return imageFormat.format; }
+	const VkFormat& depthFormat() const { return depthImageFormat; }
+	const VkExtent2D& extent() const { return imageExtent; }
+	
+	/// This should be called immediately after creation of the RenderPass
+	void initFramebuffers(VkRenderPass renderPass);
+	
 	/// Assigns the index of the next swapchain image, and returns
 	/// a semaphore which signals the acquisition of the image
 	VkSemaphore acquireNextImage(uint32_t& imageIndex);
@@ -34,20 +41,16 @@ private:
     VkImageView depthImageView;
     VkFormat depthImageFormat;
 	
-	VkRenderPass renderPass;
-	
     std::vector<VkFramebuffer> framebuffers;
 	
 	std::vector<VkSemaphore> acquireSemaphores;
 	size_t acquireIndex;
 	
-	VkExtent2D extent;
+	VkExtent2D imageExtent;
 	VkSurfaceFormatKHR imageFormat;
 	
 	void initSwapchain(VkSurfaceKHR surface);
 	void initImageViews();
 	void initDepthImage();
-	void initRenderPass();
-	void initFramebuffers();
 	void initSynchronization();
 };

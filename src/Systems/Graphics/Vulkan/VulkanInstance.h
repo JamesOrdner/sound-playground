@@ -22,6 +22,7 @@ private:
 	
 	VkInstance instance;
 	VkSurfaceKHR surface;
+	VkRenderPass renderPass;
 
 	std::unique_ptr<class VulkanDevice> device;
 	std::unique_ptr<class VulkanSwapchain> swapchain;
@@ -34,6 +35,7 @@ private:
 	std::vector<std::unique_ptr<class VulkanModel>> models;
 	
 	void initInstance(SDL_Window* window);
+	void initRenderPass();
 	void initCommandPool();
 	
 	std::vector<const char*> requiredInstanceExtensions(SDL_Window* window);

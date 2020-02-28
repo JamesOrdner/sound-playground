@@ -23,11 +23,15 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 	
 	device = std::make_unique<VulkanDevice>(instance, surface, validationLayers);
 	swapchain = std::make_unique<VulkanSwapchain>(device.get(), surface);
-	
+	initRenderPass();
+	swapchain->initFramebuffers(renderPass);
 	initCommandPool();
 	
-	frames[0] = std::make_unique<VulkanFrame>(device.get(), commandPool);
-	frames[1] = std::make_unique<VulkanFrame>(device.get(), commandPool);
+	for (auto& frame : frames) {
+		frame = std::make_unique<VulkanFrame>(device.get(), commandPool);
+		VkRect2D renderArea{ .offset = {}, .extent = swapchain->extent() };
+		frame->updateRenderDependencies(renderPass, renderArea);
+	}
 }
 
 VulkanInstance::~VulkanInstance()
@@ -37,6 +41,7 @@ VulkanInstance::~VulkanInstance()
 	for (auto& frame : frames) frame.reset();
 	vkDestroyCommandPool(device->vkDevice(), commandPool, nullptr);
 	swapchain.reset();
+	vkDestroyRenderPass(device->vkDevice(), renderPass, nullptr);
 	device.reset();
 	vkDestroySurfaceKHR(instance, surface, nullptr);
 	vkDestroyInstance(instance, nullptr);
@@ -99,6 +104,61 @@ std::vector<const char*> VulkanInstance::requiredInstanceExtensions(SDL_Window* 
 	return extensions;
 }
 
+void VulkanInstance::initRenderPass()
+{
+	VkAttachmentDescription colorAttachmentDesc{
+		.format = swapchain->presentFormat(),
+		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+	};
+	
+	VkAttachmentDescription depthAttachmentDesc{
+		.format = swapchain->depthFormat(),
+		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+		.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+		.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+	};
+	
+	VkAttachmentReference colorAttachmentRef{
+		.attachment = 0,
+		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+	};
+	
+	VkAttachmentReference depthAttachmentRef{
+		.attachment = 1,
+		.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+	};
+	
+	VkSubpassDescription subpassDesc{
+		.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+		.colorAttachmentCount = 1,
+		.pColorAttachments = &colorAttachmentRef,
+		.pDepthStencilAttachment = &depthAttachmentRef
+	};
+	
+	VkAttachmentDescription attachments[] = { colorAttachmentDesc, depthAttachmentDesc };
+	VkRenderPassCreateInfo renderPassInfo{
+		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+		.attachmentCount = 2,
+		.pAttachments = attachments,
+		.subpassCount = 1,
+		.pSubpasses = &subpassDesc
+	};
+	
+	if (vkCreateRenderPass(device->vkDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create Vulkan render pass!");
+	}
+}
+
 void VulkanInstance::initCommandPool()
 {
 	VkCommandPoolCreateInfo commandPoolInfo{
@@ -117,7 +177,7 @@ void VulkanInstance::renderFrame()
 	uint32_t imageIndex;
 	VkSemaphore acquireSemaphore = swapchain->acquireNextImage(imageIndex);
 	
-	VkSemaphore waitSemaphore = frames[frameIndex++]->draw(swapchain->framebuffer(imageIndex), acquireSemaphore, models);
+	VkSemaphore waitSemaphore = frames[frameIndex++]->render(swapchain->framebuffer(imageIndex), acquireSemaphore, models);
 	frameIndex %= frames.size();
 	
 	swapchain->present(imageIndex, waitSemaphore);

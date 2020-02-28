@@ -9,8 +9,6 @@ VulkanSwapchain::VulkanSwapchain(const VulkanDevice* device, VkSurfaceKHR surfac
 	initSwapchain(surface);
 	initImageViews();
 	initDepthImage();
-	initRenderPass();
-	initFramebuffers();
 	initSynchronization();
 }
 
@@ -24,8 +22,6 @@ VulkanSwapchain::~VulkanSwapchain()
 	framebuffers.clear();
 	imageViews.clear();
 	
-	vkDestroyRenderPass(device->vkDevice(), renderPass, nullptr);
-	
 	vkDestroyImageView(device->vkDevice(), depthImageView, nullptr);
 	device->allocator().destroyImage(depthImage);
 	
@@ -38,7 +34,7 @@ void VulkanSwapchain::initSwapchain(VkSurfaceKHR surface)
 	auto formats = device->surfaceFormats(surface);
 	auto presentModes = device->surfacePresentModes(surface);
 	
-	extent = capabilities.currentExtent;
+	imageExtent = capabilities.currentExtent;
 	imageFormat = formats[0];
 	
 	// search for preferred format
@@ -55,7 +51,7 @@ void VulkanSwapchain::initSwapchain(VkSurfaceKHR surface)
 		.minImageCount = capabilities.minImageCount + 1,
 		.imageFormat = imageFormat.format,
 		.imageColorSpace = imageFormat.colorSpace,
-		.imageExtent = extent,
+		.imageExtent = imageExtent,
 		.imageArrayLayers = 1,
 		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 		.preTransform = capabilities.currentTransform,
@@ -124,7 +120,7 @@ void VulkanSwapchain::initDepthImage()
         .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
         .imageType = VK_IMAGE_TYPE_2D,
         .format = depthImageFormat,
-        .extent = { extent.width, extent.width, 1 },
+        .extent = { imageExtent.width, imageExtent.width, 1 },
         .mipLevels = 1,
         .arrayLayers = 1,
         .samples = VK_SAMPLE_COUNT_1_BIT,
@@ -155,62 +151,21 @@ void VulkanSwapchain::initDepthImage()
 	}
 }
 
-void VulkanSwapchain::initRenderPass()
+void VulkanSwapchain::initSynchronization()
 {
-	VkAttachmentDescription colorAttachmentDesc{
-		.format = imageFormat.format,
-		.samples = VK_SAMPLE_COUNT_1_BIT,
-		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+	VkSemaphoreCreateInfo semaphoreInfo{
+		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
 	};
 	
-	VkAttachmentDescription depthAttachmentDesc{
-		.format = depthImageFormat,
-		.samples = VK_SAMPLE_COUNT_1_BIT,
-		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-		.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-		.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-	};
-	
-	VkAttachmentReference colorAttachmentRef{
-		.attachment = 0,
-		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-	};
-	
-	VkAttachmentReference depthAttachmentRef{
-		.attachment = 1,
-		.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-	};
-	
-	VkSubpassDescription subpassDesc{
-		.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-		.colorAttachmentCount = 1,
-		.pColorAttachments = &colorAttachmentRef,
-		.pDepthStencilAttachment = &depthAttachmentRef
-	};
-	
-	VkAttachmentDescription attachments[] = { colorAttachmentDesc, depthAttachmentDesc };
-	VkRenderPassCreateInfo renderPassInfo{
-		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-		.attachmentCount = 2,
-		.pAttachments = attachments,
-		.subpassCount = 1,
-		.pSubpasses = &subpassDesc
-	};
-	
-	if (vkCreateRenderPass(device->vkDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to create Vulkan render pass!");
+	acquireSemaphores.resize(imageViews.size());
+	for (size_t i = 0; i < imageViews.size(); i++) {
+		if (vkCreateSemaphore(device->vkDevice(), &semaphoreInfo, nullptr, &acquireSemaphores[i]) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to create Vulkan swapchain semaphores!");
+		}
 	}
 }
 
-void VulkanSwapchain::initFramebuffers()
+void VulkanSwapchain::initFramebuffers(VkRenderPass renderPass)
 {
 	framebuffers.resize(imageViews.size());
 	for (size_t i = 0; i < framebuffers.size(); i++) {
@@ -220,27 +175,13 @@ void VulkanSwapchain::initFramebuffers()
 			.renderPass = renderPass,
 			.attachmentCount = 2,
 			.pAttachments = attachments,
-			.width = extent.width,
-			.height = extent.height,
+			.width = imageExtent.width,
+			.height = imageExtent.height,
 			.layers = 1,
 		};
 		
 		if (vkCreateFramebuffer(device->vkDevice(), &framebufferInfo, nullptr, &framebuffers[i]) != VK_SUCCESS) {
 			throw std::runtime_error("Failed to create Vulkan swapchain framebuffers!");
-		}
-	}
-}
-
-void VulkanSwapchain::initSynchronization()
-{
-	VkSemaphoreCreateInfo semaphoreInfo{
-		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
-	};
-	
-	acquireSemaphores.resize(framebuffers.size());
-	for (size_t i = 0; i < framebuffers.size(); i++) {
-		if (vkCreateSemaphore(device->vkDevice(), &semaphoreInfo, nullptr, &acquireSemaphores[i]) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to create Vulkan swapchain semaphores!");
 		}
 	}
 }
