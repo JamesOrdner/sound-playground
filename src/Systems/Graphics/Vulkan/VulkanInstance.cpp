@@ -27,11 +27,7 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 	swapchain->initFramebuffers(renderPass);
 	initCommandPool();
 	
-	for (auto& frame : frames) {
-		frame = std::make_unique<VulkanFrame>(device.get(), commandPool);
-		VkRect2D renderArea{ .offset = {}, .extent = swapchain->extent() };
-		frame->updateRenderDependencies(renderPass, renderArea);
-	}
+	for (auto& frame : frames) frame = std::make_unique<VulkanFrame>(device.get(), commandPool);
 }
 
 VulkanInstance::~VulkanInstance()
@@ -177,8 +173,14 @@ void VulkanInstance::renderFrame()
 	uint32_t imageIndex;
 	VkSemaphore acquireSemaphore = swapchain->acquireNextImage(imageIndex);
 	
-	VkSemaphore waitSemaphore = frames[frameIndex++]->render(swapchain->framebuffer(imageIndex), acquireSemaphore, models);
+	auto& frame = frames[frameIndex++];
 	frameIndex %= frames.size();
+	
+	VkRect2D renderArea{ .offset = {}, .extent = swapchain->extent() };
+	frame->beginFrame(swapchain->framebuffer(imageIndex), renderPass, renderArea);
+	// frame->bindPipeline();
+	// frame->draw();
+	VkSemaphore waitSemaphore = frame->endFrame(acquireSemaphore);
 	
 	swapchain->present(imageIndex, waitSemaphore);
 }

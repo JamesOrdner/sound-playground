@@ -12,12 +12,18 @@ public:
 	
 	~VulkanFrame();
 	
-	/// This must be called before any calls to render(), and any time the dependencies are modified
-	void updateRenderDependencies(VkRenderPass renderPass, const VkRect2D& renderArea);
+	/// Begin recording commands for this frame
+	void beginFrame(VkFramebuffer framebuffer, VkRenderPass renderPass, const VkRect2D& renderArea);
 	
-	/// Submit a command buffer to the graphics queue. Returns the semaphore
-	/// which will be signaled when the command buffer finishes execution.
-	VkSemaphore render(VkFramebuffer framebuffer, VkSemaphore acquireSemaphore, const std::vector<std::unique_ptr<class VulkanModel>>& models);
+	/// Bind a pipeline to the actively-recording command buffer
+	void bindPipeline(VkPipeline pipeline, VkPipelineBindPoint pipelineBindPoint);
+	
+	/// Draw a list of models using the currently-bound pipeline
+	void draw(const std::vector<std::unique_ptr<class VulkanModel>>& models);
+	
+	/// End recording commands and submit to the graphics queue. Returns the
+	/// semaphore which will be signaled when the command buffer finishes execution.
+	VkSemaphore endFrame(VkSemaphore acquireSemaphore);
 	
 private:
 	
@@ -30,9 +36,6 @@ private:
 	
 	/// Signaled when the command buffer has finished execution
 	VkSemaphore completeSemaphore;
-	
-	VkRenderPass renderPass;
-	VkRect2D renderArea;
 	
 	void recordCommandBuffer(VkFramebuffer framebuffer);
 };
