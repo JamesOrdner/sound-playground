@@ -43,8 +43,7 @@ void GraphicsSystem::deinit()
 
 void GraphicsSystem::execute(float deltaTime)
 {
-	// TODO: Scene rendering
-//	for (const auto& scene : graphicsScenes) scene->drawScene(vulkan.get());
+	for (const auto& scene : graphicsScenes) scene->drawScene(vulkan.get());
 //	vulkan->swap(window);
 }
 

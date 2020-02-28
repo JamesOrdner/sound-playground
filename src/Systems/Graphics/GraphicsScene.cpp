@@ -1,8 +1,8 @@
 #include "GraphicsScene.h"
 #include "GraphicsObject.h"
-#include "Render.h"
 #include "CameraGraphicsObject.h"
 #include "UIGraphicsObject.h"
+#include "Vulkan/VulkanInstance.h"
 #include <algorithm>
 
 GraphicsScene::GraphicsScene(const SystemInterface* system, const UScene* uscene) :
@@ -26,11 +26,11 @@ void GraphicsScene::deleteSystemObject(const UObject* uobject)
 	}
 }
 
-void GraphicsScene::drawScene(Render* render)
+void GraphicsScene::drawScene(VulkanInstance* vulkan)
 {
-	if (activeCamera) render->setCamera(activeCamera->cameraPosition(), activeCamera->cameraForward());
-	render->drawMeshes();
-	for (auto* uiObject : uiObjects) render->drawUIElement(uiObject->uiData);
+	// if (activeCamera) vulkan->setCamera(activeCamera->cameraPosition(), activeCamera->cameraForward());
+	vulkan->renderFrame();
+	// for (auto* uiObject : uiObjects) render->drawUIElement(uiObject->uiData);
 }
 
 SystemObjectInterface* GraphicsScene::addSystemObject(SystemObjectInterface* object)

@@ -1,6 +1,8 @@
 #include "VulkanInstance.h"
 #include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
+#include "VulkanFrame.h"
+#include "VulkanModel.h"
 #include <SDL_vulkan.h>
 #include <stdexcept>
 
@@ -10,7 +12,8 @@ const std::vector<const char*> validationLayers{
 #endif
 };
 
-VulkanInstance::VulkanInstance(SDL_Window* window)
+VulkanInstance::VulkanInstance(SDL_Window* window) :
+	frameIndex(0)
 {
 	initInstance(window);
 	
@@ -22,12 +25,16 @@ VulkanInstance::VulkanInstance(SDL_Window* window)
 	swapchain = std::make_unique<VulkanSwapchain>(device.get(), surface);
 	
 	initCommandPool();
-	initCommandBuffers();
+	
+	frames[0] = std::make_unique<VulkanFrame>(device.get(), commandPool);
+	frames[1] = std::make_unique<VulkanFrame>(device.get(), commandPool);
 }
 
 VulkanInstance::~VulkanInstance()
 {
 	vkDeviceWaitIdle(device->vkDevice());
+	
+	for (auto& frame : frames) frame.reset();
 	vkDestroyCommandPool(device->vkDevice(), commandPool, nullptr);
 	swapchain.reset();
 	device.reset();
@@ -105,18 +112,13 @@ void VulkanInstance::initCommandPool()
 	}
 }
 
-void VulkanInstance::initCommandBuffers()
+void VulkanInstance::renderFrame()
 {
-	commandBuffers.resize(2);
-
-	VkCommandBufferAllocateInfo commandBufferInfo{
-		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-		.commandPool = commandPool,
-		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-		.commandBufferCount = static_cast<uint32_t>(commandBuffers.size())
-	};
-
-	if (vkAllocateCommandBuffers(device->vkDevice(), &commandBufferInfo, commandBuffers.data()) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to allocate Vulkan command buffers!");
-	}
+	uint32_t imageIndex;
+	VkSemaphore acquireSemaphore = swapchain->acquireNextImage(imageIndex);
+	
+	VkSemaphore waitSemaphore = frames[frameIndex++]->draw(swapchain->framebuffer(imageIndex), acquireSemaphore, models);
+	frameIndex %= frames.size();
+	
+	swapchain->present(imageIndex, waitSemaphore);
 }

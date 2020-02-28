@@ -3,18 +3,21 @@
 #include <stdexcept>
 
 VulkanSwapchain::VulkanSwapchain(const VulkanDevice* device, VkSurfaceKHR surface) :
-	device(device)
+	device(device),
+	acquireIndex(0)
 {
 	initSwapchain(surface);
 	initImageViews();
 	initDepthImage();
 	initRenderPass();
 	initFramebuffers();
+	initSynchronization();
 }
 
 VulkanSwapchain::~VulkanSwapchain()
 {
 	for (size_t i = 0; i < imageViews.size(); i++) {
+		vkDestroySemaphore(device->vkDevice(), acquireSemaphores[i], nullptr);
 		vkDestroyFramebuffer(device->vkDevice(), framebuffers[i], nullptr);
 		vkDestroyImageView(device->vkDevice(), imageViews[i], nullptr);
 	}
@@ -226,4 +229,45 @@ void VulkanSwapchain::initFramebuffers()
 			throw std::runtime_error("Failed to create Vulkan swapchain framebuffers!");
 		}
 	}
+}
+
+void VulkanSwapchain::initSynchronization()
+{
+	VkSemaphoreCreateInfo semaphoreInfo{
+		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+	};
+	
+	acquireSemaphores.resize(framebuffers.size());
+	for (size_t i = 0; i < framebuffers.size(); i++) {
+		if (vkCreateSemaphore(device->vkDevice(), &semaphoreInfo, nullptr, &acquireSemaphores[i]) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to create Vulkan swapchain semaphores!");
+		}
+	}
+}
+
+VkSemaphore VulkanSwapchain::acquireNextImage(uint32_t& imageIndex)
+{
+	VkSemaphore semaphore = acquireSemaphores[acquireIndex++];
+	acquireIndex %= acquireSemaphores.size();
+	vkAcquireNextImageKHR(device->vkDevice(), swapchain, UINT64_MAX, semaphore, VK_NULL_HANDLE, &imageIndex);
+	return semaphore;
+}
+
+void VulkanSwapchain::present(uint32_t imageIndex, VkSemaphore waitSemaphore)
+{
+	VkPresentInfoKHR submitInfo{
+		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+		.waitSemaphoreCount = 1,
+		.pWaitSemaphores = &waitSemaphore,
+		.swapchainCount = 1,
+		.pSwapchains = &swapchain,
+		.pImageIndices = &imageIndex
+	};
+	
+	vkQueuePresentKHR(device->queues().present.queue, &submitInfo);
+}
+
+VkFramebuffer VulkanSwapchain::framebuffer(uint32_t imageIndex) const
+{
+	return framebuffers[imageIndex];
 }

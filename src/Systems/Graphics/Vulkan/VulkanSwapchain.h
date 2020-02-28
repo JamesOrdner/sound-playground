@@ -12,6 +12,16 @@ public:
 	
 	~VulkanSwapchain();
 	
+	/// Assigns the index of the next swapchain image, and returns
+	/// a semaphore which signals the acquisition of the image
+	VkSemaphore acquireNextImage(uint32_t& imageIndex);
+	
+	/// Submit an image for presentation
+	void present(uint32_t imageIndex, VkSemaphore waitSemaphore);
+	
+	/// Get the framebuffer associated with the image index
+	VkFramebuffer framebuffer(uint32_t imageIndex) const;
+	
 private:
 	
 	const class VulkanDevice* const device;
@@ -28,6 +38,9 @@ private:
 	
     std::vector<VkFramebuffer> framebuffers;
 	
+	std::vector<VkSemaphore> acquireSemaphores;
+	size_t acquireIndex;
+	
 	VkExtent2D extent;
 	VkSurfaceFormatKHR imageFormat;
 	
@@ -36,4 +49,5 @@ private:
 	void initDepthImage();
 	void initRenderPass();
 	void initFramebuffers();
+	void initSynchronization();
 };
