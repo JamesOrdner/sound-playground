@@ -10,7 +10,7 @@ class GraphicsScene : public SystemSceneInterface, public ObserverInterface
 {
 public:
 
-	GraphicsScene(const class SystemInterface* system, const class UScene* uscene);
+	GraphicsScene(const class SystemInterface* system, const class UScene* uscene, class VulkanScene* vulkanScene);
 
 	~GraphicsScene();
 
@@ -21,6 +21,8 @@ public:
 	class CameraGraphicsObject* activeCamera;
 
 private:
+
+	class VulkanScene* const vulkanScene;
 
 	SystemObjectInterface* addSystemObject(SystemObjectInterface* object) override;
 

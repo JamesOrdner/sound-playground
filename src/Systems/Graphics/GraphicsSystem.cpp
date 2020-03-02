@@ -43,13 +43,15 @@ void GraphicsSystem::deinit()
 
 void GraphicsSystem::execute(float deltaTime)
 {
+	vulkan->beginRender();
 	for (const auto& scene : graphicsScenes) scene->drawScene(vulkan.get());
-//	vulkan->swap(window);
+	vulkan->endRenderAndPresent();
 }
 
 SystemSceneInterface* GraphicsSystem::createSystemScene(const class UScene* uscene)
 {
-	return graphicsScenes.emplace_back(std::make_unique<GraphicsScene>(this, uscene)).get();
+	auto* vulkanScene = vulkan->createScene();
+	return graphicsScenes.emplace_back(std::make_unique<GraphicsScene>(this, uscene, vulkanScene)).get();
 }
 
 SystemSceneInterface* GraphicsSystem::findSystemScene(const UScene* uscene)

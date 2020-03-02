@@ -5,9 +5,10 @@
 #include "Vulkan/VulkanInstance.h"
 #include <algorithm>
 
-GraphicsScene::GraphicsScene(const SystemInterface* system, const UScene* uscene) :
+GraphicsScene::GraphicsScene(const SystemInterface* system, const UScene* uscene, VulkanScene* vulkanScene) :
 	SystemSceneInterface(system, uscene),
-	activeCamera(nullptr)
+	activeCamera(nullptr),
+	vulkanScene(vulkanScene)
 {
 }
 
@@ -29,7 +30,7 @@ void GraphicsScene::deleteSystemObject(const UObject* uobject)
 void GraphicsScene::drawScene(VulkanInstance* vulkan)
 {
 	// if (activeCamera) vulkan->setCamera(activeCamera->cameraPosition(), activeCamera->cameraForward());
-	vulkan->renderFrame();
+	vulkan->renderScene(vulkanScene);
 	// for (auto* uiObject : uiObjects) render->drawUIElement(uiObject->uiData);
 }
 

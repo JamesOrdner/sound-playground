@@ -13,7 +13,6 @@ public:
 	inline class VulkanMaterial* getMaterial() const { return material; }
 	
 	void setMesh(const std::string& filepath);
-	
 	void setMaterial(const std::string& name);
 	
 private:

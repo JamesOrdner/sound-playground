@@ -13,7 +13,10 @@ const std::vector<const char*> validationLayers{
 };
 
 VulkanInstance::VulkanInstance(SDL_Window* window) :
-	frameIndex(0)
+	frameIndex(0),
+	activeFrame(nullptr),
+	activeSwapchainImageIndex(0),
+	activeFrameAcquireSemaphore(VK_NULL_HANDLE)
 {
 	initInstance(window);
 	
@@ -28,8 +31,6 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 	initCommandPool();
 	
 	for (auto& frame : frames) frame = std::make_unique<VulkanFrame>(device.get(), commandPool);
-	
-	scenes.emplace_back(std::make_unique<VulkanScene>());
 }
 
 VulkanInstance::~VulkanInstance()
@@ -172,25 +173,47 @@ void VulkanInstance::initCommandPool()
 	}
 }
 
-void VulkanInstance::renderFrame()
+VulkanScene* VulkanInstance::createScene()
 {
-	uint32_t imageIndex;
-	VkSemaphore acquireSemaphore = swapchain->acquireNextImage(imageIndex);
+	return scenes.emplace_back(std::make_unique<VulkanScene>()).get();
+}
+
+void VulkanInstance::destroyScene(VulkanScene* scene)
+{
+	for (auto it = scenes.cbegin(); it != scenes.cend(); it++) {
+		if (it->get() == scene) {
+			scenes.erase(it);
+			break;
+		}
+	}
+}
+
+void VulkanInstance::beginRender()
+{
+	activeFrameAcquireSemaphore = swapchain->acquireNextImage(activeSwapchainImageIndex);
 	
-	auto& frame = frames[frameIndex++];
+	activeFrame = frames[frameIndex++].get();
 	frameIndex %= frames.size();
-	
+
+	activeFrame->beginFrame();
+}
+
+void VulkanInstance::renderScene(VulkanScene* scene)
+{
 	// update uniforms
-	for (const auto& scene : scenes) scene->updateUniforms(*frame);
-	
-	// begin render pass and command buffer recording
+	for (const auto& scene : scenes) scene->updateUniforms(*activeFrame);
+
+	// render
 	VkRect2D renderArea{ .offset = {}, .extent = swapchain->extent() };
-	frame->beginFrame(swapchain->framebuffer(imageIndex), renderPass, renderArea);
-	
-	// record draw commands for all scens
-	for (const auto& scene : scenes) scene->render(*frame);
-	
-	// end render pass and command buffer recording
-	VkSemaphore waitSemaphore = frame->endFrame(acquireSemaphore);
-	swapchain->present(imageIndex, waitSemaphore);
+	activeFrame->beginRenderPass(renderPass, swapchain->framebuffer(activeSwapchainImageIndex), renderArea);
+	scene->render(*activeFrame);
+	activeFrame->endRenderPass();
+}
+
+void VulkanInstance::endRenderAndPresent()
+{
+	// end command buffer recording and present
+	VkSemaphore waitSemaphore = activeFrame->endFrame(activeFrameAcquireSemaphore);
+	swapchain->present(activeSwapchainImageIndex, waitSemaphore);
+	activeFrame = nullptr;
 }

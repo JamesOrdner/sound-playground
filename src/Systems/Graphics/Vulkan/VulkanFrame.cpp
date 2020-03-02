@@ -43,7 +43,7 @@ VulkanFrame::~VulkanFrame()
 	vkDestroyFence(device->vkDevice(), completeFence, nullptr);
 }
 
-void VulkanFrame::beginFrame(VkFramebuffer framebuffer, VkRenderPass renderPass, const VkRect2D& renderArea)
+void VulkanFrame::beginFrame()
 {
 	vkWaitForFences(device->vkDevice(), 1, &completeFence, VK_TRUE, UINT64_MAX);
 	vkResetFences(device->vkDevice(), 1, &completeFence);
@@ -53,11 +53,16 @@ void VulkanFrame::beginFrame(VkFramebuffer framebuffer, VkRenderPass renderPass,
 		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
 	};
 	
+	vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+}
+
+void VulkanFrame::beginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea)
+{
 	VkClearValue clearValues[] = {
 		{.color = {.float32 = { 0.0f, 0.0f, 0.0f, 1.0f }}},
 		{.depthStencil = { 1.f, 0 }}
 	};
-	
+
 	VkRenderPassBeginInfo renderPassBeginInfo{
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 		.renderPass = renderPass,
@@ -66,8 +71,7 @@ void VulkanFrame::beginFrame(VkFramebuffer framebuffer, VkRenderPass renderPass,
 		.clearValueCount = 2,
 		.pClearValues = clearValues
 	};
-	
-	vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+
 	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
@@ -87,9 +91,13 @@ void VulkanFrame::draw(const VulkanModel& model) const
 	// bind buffers and draw
 }
 
-VkSemaphore VulkanFrame::endFrame(VkSemaphore acquireSemaphore)
+void VulkanFrame::endRenderPass()
 {
 	vkCmdEndRenderPass(commandBuffer);
+}
+
+VkSemaphore VulkanFrame::endFrame(VkSemaphore acquireSemaphore)
+{
 	vkEndCommandBuffer(commandBuffer);
 	
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT };
