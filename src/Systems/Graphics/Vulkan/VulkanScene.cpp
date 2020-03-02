@@ -34,10 +34,17 @@ void VulkanScene::removeModel(VulkanModel* model)
 void VulkanScene::sortModels()
 {
 	std::sort(models.begin(), models.end(), [](auto& a, auto& b) {
-		const auto& aName = a->getMaterial()->name;
-		const auto& bName = b->getMaterial()->name;
-		if (aName != bName) return aName < bName;
-		return a->getMesh()->filepath < b->getMesh()->filepath;
+		const auto* aMat = a->getMaterial();
+		const auto* bMat = b->getMaterial();
+		if (aMat && !bMat) return true;
+		if (!aMat && bMat) return false;
+		if (aMat->name != bMat->name) return aMat->name < bMat->name;
+		
+		const auto* aMesh = a->getMesh();
+		const auto* bMesh = b->getMesh();
+		if (aMesh && !bMesh) return true;
+		if (!aMesh && bMesh) return false;
+		return aMesh->filepath < bMesh->filepath;
 	});
 }
 
