@@ -16,7 +16,7 @@ public:
 	void beginFrame(VkFramebuffer framebuffer, VkRenderPass renderPass, const VkRect2D& renderArea);
 	
 	/// Bind a pipeline to the actively-recording command buffer
-	void bindPipeline(VkPipeline pipeline, VkPipelineBindPoint pipelineBindPoint);
+	void bindMaterial(const class VulkanMaterial& material);
 	
 	/// Draw a list of models using the currently-bound pipeline
 	void draw(const class VulkanModel* model);

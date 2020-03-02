@@ -140,3 +140,8 @@ void VulkanMaterial::initPipeline(const VkExtent2D& swapchainExtent, VkRenderPas
 		throw std::runtime_error("Failed to create Vulkan pipeline!");
 	}
 }
+
+void VulkanMaterial::bind(VkCommandBuffer cmd) const
+{
+	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+}

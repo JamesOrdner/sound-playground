@@ -1,5 +1,6 @@
 #include "VulkanFrame.h"
 #include "VulkanDevice.h"
+#include "VulkanMaterial.h"
 #include "VulkanModel.h"
 #include "VulkanMesh.h"
 #include <stdexcept>
@@ -70,9 +71,9 @@ void VulkanFrame::beginFrame(VkFramebuffer framebuffer, VkRenderPass renderPass,
 	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void VulkanFrame::bindPipeline(VkPipeline pipeline, VkPipelineBindPoint pipelineBindPoint)
+void VulkanFrame::bindMaterial(const VulkanMaterial& material)
 {
-	vkCmdBindPipeline(commandBuffer, pipelineBindPoint, pipeline);
+	material.bind(commandBuffer);
 }
 
 void VulkanFrame::draw(const VulkanModel* model)

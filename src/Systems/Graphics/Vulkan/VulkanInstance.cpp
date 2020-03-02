@@ -2,6 +2,7 @@
 #include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
 #include "VulkanFrame.h"
+#include "VulkanMaterial.h"
 #include "VulkanModel.h"
 #include <SDL_vulkan.h>
 #include <stdexcept>
@@ -28,11 +29,15 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 	initCommandPool();
 	
 	for (auto& frame : frames) frame = std::make_unique<VulkanFrame>(device.get(), commandPool);
+	
+	materials.emplace_back(std::make_unique<VulkanMaterial>(device.get(), swapchain->extent(), renderPass));
 }
 
 VulkanInstance::~VulkanInstance()
 {
 	vkDeviceWaitIdle(device->vkDevice());
+	
+	materials.clear();
 	
 	for (auto& frame : frames) frame.reset();
 	vkDestroyCommandPool(device->vkDevice(), commandPool, nullptr);
@@ -178,7 +183,7 @@ void VulkanInstance::renderFrame()
 	
 	VkRect2D renderArea{ .offset = {}, .extent = swapchain->extent() };
 	frame->beginFrame(swapchain->framebuffer(imageIndex), renderPass, renderArea);
-	// frame->bindPipeline();
+	frame->bindMaterial(*materials[0]);
 	// frame->draw();
 	VkSemaphore waitSemaphore = frame->endFrame(acquireSemaphore);
 	

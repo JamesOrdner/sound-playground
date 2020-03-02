@@ -10,6 +10,8 @@ public:
 	
 	~VulkanMaterial();
 	
+	void bind(VkCommandBuffer cmd) const;
+	
 private:
 	
 	const class VulkanDevice* const device;

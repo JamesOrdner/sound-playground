@@ -23,7 +23,7 @@ private:
 	VkInstance instance;
 	VkSurfaceKHR surface;
 	VkRenderPass renderPass;
-
+	
 	std::unique_ptr<class VulkanDevice> device;
 	std::unique_ptr<class VulkanSwapchain> swapchain;
 	
@@ -31,7 +31,7 @@ private:
 	std::array<std::unique_ptr<class VulkanFrame>, 2> frames;
 	uint32_t frameIndex;
 	
-	/// This array is sorted so that all models sharing a mesh are contiguous
+	std::vector<std::unique_ptr<class VulkanMaterial>> materials;
 	std::vector<std::unique_ptr<class VulkanModel>> models;
 	
 	void initInstance(SDL_Window* window);
