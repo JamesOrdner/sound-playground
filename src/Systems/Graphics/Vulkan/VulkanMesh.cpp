@@ -20,6 +20,11 @@ inline size_t attributeIndexStride()
     return 6;
 }
 
+VulkanMesh::VulkanMesh(const std::string& filepath) :
+	filepath(filepath)
+{
+}
+
 VkVertexInputBindingDescription VulkanMesh::inputBindingDescription()
 {
     return VkVertexInputBindingDescription{

@@ -4,7 +4,8 @@
 #include "VulkanMesh.h"
 #include <stdexcept>
 
-VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const VkExtent2D& swapchainExtent, VkRenderPass renderPass) :
+VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const std::string& name, const VkExtent2D& swapchainExtent, VkRenderPass renderPass) :
+	name(name),
 	device(device)
 {
 	initPipeline(swapchainExtent, renderPass);
@@ -19,7 +20,7 @@ VulkanMaterial::~VulkanMaterial()
 
 void VulkanMaterial::initPipeline(const VkExtent2D& swapchainExtent, VkRenderPass renderPass)
 {
-	VulkanShader shader(device->vkDevice(), "main");
+	VulkanShader shader(device->vkDevice(), name.c_str());
 	
 	auto inputBindingDescription = VulkanMesh::inputBindingDescription();
 	auto inputAttributeDescriptions = VulkanMesh::inputAttributeDescriptions();

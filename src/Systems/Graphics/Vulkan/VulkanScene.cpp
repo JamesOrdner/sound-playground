@@ -12,6 +12,47 @@ VulkanScene::~VulkanScene()
 {
 }
 
+VulkanModel* VulkanScene::createModel()
+{
+	auto model = std::make_unique<VulkanModel>(this);
+	auto* ptr = model.get();
+	models.push_back(std::move(model));
+	sortModels();
+	return ptr;
+}
+
+void VulkanScene::removeModel(VulkanModel* model)
+{
+	for (auto it = models.cbegin(); it != models.cend(); it++) {
+		if (it->get() == model) {
+			models.erase(it);
+			break;
+		}
+	}
+}
+
+void VulkanScene::sortModels()
+{
+	std::sort(models.begin(), models.end(), [](auto& a, auto& b) {
+		const auto& aName = a->getMaterial()->name;
+		const auto& bName = b->getMaterial()->name;
+		if (aName != bName) return aName < bName;
+		return a->getMesh()->filepath < b->getMesh()->filepath;
+	});
+}
+
+VulkanMesh* VulkanScene::modelMeshUpdated(const std::string& meshFilepath)
+{
+	sortModels();
+	return nullptr;
+}
+
+VulkanMaterial* VulkanScene::modelMaterialUpdated(const std::string& materialName)
+{
+	sortModels();
+	return nullptr;
+}
+
 void VulkanScene::updateUniforms(const VulkanFrame& frame) const
 {
 	for (const auto& model : models) {
