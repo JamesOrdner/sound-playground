@@ -71,12 +71,18 @@ void VulkanFrame::beginFrame(VkFramebuffer framebuffer, VkRenderPass renderPass,
 	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void VulkanFrame::bindMaterial(const VulkanMaterial& material)
+void VulkanFrame::bindMaterial(const VulkanMaterial& material) const
 {
 	material.bind(commandBuffer);
 }
 
-void VulkanFrame::draw(const VulkanModel* model)
+void VulkanFrame::bindMesh(const VulkanMesh& mesh) const
+{
+//	vkCmdBindIndexBuffer(cmd, <#VkBuffer buffer#>, <#VkDeviceSize offset#>, <#VkIndexType indexType#>);
+//	vkCmdBindVertexBuffers(cmd, <#uint32_t firstBinding#>, <#uint32_t bindingCount#>, <#const VkBuffer *pBuffers#>, <#const VkDeviceSize *pOffsets#>);
+}
+
+void VulkanFrame::draw(const VulkanModel& model) const
 {
 	// bind buffers and draw
 }

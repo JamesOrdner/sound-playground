@@ -2,8 +2,7 @@
 #include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
 #include "VulkanFrame.h"
-#include "VulkanMaterial.h"
-#include "VulkanModel.h"
+#include "VulkanScene.h"
 #include <SDL_vulkan.h>
 #include <stdexcept>
 
@@ -30,14 +29,14 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 	
 	for (auto& frame : frames) frame = std::make_unique<VulkanFrame>(device.get(), commandPool);
 	
-	materials.emplace_back(std::make_unique<VulkanMaterial>(device.get(), swapchain->extent(), renderPass));
+	scenes.emplace_back(std::make_unique<VulkanScene>());
 }
 
 VulkanInstance::~VulkanInstance()
 {
 	vkDeviceWaitIdle(device->vkDevice());
 	
-	materials.clear();
+	scenes.clear();
 	
 	for (auto& frame : frames) frame.reset();
 	vkDestroyCommandPool(device->vkDevice(), commandPool, nullptr);
@@ -167,7 +166,7 @@ void VulkanInstance::initCommandPool()
 		.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 		.queueFamilyIndex = device->queues().graphics.familyIndex
 	};
-
+	
 	if (vkCreateCommandPool(device->vkDevice(), &commandPoolInfo, nullptr, &commandPool) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Vulkan command pool!");
 	}
@@ -181,11 +180,17 @@ void VulkanInstance::renderFrame()
 	auto& frame = frames[frameIndex++];
 	frameIndex %= frames.size();
 	
+	// update uniforms
+	for (const auto& scene : scenes) scene->updateUniforms(*frame);
+	
+	// begin render pass and command buffer recording
 	VkRect2D renderArea{ .offset = {}, .extent = swapchain->extent() };
 	frame->beginFrame(swapchain->framebuffer(imageIndex), renderPass, renderArea);
-	frame->bindMaterial(*materials[0]);
-	// frame->draw();
-	VkSemaphore waitSemaphore = frame->endFrame(acquireSemaphore);
 	
+	// record draw commands for all scens
+	for (const auto& scene : scenes) scene->render(*frame);
+	
+	// end render pass and command buffer recording
+	VkSemaphore waitSemaphore = frame->endFrame(acquireSemaphore);
 	swapchain->present(imageIndex, waitSemaphore);
 }

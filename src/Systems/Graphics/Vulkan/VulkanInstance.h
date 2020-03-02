@@ -31,8 +31,7 @@ private:
 	std::array<std::unique_ptr<class VulkanFrame>, 2> frames;
 	uint32_t frameIndex;
 	
-	std::vector<std::unique_ptr<class VulkanMaterial>> materials;
-	std::vector<std::unique_ptr<class VulkanModel>> models;
+	std::vector<std::unique_ptr<class VulkanScene>> scenes;
 	
 	void initInstance(SDL_Window* window);
 	void initRenderPass();
