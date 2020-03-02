@@ -3,24 +3,8 @@
 #include "VulkanModel.h"
 #include "VulkanMesh.h"
 #include "VulkanFrame.h"
-#include <vector>
 
-struct VulkanSceneData
-{
-	/// Models are sorted by material and mesh for efficient rendering iteration
-	std::vector<VulkanModel> models;
-	std::vector<VulkanMesh> meshes;
-	std::vector<VulkanMaterial> materials;
-	
-	void clear() {
-		models.clear();
-		meshes.clear();
-		materials.clear();
-	}
-};
-
-VulkanScene::VulkanScene() :
-	data(std::make_unique<VulkanSceneData>())
+VulkanScene::VulkanScene()
 {
 }
 
@@ -30,7 +14,7 @@ VulkanScene::~VulkanScene()
 
 void VulkanScene::updateUniforms(const VulkanFrame& frame) const
 {
-	for (const auto& model : data->models) {
+	for (const auto& model : models) {
 		// frame.updateTransformUniform(model.uniformAddress, model.transform);
 	}
 }
@@ -39,17 +23,19 @@ void VulkanScene::render(const VulkanFrame& frame) const
 {
 	VulkanMaterial* material = nullptr;
 	VulkanMesh* mesh = nullptr;
-	for (const auto& model : data->models) {
-		if (material != model.getMaterial()) {
-			material = model.getMaterial();
+	for (const auto& model : models) {
+		if (material != model->getMaterial()) {
+			material = model->getMaterial();
+			if (!material) break;
 			frame.bindMaterial(*material);
 		}
 		
-		if (mesh != model.getMesh()) {
-			mesh = model.getMesh();
+		if (mesh != model->getMesh()) {
+			mesh = model->getMesh();
+			if (!mesh) break;
 			frame.bindMesh(*mesh);
 		}
 		
-		frame.draw(model);
+		frame.draw(*model);
 	}
 }

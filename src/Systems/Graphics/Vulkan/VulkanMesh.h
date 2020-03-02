@@ -11,6 +11,5 @@ public:
     VulkanMesh& operator=(const VulkanMesh&) = delete;
 	
 	static VkVertexInputBindingDescription inputBindingDescription();
-
 	static std::vector<VkVertexInputAttributeDescription> inputAttributeDescriptions();
 };

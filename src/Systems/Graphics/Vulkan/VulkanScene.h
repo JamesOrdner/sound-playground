@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <memory>
 
 class VulkanScene
@@ -19,5 +20,7 @@ public:
 	
 private:
 	
-	std::unique_ptr<struct VulkanSceneData> data;
+	/// Models are sorted first by material, and then by mesh, for fast render iteration.
+	/// Models without a registered mesh or material are stored at the end of the vector.
+	std::vector<std::unique_ptr<class VulkanModel>> models;
 };
