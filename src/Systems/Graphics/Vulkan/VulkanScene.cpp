@@ -3,6 +3,7 @@
 #include "VulkanModel.h"
 #include "VulkanMesh.h"
 #include "VulkanFrame.h"
+#include <algorithm>
 
 VulkanScene::VulkanScene()
 {
@@ -37,13 +38,13 @@ void VulkanScene::sortModels()
 		const auto* aMat = a->getMaterial();
 		const auto* bMat = b->getMaterial();
 		if (aMat && !bMat) return true;
-		if (!aMat && bMat) return false;
+		if ((!aMat && bMat) || (!aMat && !bMat)) return false;
 		if (aMat->name != bMat->name) return aMat->name < bMat->name;
 		
 		const auto* aMesh = a->getMesh();
 		const auto* bMesh = b->getMesh();
 		if (aMesh && !bMesh) return true;
-		if (!aMesh && bMesh) return false;
+		if ((!aMesh && bMesh) || (!aMesh && !bMesh)) return false;
 		return aMesh->filepath < bMesh->filepath;
 	});
 }
