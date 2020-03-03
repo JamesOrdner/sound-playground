@@ -113,7 +113,7 @@ void VulkanMaterial::initPipeline(const VkExtent2D& swapchainExtent, VkRenderPas
 	
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = 1,
+		.setLayoutCount = 0, // 1,
 		.pSetLayouts = &descriptorSetLayout
 	};
 	

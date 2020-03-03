@@ -82,13 +82,13 @@ void VulkanFrame::bindMaterial(const VulkanMaterial& material) const
 
 void VulkanFrame::bindMesh(const VulkanMesh& mesh) const
 {
-//	vkCmdBindIndexBuffer(cmd, <#VkBuffer buffer#>, <#VkDeviceSize offset#>, <#VkIndexType indexType#>);
-//	vkCmdBindVertexBuffers(cmd, <#uint32_t firstBinding#>, <#uint32_t bindingCount#>, <#const VkBuffer *pBuffers#>, <#const VkDeviceSize *pOffsets#>);
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh.vertexBuffer.buffer, &mesh.vertexDataOffset);
+	vkCmdBindIndexBuffer(commandBuffer, mesh.vertexBuffer.buffer, mesh.indexBufferOffset, VK_INDEX_TYPE_UINT16);
 }
 
 void VulkanFrame::draw(const VulkanModel& model) const
 {
-	// bind buffers and draw
+	vkCmdDrawIndexed(commandBuffer, model.getMesh()->indexBuffer.size(), 1, 0, 0, 0);
 }
 
 void VulkanFrame::endRenderPass()

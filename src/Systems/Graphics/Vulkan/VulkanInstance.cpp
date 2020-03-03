@@ -195,7 +195,7 @@ void VulkanInstance::destroyScene(VulkanScene* scene)
 VulkanMesh* VulkanInstance::sharedMesh(const std::string& filepath)
 {
 	if (meshes.find(filepath) == meshes.end()) {
-		meshes[filepath] = std::make_unique<VulkanMesh>(filepath);
+		meshes[filepath] = std::make_unique<VulkanMesh>(device.get(), filepath);
 	}
 	return meshes[filepath].get();
 }
