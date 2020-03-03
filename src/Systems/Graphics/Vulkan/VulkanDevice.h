@@ -26,6 +26,8 @@ public:
 	inline class VulkanAllocator& allocator() const { return *vulkanAllocator; }
 	inline const VulkanQueues& queues() const { return vulkanQueues; }
 	
+	VkPhysicalDeviceProperties physicalDeviceProperties() const;
+	
 	/// Returns the surface capabilities of the active device
 	VkSurfaceCapabilitiesKHR surfaceCapabilities(VkSurfaceKHR surface) const;
 	

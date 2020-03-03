@@ -2,7 +2,8 @@
 #include "VulkanScene.h"
 #include "VulkanMesh.h"
 
-VulkanModel::VulkanModel(VulkanScene* scene) :
+VulkanModel::VulkanModel(VulkanScene* scene, uint32_t modelID) :
+	modelID(modelID),
 	scene(scene),
 	mesh(nullptr),
 	material(nullptr),

@@ -1,12 +1,18 @@
 #pragma once
 
+#include "VulkanAllocator.h"
 #include <vulkan/vulkan.h>
 
 class VulkanFrame
 {
 public:
 	
-	VulkanFrame(const class VulkanDevice* device, VkCommandPool commandPool);
+	VulkanFrame(
+		const class VulkanDevice* device,
+		VkCommandPool commandPool,
+		VkDescriptorPool descriptorPool,
+		VkDescriptorSetLayout descriptorSetLayout
+	);
 	
 	~VulkanFrame();
 	
@@ -44,5 +50,12 @@ private:
 	/// Signaled when the command buffer has finished execution
 	VkSemaphore completeSemaphore;
 	
-	void recordCommandBuffer(VkFramebuffer framebuffer);
+	VulkanBuffer modelTransformUniformBuffer;
+	
+	void* modelTransformUniformBufferData;
+    uint32_t uniformBufferAlignment;
+	
+	VkDescriptorSet descriptorSet;
+	
+	void initUniformBuffer(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
 };

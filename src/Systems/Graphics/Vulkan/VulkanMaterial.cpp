@@ -4,21 +4,20 @@
 #include "VulkanMesh.h"
 #include <stdexcept>
 
-VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const std::string& name, const VkExtent2D& swapchainExtent, VkRenderPass renderPass) :
+VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const std::string& name, const VkExtent2D& swapchainExtent, VkRenderPass renderPass, VkDescriptorSetLayout descriptorSetLayout) :
 	name(name),
 	device(device)
 {
-	initPipeline(swapchainExtent, renderPass);
+	initPipeline(swapchainExtent, renderPass, descriptorSetLayout);
 }
 
 VulkanMaterial::~VulkanMaterial()
 {
 	vkDestroyPipeline(device->vkDevice(), pipeline, nullptr);
 	vkDestroyPipelineLayout(device->vkDevice(), pipelineLayout, nullptr);
-	vkDestroyDescriptorSetLayout(device->vkDevice(), descriptorSetLayout, nullptr);
 }
 
-void VulkanMaterial::initPipeline(const VkExtent2D& swapchainExtent, VkRenderPass renderPass)
+void VulkanMaterial::initPipeline(const VkExtent2D& swapchainExtent, VkRenderPass renderPass, VkDescriptorSetLayout descriptorSetLayout)
 {
 	VulkanShader shader(device->vkDevice(), name.c_str());
 	
@@ -94,26 +93,9 @@ void VulkanMaterial::initPipeline(const VkExtent2D& swapchainExtent, VkRenderPas
 		.pAttachments = &colorBlendAttachment
 	};
 	
-	VkDescriptorSetLayoutBinding descriptorSetLayoutBinding{
-		.binding = 0,
-		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-		.descriptorCount = 1,
-		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
-	};
-	
-	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = 1,
-		.pBindings = &descriptorSetLayoutBinding
-	};
-	
-	if (vkCreateDescriptorSetLayout(device->vkDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to create Vulkan descriptor set layout!");
-	}
-	
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = 0, // 1,
+		.setLayoutCount = 1,
 		.pSetLayouts = &descriptorSetLayout
 	};
 	

@@ -50,7 +50,10 @@ private:
 	class VulkanFrame* activeFrame;
 	uint32_t activeSwapchainImageIndex;
 	VkSemaphore activeFrameAcquireSemaphore;
-
+	
+	VkDescriptorPool descriptorPool;
+	VkDescriptorSetLayout descriptorSetLayout;
+	
 	std::vector<std::unique_ptr<class VulkanScene>> scenes;
 	
 	/// Maps mesh filepaths to the corresponding mesh objects
@@ -62,6 +65,7 @@ private:
 	void initInstance(SDL_Window* window);
 	void initRenderPass();
 	void initCommandPool();
+	void initDescriptorPool();
 	
 	std::vector<const char*> requiredInstanceExtensions(SDL_Window* window);
 };

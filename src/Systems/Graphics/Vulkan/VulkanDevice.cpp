@@ -156,6 +156,13 @@ VkPhysicalDevice VulkanDevice::optimalPhysicalDevice(VkInstance instance, VkSurf
 	return selectedDevice;
 }
 
+VkPhysicalDeviceProperties VulkanDevice::physicalDeviceProperties() const
+{
+	VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+    return properties;
+}
+
 VkSurfaceCapabilitiesKHR VulkanDevice::surfaceCapabilities(VkSurfaceKHR surface) const
 {
 	VkSurfaceCapabilitiesKHR capabilities = {};

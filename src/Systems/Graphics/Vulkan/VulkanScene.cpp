@@ -14,9 +14,10 @@ VulkanScene::~VulkanScene()
 {
 }
 
+uint32_t modelID = 0; // TODO: TEMP
 VulkanModel* VulkanScene::createModel()
 {
-	auto model = std::make_unique<VulkanModel>(this);
+	auto model = std::make_unique<VulkanModel>(this, modelID++);
 	auto* ptr = model.get();
 	models.push_back(std::move(model));
 	sortModels();
