@@ -18,6 +18,8 @@ public:
 	/// A unique int ID used for indexing into the uniform buffer
 	const uint32_t modelID;
 	
+	mat::mat4 transform;
+	
 private:
 	
 	class VulkanScene* const scene;
@@ -25,6 +27,4 @@ private:
 	class VulkanMesh* mesh;
 	
 	class VulkanMaterial* material;
-	
-	mat::mat4 modelTransform;
 };

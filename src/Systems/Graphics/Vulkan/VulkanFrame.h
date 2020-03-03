@@ -18,6 +18,9 @@ public:
 	
 	/// Begin recording commands for this frame
 	void beginFrame();
+	
+	/// Update the model's transformation matrix in the uniform buffer
+	void updateModelTransform(const class VulkanModel& model) const;
 
 	/// Begin a render pass
 	void beginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea);

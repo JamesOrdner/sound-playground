@@ -18,6 +18,8 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 			(bEventFromParent ? parentPosition : position) = std::get<mat::vec3>(data);
 			this->uobject->childEventImmediate(EventType::PositionUpdated, position + parentPosition);
 			bDirtyTransform = true;
+			// TODO: TEMP
+			model->transform = mat::t(transformMatrix());
 		}
 	);
 

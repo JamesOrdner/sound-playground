@@ -4,10 +4,10 @@
 
 VulkanModel::VulkanModel(VulkanScene* scene, uint32_t modelID) :
 	modelID(modelID),
+	transform(mat::mat4::Identity()),
 	scene(scene),
 	mesh(nullptr),
-	material(nullptr),
-	modelTransform(mat::mat4::Identity())
+	material(nullptr)
 {
 }
 

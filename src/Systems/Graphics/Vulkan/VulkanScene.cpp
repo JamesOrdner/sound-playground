@@ -68,7 +68,7 @@ VulkanMaterial* VulkanScene::modelMaterialUpdated(const std::string& materialNam
 void VulkanScene::updateUniforms(const VulkanFrame& frame) const
 {
 	for (const auto& model : models) {
-		// frame.updateTransformUniform(model.uniformAddress, model.transform);
+		frame.updateModelTransform(*model);
 	}
 }
 

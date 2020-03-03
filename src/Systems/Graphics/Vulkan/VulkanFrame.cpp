@@ -58,7 +58,7 @@ void VulkanFrame::initUniformBuffer(VkDescriptorPool descriptorPool, VkDescripto
     
     VkPhysicalDeviceLimits limits = device->physicalDeviceProperties().limits;
     size_t minUboAlignment = limits.minUniformBufferOffsetAlignment;
-    uniformBufferAlignment = sizeof(float) * 16; // mat4
+	uniformBufferAlignment = sizeof(mat::mat4);
     if (minUboAlignment > 0) {
         uniformBufferAlignment = (uniformBufferAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
     }
@@ -121,6 +121,13 @@ void VulkanFrame::beginFrame()
 	};
 	
 	vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+}
+
+void VulkanFrame::updateModelTransform(const VulkanModel& model) const
+{
+	uint32_t offset = model.modelID * static_cast<uint32_t>(uniformBufferAlignment);
+	char* dest = static_cast<char*>(modelTransformUniformBufferData) + offset;
+	std::copy_n(&model.transform, 1, reinterpret_cast<mat::mat4*>(dest));
 }
 
 void VulkanFrame::beginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea)
