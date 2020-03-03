@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VulkanAllocator.h"
+#include <fx/gltf.h>
 #include <string>
 #include <vector>
 
@@ -30,4 +31,10 @@ public:
 private:
 	
 	const class VulkanDevice* const device;
+	
+	/// Performs glTF file preprocessing. Reserves all required host memory.
+	void gltfPreprocess(const fx::gltf::Document& gltfDocument);
+
+	/// Loads glTF data into host-local buffers.
+	void gltfProcess(const fx::gltf::Document& gltfDocument);
 };
