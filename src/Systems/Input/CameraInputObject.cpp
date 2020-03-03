@@ -23,6 +23,7 @@ void CameraInputObject::handleEvent(const SDL_Event& sdlEvent)
 		case SDLK_s: cameraVelocity.z = -1.f; break;
 		case SDLK_d: cameraVelocity.x =  1.f; break;
 		case SDLK_a: cameraVelocity.x = -1.f; break;
+		case SDLK_SPACE: bOrbiting = true;    break;
 		}
 	}
 	else if (sdlEvent.type == SDL_KEYUP) {
@@ -31,6 +32,7 @@ void CameraInputObject::handleEvent(const SDL_Event& sdlEvent)
 		case SDLK_s: cameraVelocity.z = 0.f; break;
 		case SDLK_d: cameraVelocity.x = 0.f; break;
 		case SDLK_a: cameraVelocity.x = 0.f; break;
+		case SDLK_SPACE: bOrbiting = false;  break;
 		}
 	}
 	else if (sdlEvent.type == SDL_MOUSEMOTION) {
