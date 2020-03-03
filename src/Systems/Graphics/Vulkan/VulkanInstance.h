@@ -5,6 +5,8 @@
 #include <memory>
 #include <vector>
 #include <array>
+#include <map>
+#include <string>
 
 class VulkanInstance
 {
@@ -16,6 +18,12 @@ public:
 
 	class VulkanScene* createScene();
 	void destroyScene(class VulkanScene* scene);
+	
+	/// Return a shared pointer to the specified mesh, creating the mesh if not yet loaded
+	class VulkanMesh* sharedMesh(const std::string& filepath);
+	
+	/// Return a shared pointer to the specified material, creating the material if not yet loaded
+	class VulkanMaterial* sharedMaterial(const std::string& name);
 
 	/// Begin rendering a frame
 	void beginRender();
@@ -44,6 +52,12 @@ private:
 	VkSemaphore activeFrameAcquireSemaphore;
 
 	std::vector<std::unique_ptr<class VulkanScene>> scenes;
+	
+	/// Maps mesh filepaths to the corresponding mesh objects
+	std::map<std::string, std::unique_ptr<class VulkanMesh>> meshes;
+	
+	/// Maps material names to the corresponding material objects
+	std::map<std::string, std::unique_ptr<class VulkanMaterial>> materials;
 	
 	void initInstance(SDL_Window* window);
 	void initRenderPass();

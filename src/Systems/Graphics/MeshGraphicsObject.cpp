@@ -1,12 +1,12 @@
 #include "MeshGraphicsObject.h"
 #include "../../Engine/UObject.h"
-#include "GMesh.h"
+#include "Vulkan/VulkanModel.h"
 
 MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const UObject* uobject) :
 	GraphicsObject(scene, uobject),
 	bDirtyTransform(true),
 	bDirtySelection(true),
-	mesh(nullptr),
+	model(nullptr),
 	scale(1),
 	parentScale(1),
 	bSelected(false)
@@ -53,14 +53,12 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 
 MeshGraphicsObject::~MeshGraphicsObject()
 {
-	if (mesh) mesh->unregisterWithComponent(this);
 }
 
 void MeshGraphicsObject::setMesh(std::string filepath)
 {
-	if (mesh) mesh->unregisterWithComponent(this);
-	mesh = GMesh::getSharedMesh(filepath);
-	mesh->registerWithComponent(this);
+	model->setMesh(filepath);
+	model->setMaterial("main"); // TEMP
 }
 
 const mat::mat4& MeshGraphicsObject::transformMatrix()

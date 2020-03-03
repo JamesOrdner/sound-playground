@@ -1,11 +1,12 @@
 #include "VulkanScene.h"
+#include "VulkanInstance.h"
 #include "VulkanMaterial.h"
-#include "VulkanModel.h"
 #include "VulkanMesh.h"
 #include "VulkanFrame.h"
 #include <algorithm>
 
-VulkanScene::VulkanScene()
+VulkanScene::VulkanScene(VulkanInstance* instance) :
+	vulkanInstance(instance)
 {
 }
 
@@ -51,14 +52,16 @@ void VulkanScene::sortModels()
 
 VulkanMesh* VulkanScene::modelMeshUpdated(const std::string& meshFilepath)
 {
+	auto* mesh = vulkanInstance->sharedMesh(meshFilepath);
 	sortModels();
-	return nullptr;
+	return mesh;
 }
 
 VulkanMaterial* VulkanScene::modelMaterialUpdated(const std::string& materialName)
 {
+	auto* material = vulkanInstance->sharedMaterial(materialName);
 	sortModels();
-	return nullptr;
+	return material;
 }
 
 void VulkanScene::updateUniforms(const VulkanFrame& frame) const
@@ -75,16 +78,15 @@ void VulkanScene::render(const VulkanFrame& frame) const
 	for (const auto& model : models) {
 		if (material != model->getMaterial()) {
 			material = model->getMaterial();
-			if (!material) break;
-			frame.bindMaterial(*material);
 		}
 		
 		if (mesh != model->getMesh()) {
 			mesh = model->getMesh();
-			if (!mesh) break;
-			frame.bindMesh(*mesh);
 		}
 		
+		if (!material || !mesh) break;
+		frame.bindMaterial(*material);
+		frame.bindMesh(*mesh);
 		frame.draw(*model);
 	}
 }

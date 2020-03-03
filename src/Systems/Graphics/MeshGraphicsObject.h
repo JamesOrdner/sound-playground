@@ -23,9 +23,11 @@ public:
 	bool bDirtyTransform;
 
 	bool bDirtySelection;
-
+	
+	class VulkanModel* model;
+	
 private:
-
+	
 	// World space local location
 	mat::vec3 position, parentPosition;
 
@@ -37,9 +39,6 @@ private:
 
 	// Global model matrix. This transform cumulates parent transforms
 	mat::mat4 transform;
-
-	// Shared mesh, storing rendering geometry
-	class GMesh* mesh;
 
 	// Object selection
 	bool bSelected;

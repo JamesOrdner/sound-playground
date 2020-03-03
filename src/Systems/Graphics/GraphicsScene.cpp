@@ -1,8 +1,10 @@
 #include "GraphicsScene.h"
 #include "GraphicsObject.h"
 #include "CameraGraphicsObject.h"
+#include "MeshGraphicsObject.h"
 #include "UIGraphicsObject.h"
 #include "Vulkan/VulkanInstance.h"
+#include "Vulkan/VulkanScene.h"
 #include <algorithm>
 
 GraphicsScene::GraphicsScene(const SystemInterface* system, const UScene* uscene, VulkanScene* vulkanScene) :
@@ -14,30 +16,22 @@ GraphicsScene::GraphicsScene(const SystemInterface* system, const UScene* uscene
 
 GraphicsScene::~GraphicsScene()
 {
-	graphicsObjects.clear();
-}
-
-void GraphicsScene::deleteSystemObject(const UObject* uobject)
-{
 	for (const auto& graphicsObject : graphicsObjects) {
-		if (graphicsObject->uobject == uobject) {
-			graphicsObjects.remove(graphicsObject);
-			break;
+		if (auto* meshObject = dynamic_cast<MeshGraphicsObject*>(graphicsObject.get())) {
+			vulkanScene->removeModel(meshObject->model);
 		}
 	}
-}
-
-void GraphicsScene::drawScene(VulkanInstance* vulkan)
-{
-	// if (activeCamera) vulkan->setCamera(activeCamera->cameraPosition(), activeCamera->cameraForward());
-	vulkan->renderScene(vulkanScene);
-	// for (auto* uiObject : uiObjects) render->drawUIElement(uiObject->uiData);
+	graphicsObjects.clear();
 }
 
 SystemObjectInterface* GraphicsScene::addSystemObject(SystemObjectInterface* object)
 {
 	graphicsObjects.emplace_back(static_cast<GraphicsObject*>(object));
-	if (auto* uiObject = dynamic_cast<UIGraphicsObject*>(object)) {
+	
+	if (auto* meshObject = dynamic_cast<MeshGraphicsObject*>(object)) {
+		meshObject->model = vulkanScene->createModel();
+	}
+	else if (auto* uiObject = dynamic_cast<UIGraphicsObject*>(object)) {
 		uiObjects.push_back(uiObject);
 		registerCallback(
 			uiObject,
@@ -51,5 +45,26 @@ SystemObjectInterface* GraphicsScene::addSystemObject(SystemObjectInterface* obj
 			}
 		);
 	}
+	
 	return object;
+}
+
+void GraphicsScene::deleteSystemObject(const UObject* uobject)
+{
+	for (const auto& graphicsObject : graphicsObjects) {
+		if (graphicsObject->uobject == uobject) {
+			graphicsObjects.remove(graphicsObject);
+			if (auto* meshObject = dynamic_cast<MeshGraphicsObject*>(graphicsObject.get())) {
+				vulkanScene->removeModel(meshObject->model);
+			}
+			break;
+		}
+	}
+}
+
+void GraphicsScene::drawScene(VulkanInstance* vulkan)
+{
+	// if (activeCamera) vulkan->setCamera(activeCamera->cameraPosition(), activeCamera->cameraForward());
+	vulkan->renderScene(vulkanScene);
+	// for (auto* uiObject : uiObjects) render->drawUIElement(uiObject->uiData);
 }

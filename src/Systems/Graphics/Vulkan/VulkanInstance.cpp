@@ -3,6 +3,8 @@
 #include "VulkanSwapchain.h"
 #include "VulkanFrame.h"
 #include "VulkanScene.h"
+#include "VulkanMaterial.h"
+#include "VulkanMesh.h"
 #include <SDL_vulkan.h>
 #include <stdexcept>
 
@@ -38,6 +40,8 @@ VulkanInstance::~VulkanInstance()
 	vkDeviceWaitIdle(device->vkDevice());
 	
 	scenes.clear();
+	materials.clear();
+	meshes.clear();
 	
 	for (auto& frame : frames) frame.reset();
 	vkDestroyCommandPool(device->vkDevice(), commandPool, nullptr);
@@ -175,7 +179,7 @@ void VulkanInstance::initCommandPool()
 
 VulkanScene* VulkanInstance::createScene()
 {
-	return scenes.emplace_back(std::make_unique<VulkanScene>()).get();
+	return scenes.emplace_back(std::make_unique<VulkanScene>(this)).get();
 }
 
 void VulkanInstance::destroyScene(VulkanScene* scene)
@@ -186,6 +190,22 @@ void VulkanInstance::destroyScene(VulkanScene* scene)
 			break;
 		}
 	}
+}
+
+VulkanMesh* VulkanInstance::sharedMesh(const std::string& filepath)
+{
+	if (meshes.find(filepath) == meshes.end()) {
+		meshes[filepath] = std::make_unique<VulkanMesh>(filepath);
+	}
+	return meshes[filepath].get();
+}
+
+VulkanMaterial* VulkanInstance::sharedMaterial(const std::string& name)
+{
+	if (materials.find(name) == materials.end()) {
+		materials[name] = std::make_unique<VulkanMaterial>(device.get(), name, swapchain->extent(), renderPass);
+	}
+	return materials[name].get();
 }
 
 void VulkanInstance::beginRender()
@@ -201,7 +221,7 @@ void VulkanInstance::beginRender()
 void VulkanInstance::renderScene(VulkanScene* scene)
 {
 	// update uniforms
-	for (const auto& scene : scenes) scene->updateUniforms(*activeFrame);
+	scene->updateUniforms(*activeFrame);
 
 	// render
 	VkRect2D renderArea{ .offset = {}, .extent = swapchain->extent() };

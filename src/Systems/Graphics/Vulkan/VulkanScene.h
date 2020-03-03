@@ -1,5 +1,6 @@
 #pragma once
 
+#include "VulkanModel.h"
 #include <vector>
 #include <memory>
 #include <string>
@@ -8,7 +9,7 @@ class VulkanScene
 {
 public:
 	
-	VulkanScene();
+	VulkanScene(class VulkanInstance* instance);
 	
 	~VulkanScene();
 	
@@ -27,17 +28,19 @@ public:
 	
 private:
 	
+	class VulkanInstance* const vulkanInstance;
+	
 	/// Models are sorted first by material, and then by mesh, for fast render iteration.
 	/// Models without a registered mesh or material are stored at the end of the vector.
 	std::vector<std::unique_ptr<class VulkanModel>> models;
 	
 	void sortModels();
 	
-	friend class VulkanModel;
-	
 	/// Returns a shared pointer to the specified mesh and re-sorts the models array
 	class VulkanMesh* modelMeshUpdated(const std::string& meshFilepath);
+	friend void VulkanModel::setMesh(const std::string& filepath);
 	
 	/// Returns a shared pointer to the specified material and re-sorts the models array
 	class VulkanMaterial* modelMaterialUpdated(const std::string& materialName);
+	friend void VulkanModel::setMaterial(const std::string& name);
 };
