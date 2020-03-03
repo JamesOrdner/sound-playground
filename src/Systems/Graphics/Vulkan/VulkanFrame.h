@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VulkanAllocator.h"
+#include "../../../Util/Matrix.h"
 #include <vulkan/vulkan.h>
 
 class VulkanFrame
@@ -20,7 +21,7 @@ public:
 	void beginFrame();
 	
 	/// Update the model's transformation matrix in the uniform buffer
-	void updateModelTransform(const class VulkanModel& model) const;
+	void updateModelTransform(const class VulkanModel& model, const mat::mat4& viewProjMatrix) const;
 
 	/// Begin a render pass
 	void beginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea);

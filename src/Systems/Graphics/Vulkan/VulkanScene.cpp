@@ -8,6 +8,11 @@
 VulkanScene::VulkanScene(VulkanInstance* instance) :
 	vulkanInstance(instance)
 {
+	viewMatrix = mat::mat4::Identity();
+	
+	float aspectRatio = 720.f / 1280.f;
+	projMatrix = mat::perspective(-0.05f, 0.05f, -0.05f * aspectRatio, 0.05f * aspectRatio, 0.1f, 15.f);
+	projMatrix.data[1][1] *= -1.f;
 }
 
 VulkanScene::~VulkanScene()
@@ -65,10 +70,20 @@ VulkanMaterial* VulkanScene::modelMaterialUpdated(const std::string& materialNam
 	return material;
 }
 
+void VulkanScene::setViewMatrix(const mat::mat4& matrix)
+{
+	viewMatrix = matrix;
+}
+
+void VulkanScene::setProjMatrix(const mat::mat4& matrix)
+{
+	projMatrix = matrix;
+}
+
 void VulkanScene::updateUniforms(const VulkanFrame& frame) const
 {
 	for (const auto& model : models) {
-		frame.updateModelTransform(*model);
+		frame.updateModelTransform(*model, projMatrix * viewMatrix);
 	}
 }
 

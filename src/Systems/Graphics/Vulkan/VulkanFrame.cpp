@@ -123,11 +123,12 @@ void VulkanFrame::beginFrame()
 	vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
 }
 
-void VulkanFrame::updateModelTransform(const VulkanModel& model) const
+void VulkanFrame::updateModelTransform(const VulkanModel& model, const mat::mat4& viewProjMatrix) const
 {
+	mat::mat4 transform = mat::t(viewProjMatrix * model.transform);
 	uint32_t offset = model.modelID * static_cast<uint32_t>(uniformBufferAlignment);
 	char* dest = static_cast<char*>(modelTransformUniformBufferData) + offset;
-	std::copy_n(&model.transform, 1, reinterpret_cast<mat::mat4*>(dest));
+	std::copy_n(&transform, 1, reinterpret_cast<mat::mat4*>(dest));
 }
 
 void VulkanFrame::beginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea)

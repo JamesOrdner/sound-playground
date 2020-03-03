@@ -19,7 +19,7 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 			this->uobject->childEventImmediate(EventType::PositionUpdated, position + parentPosition);
 			bDirtyTransform = true;
 			// TODO: TEMP
-			model->transform = mat::t(transformMatrix());
+			model->transform = transformMatrix();
 		}
 	);
 

@@ -64,7 +64,12 @@ void GraphicsScene::deleteSystemObject(const UObject* uobject)
 
 void GraphicsScene::drawScene(VulkanInstance* vulkan)
 {
-	// if (activeCamera) vulkan->setCamera(activeCamera->cameraPosition(), activeCamera->cameraForward());
+	if (activeCamera) {
+		const auto& pos = activeCamera->cameraPosition();
+		const auto& dir = activeCamera->cameraForward();
+		vulkanScene->setViewMatrix(mat::lookAt(pos, pos + dir));
+	}
+	
 	vulkan->renderScene(vulkanScene);
 	// for (auto* uiObject : uiObjects) render->drawUIElement(uiObject->uiData);
 }
