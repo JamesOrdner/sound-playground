@@ -11,8 +11,8 @@ VulkanScene::VulkanScene(VulkanInstance* instance) :
 	viewMatrix = mat::mat4::Identity();
 	
 	float aspectRatio = 720.f / 1280.f;
-	projMatrix = mat::perspective(-0.05f, 0.05f, -0.05f * aspectRatio, 0.05f * aspectRatio, 0.1f, 15.f);
-	projMatrix.data[1][1] *= -1.f;
+//	projMatrix = mat::perspective(-0.05f, 0.05f, -0.05f * aspectRatio, 0.05f * aspectRatio, 0.1f, 15.f);
+	projMatrix = mat::ortho(-5, 5, -5, 5, 0, 50);
 }
 
 VulkanScene::~VulkanScene()

@@ -13,5 +13,5 @@ layout(location = 0) out vec3 fragNormal;
 void main()
 {
     gl_Position = transform.matrix * vec4(position, 1.0);
-	fragNormal = vec3(transform.matrix * vec4(normal, 0)) * 0.5 + 0.5;
+	fragNormal = normal * 0.5 + 0.5;
 }

@@ -434,14 +434,14 @@ namespace mat // Matrix
 			{    0,   0,    0,             1 }
 		};
 	}
-
+	
 	// Produce an orthographic projection matrix
-	constexpr mat4 ortho(float l, float r, float b, float t, float f, float n) {
+	constexpr mat4 ortho(float l, float r, float b, float t, float n, float f) {
 		return mat4{
-			{ 2 / (r - l),           0,           0, -(r + l) / (r - l) },
-			{           0, 2 / (t - b),           0, -(t + b) / (t - b) },
-			{           0,           0, 2 / (f - n), -(f + n) / (f - n) },
-			{           0,           0,           0,                  1 }
+			{ 2 / (r - l),            0,            0, -(r + l) / (r - l) },
+			{           0, -2 / (t - b),            0, -(t + b) / (t - b) },
+			{           0,            0, -1 / (f - n),       -n / (f - n) },
+			{           0,            0,            0,                  1 }
 		};
 	}
 
