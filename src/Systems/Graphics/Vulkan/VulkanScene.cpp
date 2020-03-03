@@ -78,15 +78,15 @@ void VulkanScene::render(const VulkanFrame& frame) const
 	for (const auto& model : models) {
 		if (material != model->getMaterial()) {
 			material = model->getMaterial();
+			if (material) frame.bindMaterial(*material);
 		}
 		
 		if (mesh != model->getMesh()) {
 			mesh = model->getMesh();
+			if (mesh) frame.bindMesh(*mesh);
 		}
 		
 		if (!material || !mesh) break;
-		frame.bindMaterial(*material);
-		frame.bindMesh(*mesh);
 		frame.draw(*model);
 	}
 }

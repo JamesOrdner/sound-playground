@@ -136,3 +136,25 @@ else()
     $<TARGET_FILE_DIR:SoundPlayground>/res
   )
 endif()
+
+# ---------- GLSL to SPIR-V
+
+find_program(GLSLC glslc
+  HINTS ${VULKAN_SDK_DIR}/macOS/bin/
+)
+
+# file(GLOB VERTEX_SHADERS ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/*.vert)
+set(VERTEX_SHADERS
+  ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/main.vert
+  ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/main.frag
+)
+
+foreach(VERTEX_SHADER ${VERTEX_SHADERS})
+  add_custom_command(
+    OUTPUT ${VERTEX_SHADER}.spv
+    COMMAND ${GLSLC} -o ${VERTEX_SHADER}.spv ${VERTEX_SHADER}
+    DEPENDS ${VERTEX_SHADER}
+    VERBATIM
+  )
+  target_sources(SoundPlayground PRIVATE ${VERTEX_SHADER}.spv)
+endforeach(VERTEX_SHADER)
