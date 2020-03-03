@@ -16,20 +16,25 @@ GraphicsSystem::~GraphicsSystem()
 bool GraphicsSystem::init()
 {
 	// Create window
-	window = SDL_CreateWindow("Sound Playground", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_VULKAN);
-
+	window = SDL_CreateWindow(
+		"Sound Playground",
+		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+		1280, 720,
+		SDL_WINDOW_VULKAN | SDL_WINDOW_ALLOW_HIGHDPI
+	);
+	
 	if (!window) {
 		printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
 		return false;
 	}
-
+	
 	try {
 		vulkan = std::make_unique<VulkanInstance>(window);
 	} catch(std::exception& e) {
 		printf("Vulkan error! %s\n", e.what());
 		return false;
 	}
-
+	
 	return true;
 }
 

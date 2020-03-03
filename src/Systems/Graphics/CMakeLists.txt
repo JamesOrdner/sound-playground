@@ -2,10 +2,6 @@ target_sources(SoundPlayground
   PRIVATE
     CameraGraphicsObject.cpp
     CameraGraphicsObject.h
-    GMesh.cpp
-    GMesh.h
-    GProgram.cpp
-    GProgram.h
     GraphicsObject.cpp
     GraphicsObject.h
     GraphicsScene.cpp
@@ -13,12 +9,8 @@ target_sources(SoundPlayground
     GraphicsSystem.cpp
     GraphicsSystem.h
     GraphicsSystemInterface.h
-    GTexture.cpp
-    GTexture.h
     MeshGraphicsObject.cpp
     MeshGraphicsObject.h
-    Render.cpp
-    Render.h
     UIGraphicsObject.cpp
     UIGraphicsObject.h
 )
