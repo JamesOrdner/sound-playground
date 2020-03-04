@@ -48,6 +48,7 @@ VulkanFrame::~VulkanFrame()
 {
 	vkDestroySemaphore(device->vkDevice(), completeSemaphore, nullptr);
 	vkDestroyFence(device->vkDevice(), completeFence, nullptr);
+	device->allocator().unmap(modelTransformUniformBuffer);
 	device->allocator().destroyBuffer(modelTransformUniformBuffer);
 }
 

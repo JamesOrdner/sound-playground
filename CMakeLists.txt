@@ -121,26 +121,10 @@ elseif(UNIX)
   target_link_libraries(SoundPlayground PRIVATE ${VULKAN_SDK_DIR}/x86_64/lib/libvulkan.so)
 endif()
 
-# ---------- COPY RESOURCES ----------
-
-if(WIN32)
-  add_custom_command(TARGET SoundPlayground POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_SOURCE_DIR}/res
-    ${CMAKE_BINARY_DIR}/res
-  )
-else()
-  add_custom_command(TARGET SoundPlayground POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_SOURCE_DIR}/res
-    $<TARGET_FILE_DIR:SoundPlayground>/res
-  )
-endif()
-
 # ---------- GLSL to SPIR-V
 
 find_program(GLSLC glslc
-  HINTS ${VULKAN_SDK_DIR}/macOS/bin/
+  HINTS ${VULKAN_SDK_DIR}/macOS/bin/ ${VULKAN_SDK_DIR}/Bin
 )
 
 # file(GLOB VERTEX_SHADERS ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/*.vert)
@@ -158,3 +142,19 @@ foreach(VERTEX_SHADER ${VERTEX_SHADERS})
   )
   target_sources(SoundPlayground PRIVATE ${VERTEX_SHADER}.spv)
 endforeach(VERTEX_SHADER)
+
+# ---------- COPY RESOURCES ----------
+
+if(WIN32)
+  add_custom_command(TARGET SoundPlayground POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/res
+    ${CMAKE_BINARY_DIR}/res
+  )
+else()
+  add_custom_command(TARGET SoundPlayground POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/res
+    $<TARGET_FILE_DIR:SoundPlayground>/res
+  )
+endif()
