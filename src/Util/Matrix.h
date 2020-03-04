@@ -448,10 +448,10 @@ namespace mat // Matrix
 	// Produce a perspective projection matrix
 	constexpr mat4 perspective(float l, float r, float b, float t, float n, float f) {
 		return mat4{
-			{ 2 * n / (r - l),               0,  (r + l) / (r - l),                    0 },
-			{               0, 2 * n / (t - b),  (t + b) / (t - b),                    0 },
-			{               0,               0, -(f + n) / (f - n), -2 * f * n / (f - n) },
-			{               0,               0,                 -1,                    0 }
+			{ 2 * n / (r - l),               0,  (r + l) / (r - l),               0 },
+			{               0, 2 * n / (b - t),  (t + b) / (t - b),               0 },
+			{               0,               0,        f / (n - f), f * n / (n - f) },
+			{               0,               0,                 -1,               0 }
 		};
 	}
 
