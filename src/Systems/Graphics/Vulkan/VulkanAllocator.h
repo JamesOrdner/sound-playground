@@ -48,6 +48,8 @@ public:
     
     void map(const VulkanBuffer& buffer, void** data) const;
     void unmap(const VulkanBuffer& buffer) const;
+	
+	void flush(const VulkanBuffer& buffer, VkDeviceSize offset = 0, VkDeviceSize size = VK_WHOLE_SIZE) const;
     
 private:
     

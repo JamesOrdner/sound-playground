@@ -74,7 +74,7 @@ void VulkanFrame::initUniformBuffer(VkDescriptorPool descriptorPool, VkDescripto
 	
     VmaAllocationCreateInfo bufferAllocInfo{
         .usage = VMA_MEMORY_USAGE_CPU_TO_GPU,
-        .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
     };
 	
 	modelTransformUniformBuffer = device->allocator().createBuffer(bufferInfo, bufferAllocInfo);
@@ -130,6 +130,11 @@ void VulkanFrame::updateModelTransform(const VulkanModel& model, const mat::mat4
 	uint32_t offset = model.modelID * static_cast<uint32_t>(uniformBufferAlignment);
 	char* dest = static_cast<char*>(modelTransformUniformBufferData) + offset;
 	std::copy_n(&transform, 1, reinterpret_cast<mat::mat4*>(dest));
+}
+
+void VulkanFrame::flushModelTransformUpdates() const
+{
+	device->allocator().flush(modelTransformUniformBuffer);
 }
 
 void VulkanFrame::beginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea)

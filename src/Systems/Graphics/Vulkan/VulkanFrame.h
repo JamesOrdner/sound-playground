@@ -22,6 +22,9 @@ public:
 	
 	/// Update the model's transformation matrix in the uniform buffer
 	void updateModelTransform(const class VulkanModel& model, const mat::mat4& viewProjMatrix) const;
+	
+	/// Call after all model transforms have been updated
+	void flushModelTransformUpdates() const;
 
 	/// Begin a render pass
 	void beginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea);

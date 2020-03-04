@@ -100,3 +100,8 @@ void VulkanAllocator::unmap(const VulkanBuffer& buffer) const
 {
     vmaUnmapMemory(allocator, buffer.allocation);
 }
+
+void VulkanAllocator::flush(const VulkanBuffer& buffer, VkDeviceSize offset, VkDeviceSize size) const
+{
+	vmaFlushAllocation(allocator, buffer.allocation, offset, size);
+}

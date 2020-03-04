@@ -84,6 +84,8 @@ void VulkanScene::updateUniforms(const VulkanFrame& frame) const
 	for (const auto& model : models) {
 		frame.updateModelTransform(*model, projMatrix * viewMatrix);
 	}
+	
+	frame.flushModelTransformUpdates();
 }
 
 void VulkanScene::render(const VulkanFrame& frame) const
