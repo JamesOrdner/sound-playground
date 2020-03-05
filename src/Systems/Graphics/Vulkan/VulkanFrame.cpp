@@ -48,13 +48,15 @@ VulkanFrame::~VulkanFrame()
 {
 	vkDestroySemaphore(device->vkDevice(), completeSemaphore, nullptr);
 	vkDestroyFence(device->vkDevice(), completeFence, nullptr);
+	device->allocator().unmap(constantsUniformBuffer);
 	device->allocator().unmap(modelTransformUniformBuffer);
+	device->allocator().destroyBuffer(constantsUniformBuffer);
 	device->allocator().destroyBuffer(modelTransformUniformBuffer);
 }
 
 void VulkanFrame::initUniformBuffer(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout)
 {
-	// uniform buffer
+	// per-frame (modelView) uniform buffer
 	constexpr size_t maxModelCount = 128;
     
     VkPhysicalDeviceLimits limits = device->physicalDeviceProperties().limits;
@@ -80,6 +82,21 @@ void VulkanFrame::initUniformBuffer(VkDescriptorPool descriptorPool, VkDescripto
 	modelTransformUniformBuffer = device->allocator().createBuffer(bufferInfo, bufferAllocInfo);
 	device->allocator().map(modelTransformUniformBuffer, &modelTransformUniformBufferData);
 	
+	// constants (projection) uniform buffer
+	VkBufferCreateInfo constantsBufferInfo{
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = bufferSize,
+        .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
+    };
+	
+    VmaAllocationCreateInfo constantsBufferAllocInfo{
+        .usage = VMA_MEMORY_USAGE_CPU_TO_GPU,
+        .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    };
+	
+	constantsUniformBuffer = device->allocator().createBuffer(constantsBufferInfo, constantsBufferAllocInfo);
+	device->allocator().map(constantsUniformBuffer, &constantsUniformBufferData);
+	
 	// descriptor set
 	VkDescriptorSetAllocateInfo descriptorSetAllocInfo{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
@@ -92,23 +109,46 @@ void VulkanFrame::initUniformBuffer(VkDescriptorPool descriptorPool, VkDescripto
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
 	
-	VkDescriptorBufferInfo descriptorBufferInfo{
+	// VkWriteDescriptorSets
+	
+	VkDescriptorBufferInfo modelTransformDescriptorBufferInfo{
 		.buffer = modelTransformUniformBuffer.buffer,
 		.offset = 0,
 		.range = uniformBufferAlignment
 	};
 	
-	VkWriteDescriptorSet descriptorWrite{
+	VkWriteDescriptorSet modelTransformDescriptorWrite{
 		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet = descriptorSet,
 		.dstBinding = 0,
 		.dstArrayElement = 0,
 		.descriptorCount = 1,
 		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-		.pBufferInfo = &descriptorBufferInfo
+		.pBufferInfo = &modelTransformDescriptorBufferInfo
 	};
 	
-	vkUpdateDescriptorSets(device->vkDevice(), 1, &descriptorWrite, 0, nullptr);
+	VkDescriptorBufferInfo constantsDescriptorBufferInfo{
+		.buffer = constantsUniformBuffer.buffer,
+		.offset = 0,
+		.range = sizeof(mat::mat4)
+	};
+	
+	VkWriteDescriptorSet constantsDescriptorWrite{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet = descriptorSet,
+		.dstBinding = 1,
+		.dstArrayElement = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.pBufferInfo = &constantsDescriptorBufferInfo
+	};
+	
+	VkWriteDescriptorSet writeDescriptorSets[] = {
+		modelTransformDescriptorWrite,
+		constantsDescriptorWrite
+	};
+	
+	vkUpdateDescriptorSets(device->vkDevice(), 2, writeDescriptorSets, 0, nullptr);
 }
 
 void VulkanFrame::beginFrame()
@@ -124,9 +164,9 @@ void VulkanFrame::beginFrame()
 	vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
 }
 
-void VulkanFrame::updateModelTransform(const VulkanModel& model, const mat::mat4& viewProjMatrix) const
+void VulkanFrame::updateModelTransform(const VulkanModel& model, const mat::mat4& viewMatrix) const
 {
-	mat::mat4 transform = mat::t(viewProjMatrix * model.transform);
+	mat::mat4 transform = mat::t(viewMatrix * model.transform);
 	uint32_t offset = model.modelID * static_cast<uint32_t>(uniformBufferAlignment);
 	char* dest = static_cast<char*>(modelTransformUniformBufferData) + offset;
 	std::copy_n(&transform, 1, reinterpret_cast<mat::mat4*>(dest));
@@ -135,6 +175,12 @@ void VulkanFrame::updateModelTransform(const VulkanModel& model, const mat::mat4
 void VulkanFrame::flushModelTransformUpdates() const
 {
 	device->allocator().flush(modelTransformUniformBuffer);
+}
+
+void VulkanFrame::updateProjectionMatrix(const mat::mat4& projectionMatrix) const
+{
+	mat::mat4 transposed = mat::t(projectionMatrix);
+	std::copy_n(&transposed, 1, reinterpret_cast<mat::mat4*>(constantsUniformBufferData));
 }
 
 void VulkanFrame::beginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea)

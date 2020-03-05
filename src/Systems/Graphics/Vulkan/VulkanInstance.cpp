@@ -200,17 +200,29 @@ void VulkanInstance::initDescriptorPool()
 		throw std::runtime_error("Failed to create Vulkan descriptor pool!");
 	}
 	
-	VkDescriptorSetLayoutBinding descriptorSetLayoutBinding{
+	VkDescriptorSetLayoutBinding dynamicsDescriptorSetLayoutBinding{
 		.binding = 0,
 		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
 		.descriptorCount = 1,
 		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
 	};
 	
+	VkDescriptorSetLayoutBinding constantsDescriptorSetLayoutBinding{
+		.binding = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.descriptorCount = 1,
+		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+	};
+	
+	VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[] = {
+		dynamicsDescriptorSetLayoutBinding,
+		constantsDescriptorSetLayoutBinding
+	};
+	
 	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = 1,
-		.pBindings = &descriptorSetLayoutBinding
+		.bindingCount = 2,
+		.pBindings = descriptorSetLayoutBindings
 	};
 	
 	if (vkCreateDescriptorSetLayout(device->vkDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {

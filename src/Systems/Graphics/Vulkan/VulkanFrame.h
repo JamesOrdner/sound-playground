@@ -21,10 +21,12 @@ public:
 	void beginFrame();
 	
 	/// Update the model's transformation matrix in the uniform buffer
-	void updateModelTransform(const class VulkanModel& model, const mat::mat4& viewProjMatrix) const;
+	void updateModelTransform(const class VulkanModel& model, const mat::mat4& viewMatrix) const;
 	
 	/// Call after all model transforms have been updated
 	void flushModelTransformUpdates() const;
+	
+	void updateProjectionMatrix(const mat::mat4& projectionMatrix) const;
 
 	/// Begin a render pass
 	void beginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea);
@@ -58,9 +60,11 @@ private:
 	VkSemaphore completeSemaphore;
 	
 	VulkanBuffer modelTransformUniformBuffer;
-	
 	void* modelTransformUniformBufferData;
     uint32_t uniformBufferAlignment;
+	
+	VulkanBuffer constantsUniformBuffer;
+	void* constantsUniformBufferData;
 	
 	VkDescriptorSet descriptorSet;
 	

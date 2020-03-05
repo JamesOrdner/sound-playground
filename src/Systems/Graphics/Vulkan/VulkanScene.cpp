@@ -82,10 +82,13 @@ void VulkanScene::setProjMatrix(const mat::mat4& matrix)
 void VulkanScene::updateUniforms(const VulkanFrame& frame) const
 {
 	for (const auto& model : models) {
-		frame.updateModelTransform(*model, projMatrix * viewMatrix);
+		frame.updateModelTransform(*model, viewMatrix);
 	}
 	
 	frame.flushModelTransformUpdates();
+	
+	// TODO: Update only once
+	frame.updateProjectionMatrix(projMatrix);
 }
 
 void VulkanScene::render(const VulkanFrame& frame) const
