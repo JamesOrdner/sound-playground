@@ -18,8 +18,6 @@ layout(location = 1) out vec3 lightDir;
 void main()
 {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-	
-	mat4 modelViewRotationMatrix = transpose(inverse(modelViewMatrix));
-	fragNormal = vec3(modelViewRotationMatrix * vec4(normal, 0));
-	lightDir = vec3(modelViewRotationMatrix * vec4(normalize(vec3(.3, 1, .1)), 0));
+	fragNormal = vec3(modelViewMatrix * vec4(normal, 0));
+	lightDir = vec3(modelViewMatrix * vec4(normalize(vec3(.3, 1, .1)), 0));
 }
