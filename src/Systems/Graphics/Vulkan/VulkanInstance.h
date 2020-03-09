@@ -19,6 +19,9 @@ public:
 	class VulkanScene* createScene();
 	void destroyScene(class VulkanScene* scene);
 	
+	class VulkanUI* createUI();
+	void destroyUI(class VulkanUI* ui);
+	
 	/// Return a shared pointer to the specified mesh, creating the mesh if not yet loaded
 	class VulkanMesh* sharedMesh(const std::string& filepath);
 	
@@ -30,6 +33,9 @@ public:
 
 	/// During active rendering, render a scene to the framebuffer
 	void renderScene(class VulkanScene* scene);
+	
+	/// During active rendering, render a UI to the framebuffer
+	void renderUI(class VulkanUI* ui);
 
 	/// End frame rendering and present to the swapchain
 	void endRenderAndPresent();
