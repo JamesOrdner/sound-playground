@@ -24,7 +24,7 @@ public:
 	// GraphicsSystemInterface
 
 	void screenDimensions(int& x, int& y) const override;
-	mat::mat4 screenToWorldTransform(const class UScene* uscene) const override;
+	const mat::mat4& screenToWorldTransform(const class UScene* uscene) const override;
 
 private:
 

@@ -14,6 +14,8 @@ public:
 
 	~GraphicsScene();
 
+	const mat::mat4& screenToWorldMatrix() const { return invViewProjMatrix; }
+
 	void deleteSystemObject(const class UObject* uobject) override;
 
 	void drawScene(class VulkanInstance* vulkan);
@@ -29,4 +31,6 @@ private:
 	std::list<std::unique_ptr<class GraphicsObject>> graphicsObjects;
 
 	std::vector<class UIGraphicsObject*> uiObjects;
+
+	mat::mat4 invViewProjMatrix;
 };

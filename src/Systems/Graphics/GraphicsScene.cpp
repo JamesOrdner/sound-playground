@@ -67,7 +67,9 @@ void GraphicsScene::drawScene(VulkanInstance* vulkan)
 	if (activeCamera) {
 		const auto& pos = activeCamera->cameraPosition();
 		const auto& dir = activeCamera->cameraForward();
-		vulkanScene->setViewMatrix(mat::lookAt(pos, pos + dir));
+		const auto viewMatrix = mat::lookAt(pos, pos + dir);
+		vulkanScene->setViewMatrix(viewMatrix);
+		invViewProjMatrix = mat::inverse(vulkanScene->getProjMatrix() * viewMatrix);
 	}
 	
 	vulkan->renderScene(vulkanScene);

@@ -13,6 +13,9 @@ public:
 	
 	~VulkanScene();
 	
+	inline const mat::mat4& getViewMatrix() const { return viewMatrix; }
+	inline const mat::mat4& getProjMatrix() const { return projMatrix; }
+
 	/// Add a new model to the scene
 	class VulkanModel* createModel();
 	

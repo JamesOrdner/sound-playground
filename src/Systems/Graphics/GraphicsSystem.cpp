@@ -73,9 +73,11 @@ void GraphicsSystem::screenDimensions(int& x, int& y) const
 	y = 720;
 }
 
-mat::mat4 GraphicsSystem::screenToWorldTransform(const UScene* uscene) const
+const mat::mat4& GraphicsSystem::screenToWorldTransform(const UScene* uscene) const
 {
-	// TODO: lookup per scene
-	return mat::mat4::Identity();
-//	return vulkan->screenToWorldMatrix();
+	for (const auto& scene : graphicsScenes) {
+		if (scene->uscene == uscene) return scene->screenToWorldMatrix();
+	}
+
+	throw std::runtime_error("Invalid UScene passed to GraphicsSystem::screenToWorldTransform.");
 }
