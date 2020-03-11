@@ -59,9 +59,10 @@ private:
 	/// Signaled when the command buffer has finished execution
 	VkSemaphore completeSemaphore;
 	
+	uint32_t uniformBufferAlignment;
+	
 	VulkanBuffer modelTransformUniformBuffer;
 	void* modelTransformUniformBufferData;
-    uint32_t uniformBufferAlignment;
 	
 	VulkanBuffer constantsUniformBuffer;
 	void* constantsUniformBufferData;

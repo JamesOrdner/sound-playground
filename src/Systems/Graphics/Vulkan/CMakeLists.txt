@@ -20,4 +20,6 @@ target_sources(SoundPlayground
     VulkanShader.h
     VulkanSwapchain.cpp
     VulkanSwapchain.h
+    VulkanUI.cpp
+    VulkanUI.h
 )
