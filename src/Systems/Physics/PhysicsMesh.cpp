@@ -1,53 +1,45 @@
 #include "PhysicsMesh.h"
+#include <fx/gltf.h>
 
 PhysicsMesh::PhysicsMesh(const std::string& filepath)
 {
-//	using namespace tinygltf;
-//
-//	TinyGLTF loader;
-//	Model model;
-//	std::string err;
-//	std::string warn;
-//	loader.LoadBinaryFromFile(&model, &err, &warn, filepath);
-//
-//	for (const Node& node : model.nodes) {
-//		if (node.name != "_ray") continue;
-//
-//		// There should be only one primitive
-//		const Primitive& primitive = model.meshes[node.mesh].primitives[0];
-//
-//		// Index array buffer
-//		Accessor idx_accessor = model.accessors[primitive.indices];
-//		const BufferView& idx_bufferView = model.bufferViews[idx_accessor.bufferView];
-//		const Buffer& idx_buffer = model.buffers[idx_bufferView.buffer];
-//
-//		for (auto& attrib : primitive.attributes) {
-//			if (attrib.first != "POSITION") continue;
-//
-//			// Vertex buffer
-//			const Accessor& vert_accessor = model.accessors[attrib.second];
-//			const BufferView& vert_bufferView = model.bufferViews[vert_accessor.bufferView];
-//			const Buffer& vert_buffer = model.buffers[vert_bufferView.buffer];
-//
-//			assert(primitive.mode == TINYGLTF_MODE_TRIANGLES);
-//			assert(idx_accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT);
-//			assert(vert_accessor.type == TINYGLTF_TYPE_VEC3);
-//			assert(vert_accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
-//
-//			mesh.reserve(idx_accessor.count);
-//
-//			size_t idx_stride = idx_accessor.ByteStride(idx_bufferView);
-//			size_t vert_stride = vert_accessor.ByteStride(vert_bufferView);
-//			for (size_t i = 0; i < idx_accessor.count; i++) {
-//				const unsigned char* iptr = &idx_buffer.data[0] + idx_bufferView.byteOffset + idx_stride * i;
-//				int v_idx = static_cast<int>(*((unsigned short*)iptr));
-//				const unsigned char* vptr = &vert_buffer.data[0] + vert_bufferView.byteOffset + vert_stride * v_idx;
-//				mesh.push_back(mat::vec3((float*)vptr));
-//			}
-//
-//			return;
-//		}
-//	}
+	fx::gltf::Document gltfDocument = filepath.ends_with(".glb") ? fx::gltf::LoadFromBinary(filepath) : fx::gltf::LoadFromText(filepath);
+	const auto& scene = gltfDocument.scenes[gltfDocument.scene];
+	for (const auto nodeIndex : scene.nodes) {
+		const auto& node = gltfDocument.nodes[nodeIndex];
+		if (node.name != "_ray") continue;
+		const auto& mesh = gltfDocument.meshes[node.mesh];
+        const auto& primitive = mesh.primitives[0]; // assume single primitive
+
+        // vertex buffer
+        for (const auto& attribute : primitive.attributes) {
+			if (attribute.first != "POSITION") continue;
+			
+			// index buffer
+			const auto& indicesAccessor = gltfDocument.accessors[primitive.indices];
+			const auto& indicesBufferView = gltfDocument.bufferViews[indicesAccessor.bufferView];
+			const auto& indicesBuffer = gltfDocument.buffers[indicesBufferView.buffer];
+			uint32_t indicesBufferOffset = indicesAccessor.byteOffset + indicesBufferView.byteOffset;
+			uint32_t indicesBufferStride = indicesBufferView.byteStride ? indicesBufferView.byteStride : sizeof(uint16_t);
+			
+			// vertex buffer
+            const auto& verticesAccessor = gltfDocument.accessors[attribute.second];
+			const auto& verticesBufferView = gltfDocument.bufferViews[verticesAccessor.bufferView];
+			const auto& verticesBuffer = gltfDocument.buffers[verticesBufferView.buffer];
+
+            // source (glTF file)
+            uint32_t verticesBufferOffset = verticesAccessor.byteOffset + verticesBufferView.byteOffset;
+            uint32_t verticesBufferStride = verticesBufferView.byteStride ? verticesBufferView.byteStride : sizeof(mat::vec3);
+            
+			for (uint32_t i = 0; i < indicesAccessor.count; i++) {
+				uint32_t indicesByteOffset = indicesBufferOffset + indicesBufferStride * i;
+				uint16_t vertexIndex = *reinterpret_cast<const uint16_t*>(indicesBuffer.data.data() + indicesByteOffset);
+                uint32_t vertexByteOffset = verticesBufferOffset + verticesBufferStride * vertexIndex;
+				this->mesh.push_back(*reinterpret_cast<const mat::vec3*>(verticesBuffer.data.data() + vertexByteOffset));
+            }
+        }
+		break; // assume single node
+	}
 }
 
 PhysicsMesh::~PhysicsMesh()

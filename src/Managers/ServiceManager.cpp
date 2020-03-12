@@ -74,7 +74,7 @@ const UObject* ServiceManager::raycastScreen(
 
 	mat::vec4 rayEndScreen{
 		static_cast<float>(x - width / 2) / (width / 2),
-		static_cast<float>(height / 2 - y) / (height / 2),
+		static_cast<float>(y - height / 2) / (height / 2),
 		1.f,
 		1.f };
 	mat::vec4 rayEndWorld = screenToWorldTransform(uscene) * rayEndScreen;
