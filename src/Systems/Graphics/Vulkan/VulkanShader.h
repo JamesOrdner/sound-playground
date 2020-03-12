@@ -21,7 +21,7 @@ public:
 	VkShaderModule vertShaderModule;
 	VkShaderModule fragShaderModule;
 
-	VkPipelineShaderStageCreateInfo shaderStages[2];
+	std::vector<VkPipelineShaderStageCreateInfo> stages;
 
 private:
 

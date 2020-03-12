@@ -4,31 +4,39 @@
 
 VulkanShader::VulkanShader(VkDevice device, const std::string& filename) :
 	filename(filename),
+	vertShaderModule(VK_NULL_HANDLE),
+	fragShaderModule(VK_NULL_HANDLE),
     device(device)
 {
-	auto vertShaderCode = readShaderFile("res/shaders/" + filename + ".vert.spv");
-	auto fragShaderCode = readShaderFile("res/shaders/" + filename + ".frag.spv");
-
-	vertShaderModule = createShaderModule(vertShaderCode);
-	fragShaderModule = createShaderModule(fragShaderCode);
-
-	shaderStages[0] = {};
-	shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-	shaderStages[0].module = vertShaderModule;
-	shaderStages[0].pName = "main";
-
-	shaderStages[1] = {};
-	shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	shaderStages[1].module = fragShaderModule;
-	shaderStages[1].pName = "main";
+	std::string vertShaderPath = "res/shaders/" + filename + ".vert.spv";
+	if (std::filesystem::exists(vertShaderPath)) {
+		auto shaderCode = readShaderFile(vertShaderPath);
+		vertShaderModule = createShaderModule(shaderCode);
+		stages.push_back({
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+			.stage = VK_SHADER_STAGE_VERTEX_BIT,
+			.module = vertShaderModule,
+			.pName = "main"
+		});
+	}
+	
+	std::string fragShaderPath = "res/shaders/" + filename + ".frag.spv";
+	if (std::filesystem::exists(fragShaderPath)) {
+		auto shaderCode = readShaderFile(fragShaderPath);
+		fragShaderModule = createShaderModule(shaderCode);
+		stages.push_back({
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+			.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+			.module = fragShaderModule,
+			.pName = "main"
+		});
+	}
 }
 
 VulkanShader::~VulkanShader()
 {
-	vkDestroyShaderModule(device, vertShaderModule, nullptr);
-	vkDestroyShaderModule(device, fragShaderModule, nullptr);
+	if (vertShaderModule) vkDestroyShaderModule(device, vertShaderModule, nullptr);
+	if (fragShaderModule) vkDestroyShaderModule(device, fragShaderModule, nullptr);
 }
 
 std::vector<char> VulkanShader::readShaderFile(const std::string& filepath)
@@ -37,7 +45,7 @@ std::vector<char> VulkanShader::readShaderFile(const std::string& filepath)
 	if (!file.is_open()) {
 		throw std::runtime_error("Failed to open Vulkan shader file!");
 	}
-
+	
 	size_t fileSize = (size_t)file.tellg();
 	std::vector<char> buffer(fileSize);
 	file.seekg(0);
@@ -59,6 +67,6 @@ VkShaderModule VulkanShader::createShaderModule(const std::vector<char>& code)
 	if (vkCreateShaderModule(device, &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Vulkan shader module!");
 	}
-
+	
 	return shaderModule;
 }

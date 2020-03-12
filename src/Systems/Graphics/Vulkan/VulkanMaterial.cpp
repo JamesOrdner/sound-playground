@@ -105,8 +105,8 @@ void VulkanMaterial::initPipeline(const VkExtent2D& swapchainExtent, VkRenderPas
 	
 	VkGraphicsPipelineCreateInfo pipelineInfo{
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-		.stageCount = 2,
-		.pStages = shader.shaderStages,
+		.stageCount = static_cast<uint32_t>(shader.stages.size()),
+		.pStages = shader.stages.data(),
 		.pVertexInputState = &vertexInputInfo,
 		.pInputAssemblyState = &inputAssemblyInfo,
 		.pViewportState = &viewportInfo,
