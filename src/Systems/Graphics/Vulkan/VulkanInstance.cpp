@@ -184,16 +184,16 @@ void VulkanInstance::initCommandPool()
 
 void VulkanInstance::initDescriptorPool()
 {
-	VkDescriptorPoolSize descriptorPoolSize{
-		.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-		.descriptorCount = static_cast<uint32_t>(frames.size())
+	VkDescriptorPoolSize descriptorPoolSizes[] = {
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, static_cast<uint32_t>(frames.size()) },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, static_cast<uint32_t>(frames.size()) }
 	};
 	
 	VkDescriptorPoolCreateInfo descriptorPoolInfo{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
 		.maxSets = static_cast<uint32_t>(frames.size()),
-		.poolSizeCount = 1,
-		.pPoolSizes = &descriptorPoolSize
+		.poolSizeCount = 2,
+		.pPoolSizes = descriptorPoolSizes
 	};
 	
 	if (vkCreateDescriptorPool(device->vkDevice(), &descriptorPoolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
