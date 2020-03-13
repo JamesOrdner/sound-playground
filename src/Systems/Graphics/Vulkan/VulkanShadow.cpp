@@ -2,6 +2,7 @@
 #include "VulkanDevice.h"
 #include "VulkanShader.h"
 #include "VulkanMesh.h"
+#include "../../../Util/Matrix.h"
 #include <array>
 
 constexpr uint32_t shadowMapDimensions = 2048;
@@ -52,8 +53,6 @@ VulkanShadow::VulkanShadow(const VulkanDevice* device) :
 		.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
 		.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
 		.mipLodBias = 0.f,
-		.anisotropyEnable = VK_TRUE,
-		.maxAnisotropy = 1.f,
 		.minLod = 0.f,
 		.maxLod = 1.f,
 		.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE
@@ -202,6 +201,32 @@ VulkanShadow::VulkanShadow(const VulkanDevice* device) :
 		.stencilTestEnable = VK_FALSE
 	};
 	
+	VkDescriptorSetLayoutBinding descriptorSetLayoutBinding{
+		.binding = 0,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+		.descriptorCount = 1,
+		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+	};
+	
+	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.bindingCount = 1,
+		.pBindings = &descriptorSetLayoutBinding
+	};
+	
+	if (vkCreateDescriptorSetLayout(device->vkDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create Vulkan descriptor set layout!");
+	}
+	
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+		.setLayoutCount = 1,
+		.pSetLayouts = &descriptorSetLayout
+	};
+	
+	if (vkCreatePipelineLayout(device->vkDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create Vulkan pipeline layout!");
+	}
 	
 	VkGraphicsPipelineCreateInfo pipelineInfo{
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -213,13 +238,20 @@ VulkanShadow::VulkanShadow(const VulkanDevice* device) :
 		.pRasterizationState = &rasterizationInfo,
 		.pMultisampleState = &multisampleInfo,
 		.pDepthStencilState = &depthStencilInfo,
-//		.layout = pipelineLayout,
+		.layout = pipelineLayout,
 		.renderPass = renderPass
 	};
+	
+	if (vkCreateGraphicsPipelines(device->vkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create Vulkan pipeline!");
+	}
 }
 
 VulkanShadow::~VulkanShadow()
 {
+	vkDestroyPipeline(device->vkDevice(), pipeline, nullptr);
+	vkDestroyPipelineLayout(device->vkDevice(), pipelineLayout, nullptr);
+	vkDestroyDescriptorSetLayout(device->vkDevice(), descriptorSetLayout, nullptr);
 	vkDestroyFramebuffer(device->vkDevice(), framebuffer, nullptr);
 	vkDestroyRenderPass(device->vkDevice(), renderPass, nullptr);
 	vkDestroySampler(device->vkDevice(), sampler, nullptr);

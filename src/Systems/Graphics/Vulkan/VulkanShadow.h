@@ -10,6 +10,9 @@ public:
 	
 	~VulkanShadow();
 	
+	VkDescriptorSetLayout descriptorSetLayout;
+	VkPipelineLayout pipelineLayout;
+	
 private:
 	
 	const class VulkanDevice* const device;
@@ -19,4 +22,5 @@ private:
 	VkSampler sampler;
 	VkRenderPass renderPass;
 	VkFramebuffer framebuffer;
+	VkPipeline pipeline;
 };

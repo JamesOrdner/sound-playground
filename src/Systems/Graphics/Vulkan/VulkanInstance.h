@@ -65,6 +65,8 @@ private:
 	/// Maps material names to the corresponding material objects
 	std::map<std::string, std::unique_ptr<class VulkanMaterial>> materials;
 	
+	std::unique_ptr<class VulkanShadow> shadow;
+	
 	void initInstance(SDL_Window* window);
 	void initRenderPass();
 	void initCommandPool();

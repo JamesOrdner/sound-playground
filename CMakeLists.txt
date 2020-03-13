@@ -127,21 +127,21 @@ find_program(GLSLC glslc
   HINTS ${VULKAN_SDK_DIR}/macOS/bin/ ${VULKAN_SDK_DIR}/Bin
 )
 
-# file(GLOB VERTEX_SHADERS ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/*.vert)
-set(VERTEX_SHADERS
+set(SHADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/main.vert
   ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/main.frag
+  ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/shadow.vert
 )
 
-foreach(VERTEX_SHADER ${VERTEX_SHADERS})
+foreach(SHADER ${SHADERS})
   add_custom_command(
-    OUTPUT ${VERTEX_SHADER}.spv
-    COMMAND ${GLSLC} -o ${VERTEX_SHADER}.spv ${VERTEX_SHADER}
-    DEPENDS ${VERTEX_SHADER}
+    OUTPUT ${SHADER}.spv
+    COMMAND ${GLSLC} -o ${SHADER}.spv ${SHADER}
+    DEPENDS ${SHADER}
     VERBATIM
   )
-  target_sources(SoundPlayground PRIVATE ${VERTEX_SHADER}.spv)
-endforeach(VERTEX_SHADER)
+  target_sources(SoundPlayground PRIVATE ${SHADER}.spv)
+endforeach()
 
 # ---------- COPY RESOURCES ----------
 

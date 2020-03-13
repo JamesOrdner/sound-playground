@@ -1,11 +1,12 @@
-#version 410 core
+#version 450
+
+layout(binding = 0) uniform UBO {
+    mat4 mvpMatrix;
+};
 
 layout(location = 0) in vec3 position;
-layout(location = 3) in mat4 instanceTransform;
-
-uniform mat4 viewProj;
 
 void main()
 {
-	gl_Position = viewProj * instanceTransform * vec4(position, 1.0);
+	gl_Position = mvpMatrix * vec4(position, 1.0);
 }

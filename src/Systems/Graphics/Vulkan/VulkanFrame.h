@@ -15,7 +15,7 @@ public:
 	~VulkanFrame();
 	
 	/// Called when descriptor set layouts are changed, i.e. when a new materal is added
-	void updateDescriptorSets(const std::vector<class VulkanMaterial*>& materials);
+	void updateDescriptorSets(const std::vector<class VulkanMaterial*>& materials, VkDescriptorSetLayout shadowLayout);
 	
 	/// Begin recording commands for this frame
 	void beginFrame();
@@ -63,6 +63,9 @@ private:
 	
 	VulkanBuffer modelTransformUniformBuffer;
 	void* modelTransformUniformBufferData;
+	
+	VulkanBuffer modelShadowUniformBuffer;
+	void* modelShadowUniformBufferData;
 	
 	VulkanBuffer constantsUniformBuffer;
 	void* constantsUniformBufferData;

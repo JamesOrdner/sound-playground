@@ -5,6 +5,7 @@
 #include "VulkanScene.h"
 #include "VulkanMaterial.h"
 #include "VulkanMesh.h"
+#include "VulkanShadow.h"
 #include <SDL_vulkan.h>
 #include <stdexcept>
 
@@ -35,12 +36,15 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 	for (auto& frame : frames) {
 		frame = std::make_unique<VulkanFrame>(device.get(), commandPool);
 	}
+	
+	shadow = std::make_unique<VulkanShadow>(device.get());
 }
 
 VulkanInstance::~VulkanInstance()
 {
 	vkDeviceWaitIdle(device->vkDevice());
 	
+	shadow.reset();
 	scenes.clear();
 	materials.clear();
 	meshes.clear();
@@ -210,7 +214,7 @@ VulkanMaterial* VulkanInstance::sharedMaterial(const std::string& name)
 		std::vector<VulkanMaterial*> materialPointers;
 		materialPointers.reserve(materials.size());
 		for (const auto& material : materials) materialPointers.push_back(material.second.get());
-		for (auto& frame : frames) frame->updateDescriptorSets(materialPointers);
+		for (auto& frame : frames) frame->updateDescriptorSets(materialPointers, shadow->descriptorSetLayout);
 	}
 	return materials[name].get();
 }

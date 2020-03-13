@@ -41,13 +41,13 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
 	// DescriptorPool
 	
 	std::array<VkDescriptorPoolSize, 2> descriptorPoolSizes{
-		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1 },
+		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 2 },
 		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 }
 	};
 	
 	VkDescriptorPoolCreateInfo descriptorPoolInfo{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.maxSets = 2, // NOTE: this must be equal to the maximum number of VkDescriptorSetLayout objects
+		.maxSets = 2, // one material + shadow pipeline
 		.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size()),
 		.pPoolSizes = descriptorPoolSizes.data()
 	};
@@ -83,10 +83,13 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
 	modelTransformUniformBuffer = device->allocator().createBuffer(bufferInfo, bufferAllocInfo);
 	device->allocator().map(modelTransformUniformBuffer, &modelTransformUniformBufferData);
 	
+	modelShadowUniformBuffer = device->allocator().createBuffer(bufferInfo, bufferAllocInfo);
+	device->allocator().map(modelShadowUniformBuffer, &modelShadowUniformBufferData);
+	
 	// constants (projection) uniform buffer
 	VkBufferCreateInfo constantsBufferInfo{
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size = bufferSize,
+        .size = static_cast<uint32_t>(sizeof(mat::mat4)),
         .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
     };
 	
@@ -105,12 +108,14 @@ VulkanFrame::~VulkanFrame()
 	vkDestroySemaphore(device->vkDevice(), completeSemaphore, nullptr);
 	vkDestroyFence(device->vkDevice(), completeFence, nullptr);
 	device->allocator().unmap(constantsUniformBuffer);
+	device->allocator().unmap(modelShadowUniformBuffer);
 	device->allocator().unmap(modelTransformUniformBuffer);
 	device->allocator().destroyBuffer(constantsUniformBuffer);
+	device->allocator().destroyBuffer(modelShadowUniformBuffer);
 	device->allocator().destroyBuffer(modelTransformUniformBuffer);
 }
 
-void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& materials)
+void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& materials, VkDescriptorSetLayout shadowLayout)
 {
 	vkResetDescriptorPool(device->vkDevice(), descriptorPool, 0);
 	descriptorSets.clear();
@@ -169,6 +174,40 @@ void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& mater
 		
 		vkUpdateDescriptorSets(device->vkDevice(), 2, writeDescriptorSets, 0, nullptr);
 	}
+	
+	// shadow
+	
+	VkDescriptorSetAllocateInfo descriptorSetAllocInfo{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+		.descriptorPool = descriptorPool,
+		.descriptorSetCount = 1,
+		.pSetLayouts = &shadowLayout
+	};
+	
+	VkDescriptorSet descriptorSet;
+	if (vkAllocateDescriptorSets(device->vkDevice(), &descriptorSetAllocInfo, &descriptorSet) != VK_SUCCESS) {
+		throw std::runtime_error("failed to allocate descriptor sets!");
+	}
+	
+	descriptorSets["shadow"] = descriptorSet;
+	
+	VkDescriptorBufferInfo descriptorBufferInfo{
+		.buffer = modelShadowUniformBuffer.buffer,
+		.offset = 0,
+		.range = uniformBufferAlignment
+	};
+	
+	VkWriteDescriptorSet descriptorWrite{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet = descriptorSet,
+		.dstBinding = 0,
+		.dstArrayElement = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+		.pBufferInfo = &descriptorBufferInfo
+	};
+	
+	vkUpdateDescriptorSets(device->vkDevice(), 1, &descriptorWrite, 0, nullptr);
 }
 
 void VulkanFrame::beginFrame()
@@ -186,10 +225,16 @@ void VulkanFrame::beginFrame()
 
 void VulkanFrame::updateModelTransform(const VulkanModel& model, const mat::mat4& viewMatrix) const
 {
-	mat::mat4 transform = mat::t(viewMatrix * model.transform);
 	uint32_t offset = model.modelID * static_cast<uint32_t>(uniformBufferAlignment);
+	
+	mat::mat4 modelView = mat::t(viewMatrix * model.transform);
 	char* dest = static_cast<char*>(modelTransformUniformBufferData) + offset;
-	std::copy_n(&transform, 1, reinterpret_cast<mat::mat4*>(dest));
+	std::copy_n(&modelView, 1, reinterpret_cast<mat::mat4*>(dest));
+	
+	mat::mat4 lightView = mat::lookAt(mat::vec3{ 0.3f, 1.f, 0.1f }, mat::vec3());
+	mat::mat4 lightViewProj = mat::ortho(-20, 20, -20, 20, -20, 20) * lightView;
+	dest = static_cast<char*>(modelShadowUniformBufferData) + offset;
+	std::copy_n(&lightViewProj, 1, reinterpret_cast<mat::mat4*>(dest));
 }
 
 void VulkanFrame::flushModelTransformUpdates() const
