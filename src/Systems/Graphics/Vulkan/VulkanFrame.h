@@ -3,19 +3,19 @@
 #include "VulkanAllocator.h"
 #include "../../../Util/Matrix.h"
 #include <vulkan/vulkan.h>
+#include <vector>
+#include <map>
 
 class VulkanFrame
 {
 public:
 	
-	VulkanFrame(
-		const class VulkanDevice* device,
-		VkCommandPool commandPool,
-		VkDescriptorPool descriptorPool,
-		VkDescriptorSetLayout descriptorSetLayout
-	);
+	VulkanFrame(const class VulkanDevice* device, VkCommandPool commandPool);
 	
 	~VulkanFrame();
+	
+	/// Called when descriptor set layouts are changed, i.e. when a new materal is added
+	void updateDescriptorSets(const std::vector<class VulkanMaterial*>& materials);
 	
 	/// Begin recording commands for this frame
 	void beginFrame();
@@ -67,7 +67,11 @@ private:
 	VulkanBuffer constantsUniformBuffer;
 	void* constantsUniformBufferData;
 	
-	VkDescriptorSet descriptorSet;
+	VkDescriptorPool descriptorPool;
 	
+	/// Maps material names to their corresponding descriptor set
+	std::map<std::string, VkDescriptorSet> descriptorSets;
+	
+	void initDescriptorPool();
 	void initUniformBuffer(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
 };

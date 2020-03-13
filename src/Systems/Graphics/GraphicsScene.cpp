@@ -53,10 +53,10 @@ void GraphicsScene::deleteSystemObject(const UObject* uobject)
 {
 	for (const auto& graphicsObject : graphicsObjects) {
 		if (graphicsObject->uobject == uobject) {
-			graphicsObjects.remove(graphicsObject);
 			if (auto* meshObject = dynamic_cast<MeshGraphicsObject*>(graphicsObject.get())) {
 				vulkanScene->removeModel(meshObject->model);
 			}
+			graphicsObjects.remove(graphicsObject);
 			break;
 		}
 	}

@@ -4,20 +4,9 @@
 #include "VulkanMesh.h"
 #include <stdexcept>
 
-VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const std::string& name, const VkExtent2D& swapchainExtent, VkRenderPass renderPass, VkDescriptorSetLayout descriptorSetLayout) :
+VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const std::string& name, const VkExtent2D& swapchainExtent, VkRenderPass renderPass) :
 	name(name),
 	device(device)
-{
-	initPipeline(swapchainExtent, renderPass, descriptorSetLayout);
-}
-
-VulkanMaterial::~VulkanMaterial()
-{
-	vkDestroyPipeline(device->vkDevice(), pipeline, nullptr);
-	vkDestroyPipelineLayout(device->vkDevice(), pipelineLayout, nullptr);
-}
-
-void VulkanMaterial::initPipeline(const VkExtent2D& swapchainExtent, VkRenderPass renderPass, VkDescriptorSetLayout descriptorSetLayout)
 {
 	VulkanShader shader(device->vkDevice(), name.c_str());
 	
@@ -93,6 +82,21 @@ void VulkanMaterial::initPipeline(const VkExtent2D& swapchainExtent, VkRenderPas
 		.pAttachments = &colorBlendAttachment
 	};
 	
+	VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[] = {
+		{.binding = 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1, VK_SHADER_STAGE_VERTEX_BIT },
+		{.binding = 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT }
+	};
+	
+	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.bindingCount = 2,
+		.pBindings = descriptorSetLayoutBindings
+	};
+	
+	if (vkCreateDescriptorSetLayout(device->vkDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create Vulkan descriptor set layout!");
+	}
+	
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 		.setLayoutCount = 1,
@@ -122,6 +126,13 @@ void VulkanMaterial::initPipeline(const VkExtent2D& swapchainExtent, VkRenderPas
 	if (vkCreateGraphicsPipelines(device->vkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Vulkan pipeline!");
 	}
+}
+
+VulkanMaterial::~VulkanMaterial()
+{
+	vkDestroyPipeline(device->vkDevice(), pipeline, nullptr);
+	vkDestroyPipelineLayout(device->vkDevice(), pipelineLayout, nullptr);
+	vkDestroyDescriptorSetLayout(device->vkDevice(), descriptorSetLayout, nullptr);
 }
 
 void VulkanMaterial::bind(VkCommandBuffer cmd) const

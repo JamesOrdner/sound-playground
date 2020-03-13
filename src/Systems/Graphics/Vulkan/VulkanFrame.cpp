@@ -5,12 +5,9 @@
 #include "VulkanMesh.h"
 #include <stdexcept>
 
-VulkanFrame::VulkanFrame(
-	const VulkanDevice* device,
-	VkCommandPool commandPool,
-	VkDescriptorPool descriptorPool,
-	VkDescriptorSetLayout descriptorSetLayout
-) :
+constexpr size_t maxModelCount = 128;
+
+VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) :
 	device(device)
 {
 	VkCommandBufferAllocateInfo commandBufferInfo{
@@ -41,32 +38,36 @@ VulkanFrame::VulkanFrame(
 		throw std::runtime_error("Failed to create Vulkan frame semaphore!");
 	}
 	
-	initUniformBuffer(descriptorPool, descriptorSetLayout);
-}
-
-VulkanFrame::~VulkanFrame()
-{
-	vkDestroySemaphore(device->vkDevice(), completeSemaphore, nullptr);
-	vkDestroyFence(device->vkDevice(), completeFence, nullptr);
-	device->allocator().unmap(constantsUniformBuffer);
-	device->allocator().unmap(modelTransformUniformBuffer);
-	device->allocator().destroyBuffer(constantsUniformBuffer);
-	device->allocator().destroyBuffer(modelTransformUniformBuffer);
-}
-
-void VulkanFrame::initUniformBuffer(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout)
-{
-	// per-frame (modelView) uniform buffer
-	constexpr size_t maxModelCount = 128;
-    
-    VkPhysicalDeviceLimits limits = device->physicalDeviceProperties().limits;
+	// DescriptorPool
+	
+	std::array<VkDescriptorPoolSize, 2> descriptorPoolSizes{
+		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1 },
+		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 }
+	};
+	
+	VkDescriptorPoolCreateInfo descriptorPoolInfo{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.maxSets = 2, // NOTE: this must be equal to the maximum number of VkDescriptorSetLayout objects
+		.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size()),
+		.pPoolSizes = descriptorPoolSizes.data()
+	};
+	
+	if (vkCreateDescriptorPool(device->vkDevice(), &descriptorPoolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create Vulkan descriptor pool!");
+	}
+	
+	// UBO alignment
+	
+	VkPhysicalDeviceLimits limits = device->physicalDeviceProperties().limits;
     size_t minUboAlignment = limits.minUniformBufferOffsetAlignment;
 	uniformBufferAlignment = sizeof(mat::mat4);
     if (minUboAlignment > 0) {
         uniformBufferAlignment = (uniformBufferAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
     }
-    
-    VkDeviceSize bufferSize = maxModelCount * uniformBufferAlignment;
+	
+	// Uniform buffers
+	
+	VkDeviceSize bufferSize = maxModelCount * uniformBufferAlignment;
 	
 	VkBufferCreateInfo bufferInfo{
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -96,59 +97,78 @@ void VulkanFrame::initUniformBuffer(VkDescriptorPool descriptorPool, VkDescripto
 	
 	constantsUniformBuffer = device->allocator().createBuffer(constantsBufferInfo, constantsBufferAllocInfo);
 	device->allocator().map(constantsUniformBuffer, &constantsUniformBufferData);
+}
+
+VulkanFrame::~VulkanFrame()
+{
+	vkDestroyDescriptorPool(device->vkDevice(), descriptorPool, nullptr);
+	vkDestroySemaphore(device->vkDevice(), completeSemaphore, nullptr);
+	vkDestroyFence(device->vkDevice(), completeFence, nullptr);
+	device->allocator().unmap(constantsUniformBuffer);
+	device->allocator().unmap(modelTransformUniformBuffer);
+	device->allocator().destroyBuffer(constantsUniformBuffer);
+	device->allocator().destroyBuffer(modelTransformUniformBuffer);
+}
+
+void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& materials)
+{
+	vkResetDescriptorPool(device->vkDevice(), descriptorPool, 0);
+	descriptorSets.clear();
 	
-	// descriptor set
-	VkDescriptorSetAllocateInfo descriptorSetAllocInfo{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-		.descriptorPool = descriptorPool,
-		.descriptorSetCount = 1,
-		.pSetLayouts = &descriptorSetLayout
-	};
-	
-	if (vkAllocateDescriptorSets(device->vkDevice(), &descriptorSetAllocInfo, &descriptorSet) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate descriptor sets!");
+	for (const auto* material : materials) {
+		VkDescriptorSetAllocateInfo descriptorSetAllocInfo{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+			.descriptorPool = descriptorPool,
+			.descriptorSetCount = 1,
+			.pSetLayouts = &material->descriptorSetLayout
+		};
+		
+		VkDescriptorSet descriptorSet;
+		if (vkAllocateDescriptorSets(device->vkDevice(), &descriptorSetAllocInfo, &descriptorSet) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate descriptor sets!");
+		}
+		
+		descriptorSets[material->name] = descriptorSet;
+		
+		VkDescriptorBufferInfo modelTransformDescriptorBufferInfo{
+			.buffer = modelTransformUniformBuffer.buffer,
+			.offset = 0,
+			.range = uniformBufferAlignment
+		};
+		
+		VkWriteDescriptorSet modelTransformDescriptorWrite{
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.dstSet = descriptorSet,
+			.dstBinding = 0,
+			.dstArrayElement = 0,
+			.descriptorCount = 1,
+			.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+			.pBufferInfo = &modelTransformDescriptorBufferInfo
+		};
+		
+		VkDescriptorBufferInfo constantsDescriptorBufferInfo{
+			.buffer = constantsUniformBuffer.buffer,
+			.offset = 0,
+			.range = sizeof(mat::mat4)
+		};
+		
+		VkWriteDescriptorSet constantsDescriptorWrite{
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.dstSet = descriptorSet,
+			.dstBinding = 1,
+			.dstArrayElement = 0,
+			.descriptorCount = 1,
+			.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.pBufferInfo = &constantsDescriptorBufferInfo
+		};
+		
+		VkWriteDescriptorSet writeDescriptorSets[] = {
+			modelTransformDescriptorWrite,
+			constantsDescriptorWrite
+		};
+		
+		vkUpdateDescriptorSets(device->vkDevice(), 2, writeDescriptorSets, 0, nullptr);
 	}
-	
-	// VkWriteDescriptorSets
-	
-	VkDescriptorBufferInfo modelTransformDescriptorBufferInfo{
-		.buffer = modelTransformUniformBuffer.buffer,
-		.offset = 0,
-		.range = uniformBufferAlignment
-	};
-	
-	VkWriteDescriptorSet modelTransformDescriptorWrite{
-		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstSet = descriptorSet,
-		.dstBinding = 0,
-		.dstArrayElement = 0,
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-		.pBufferInfo = &modelTransformDescriptorBufferInfo
-	};
-	
-	VkDescriptorBufferInfo constantsDescriptorBufferInfo{
-		.buffer = constantsUniformBuffer.buffer,
-		.offset = 0,
-		.range = sizeof(mat::mat4)
-	};
-	
-	VkWriteDescriptorSet constantsDescriptorWrite{
-		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstSet = descriptorSet,
-		.dstBinding = 1,
-		.dstArrayElement = 0,
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		.pBufferInfo = &constantsDescriptorBufferInfo
-	};
-	
-	VkWriteDescriptorSet writeDescriptorSets[] = {
-		modelTransformDescriptorWrite,
-		constantsDescriptorWrite
-	};
-	
-	vkUpdateDescriptorSets(device->vkDevice(), 2, writeDescriptorSets, 0, nullptr);
 }
 
 void VulkanFrame::beginFrame()
@@ -215,8 +235,10 @@ void VulkanFrame::bindMesh(const VulkanMesh& mesh) const
 
 void VulkanFrame::draw(const VulkanModel& model) const
 {
+	const VulkanMaterial* material = model.getMaterial();
+	VkDescriptorSet descriptorSet = descriptorSets.find(material->name)->second;
 	uint32_t dynamicOffset = model.modelID * static_cast<uint32_t>(uniformBufferAlignment);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, model.getMaterial()->pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
 	vkCmdDrawIndexed(commandBuffer, model.getMesh()->indexBuffer.size(), 1, 0, 0, 0);
 }
 

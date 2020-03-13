@@ -31,10 +31,9 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 	initRenderPass();
 	swapchain->initFramebuffers(renderPass);
 	initCommandPool();
-	initDescriptorPool();
 	
 	for (auto& frame : frames) {
-		frame = std::make_unique<VulkanFrame>(device.get(), commandPool, descriptorPool, descriptorSetLayout);
+		frame = std::make_unique<VulkanFrame>(device.get(), commandPool);
 	}
 }
 
@@ -47,8 +46,6 @@ VulkanInstance::~VulkanInstance()
 	meshes.clear();
 	
 	for (auto& frame : frames) frame.reset();
-	vkDestroyDescriptorSetLayout(device->vkDevice(), descriptorSetLayout, nullptr);
-	vkDestroyDescriptorPool(device->vkDevice(), descriptorPool, nullptr);
 	vkDestroyCommandPool(device->vkDevice(), commandPool, nullptr);
 	swapchain.reset();
 	vkDestroyRenderPass(device->vkDevice(), renderPass, nullptr);
@@ -182,40 +179,6 @@ void VulkanInstance::initCommandPool()
 	}
 }
 
-void VulkanInstance::initDescriptorPool()
-{
-	VkDescriptorPoolSize descriptorPoolSizes[] = {
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, static_cast<uint32_t>(frames.size()) },
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, static_cast<uint32_t>(frames.size()) }
-	};
-	
-	VkDescriptorPoolCreateInfo descriptorPoolInfo{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.maxSets = static_cast<uint32_t>(frames.size()),
-		.poolSizeCount = 2,
-		.pPoolSizes = descriptorPoolSizes
-	};
-	
-	if (vkCreateDescriptorPool(device->vkDevice(), &descriptorPoolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to create Vulkan descriptor pool!");
-	}
-	
-	VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[] = {
-		{.binding = 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1, VK_SHADER_STAGE_VERTEX_BIT },
-		{.binding = 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT }
-	};
-	
-	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = 2,
-		.pBindings = descriptorSetLayoutBindings
-	};
-	
-	if (vkCreateDescriptorSetLayout(device->vkDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to create Vulkan descriptor set layout!");
-	}
-}
-
 VulkanScene* VulkanInstance::createScene()
 {
 	return scenes.emplace_back(std::make_unique<VulkanScene>(this)).get();
@@ -242,7 +205,12 @@ VulkanMesh* VulkanInstance::sharedMesh(const std::string& filepath)
 VulkanMaterial* VulkanInstance::sharedMaterial(const std::string& name)
 {
 	if (materials.find(name) == materials.end()) {
-		materials[name] = std::make_unique<VulkanMaterial>(device.get(), name, swapchain->extent(), renderPass, descriptorSetLayout);
+		materials[name] = std::make_unique<VulkanMaterial>(device.get(), name, swapchain->extent(), renderPass);
+		
+		std::vector<VulkanMaterial*> materialPointers;
+		materialPointers.reserve(materials.size());
+		for (const auto& material : materials) materialPointers.push_back(material.second.get());
+		for (auto& frame : frames) frame->updateDescriptorSets(materialPointers);
 	}
 	return materials[name].get();
 }
