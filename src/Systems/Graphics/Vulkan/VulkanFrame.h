@@ -15,7 +15,7 @@ public:
 	~VulkanFrame();
 	
 	/// Called when descriptor set layouts are changed, i.e. when a new materal is added
-	void updateDescriptorSets(const std::vector<class VulkanMaterial*>& materials, VkDescriptorSetLayout shadowLayout);
+	void updateDescriptorSets(const std::vector<class VulkanMaterial*>& materials, const class VulkanShadow* shadow);
 	
 	/// Begin recording commands for this frame
 	void beginFrame();

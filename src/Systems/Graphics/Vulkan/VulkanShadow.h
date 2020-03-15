@@ -12,6 +12,8 @@ public:
 	
 	VkRect2D renderArea;
 	
+	VkImageView imageView;
+	VkSampler sampler;
 	VkRenderPass renderPass;
 	VkFramebuffer framebuffer;
 	VkDescriptorSetLayout descriptorSetLayout;
@@ -23,6 +25,4 @@ private:
 	const class VulkanDevice* const device;
 	
 	VulkanImage image;
-	VkImageView imageView;
-	VkSampler sampler;
 };

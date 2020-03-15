@@ -1,5 +1,7 @@
 #version 450
 
+layout(binding = 2) uniform sampler2D shadowMap;
+
 layout(location = 0) in vec3 normal;
 layout(location = 1) in vec3 lightDir;
 

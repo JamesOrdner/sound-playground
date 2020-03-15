@@ -42,9 +42,10 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
 	
 	// DescriptorPool
 	
-	std::array<VkDescriptorPoolSize, 2> descriptorPoolSizes{
+	std::array<VkDescriptorPoolSize, 3> descriptorPoolSizes{
 		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 2 },
-		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 }
+		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
+		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 }
 	};
 	
 	VkDescriptorPoolCreateInfo descriptorPoolInfo{
@@ -117,7 +118,7 @@ VulkanFrame::~VulkanFrame()
 	device->allocator().destroyBuffer(modelTransformUniformBuffer);
 }
 
-void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& materials, VkDescriptorSetLayout shadowLayout)
+void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& materials, const VulkanShadow* shadow)
 {
 	vkResetDescriptorPool(device->vkDevice(), descriptorPool, 0);
 	descriptorSets.clear();
@@ -147,7 +148,6 @@ void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& mater
 			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.dstSet = descriptorSet,
 			.dstBinding = 0,
-			.dstArrayElement = 0,
 			.descriptorCount = 1,
 			.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
 			.pBufferInfo = &modelTransformDescriptorBufferInfo
@@ -163,18 +163,33 @@ void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& mater
 			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.dstSet = descriptorSet,
 			.dstBinding = 1,
-			.dstArrayElement = 0,
 			.descriptorCount = 1,
 			.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 			.pBufferInfo = &constantsDescriptorBufferInfo
 		};
 		
-		VkWriteDescriptorSet writeDescriptorSets[] = {
-			modelTransformDescriptorWrite,
-			constantsDescriptorWrite
+		VkDescriptorImageInfo shadowSamplerDescriptorImageInfo{
+			.sampler = shadow->sampler,
+			.imageView = shadow->imageView,
+			.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
 		};
 		
-		vkUpdateDescriptorSets(device->vkDevice(), 2, writeDescriptorSets, 0, nullptr);
+		VkWriteDescriptorSet shadowSamplerDescriptorWrite{
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.dstSet = descriptorSet,
+			.dstBinding = 2,
+			.descriptorCount = 1,
+			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			.pImageInfo = &shadowSamplerDescriptorImageInfo
+		};
+		
+		std::array<VkWriteDescriptorSet, 3> writeDescriptorSets{
+			modelTransformDescriptorWrite,
+			constantsDescriptorWrite,
+			shadowSamplerDescriptorWrite
+		};
+		
+		vkUpdateDescriptorSets(device->vkDevice(), writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
 	}
 	
 	// shadow
@@ -183,7 +198,7 @@ void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& mater
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 		.descriptorPool = descriptorPool,
 		.descriptorSetCount = 1,
-		.pSetLayouts = &shadowLayout
+		.pSetLayouts = &shadow->descriptorSetLayout
 	};
 	
 	VkDescriptorSet descriptorSet;

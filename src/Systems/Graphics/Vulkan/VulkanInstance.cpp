@@ -214,7 +214,7 @@ VulkanMaterial* VulkanInstance::sharedMaterial(const std::string& name)
 		std::vector<VulkanMaterial*> materialPointers;
 		materialPointers.reserve(materials.size());
 		for (const auto& material : materials) materialPointers.push_back(material.second.get());
-		for (auto& frame : frames) frame->updateDescriptorSets(materialPointers, shadow->descriptorSetLayout);
+		for (auto& frame : frames) frame->updateDescriptorSets(materialPointers, shadow.get());
 	}
 	return materials[name].get();
 }

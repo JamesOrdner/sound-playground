@@ -82,15 +82,16 @@ VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const std::string& na
 		.pAttachments = &colorBlendAttachment
 	};
 	
-	VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[] = {
-		{.binding = 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1, VK_SHADER_STAGE_VERTEX_BIT },
-		{.binding = 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT }
+	std::array<VkDescriptorSetLayoutBinding, 3> descriptorSetLayoutBindings = {
+		VkDescriptorSetLayoutBinding{ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1, VK_SHADER_STAGE_VERTEX_BIT },
+		VkDescriptorSetLayoutBinding{ 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT },
+		VkDescriptorSetLayoutBinding{ 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
 	};
 	
 	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = 2,
-		.pBindings = descriptorSetLayoutBindings
+		.bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings.size()),
+		.pBindings = descriptorSetLayoutBindings.data()
 	};
 	
 	if (vkCreateDescriptorSetLayout(device->vkDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
