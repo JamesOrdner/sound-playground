@@ -16,9 +16,6 @@ add_executable(SoundPlayground)
 
 add_subdirectory(src)
 
-get_property("TARGET_SOURCE_FILES" TARGET SoundPlayground PROPERTY SOURCES)
-source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${TARGET_SOURCE_FILES})
-
 # ---------- EXTERNAL DEPENDENCIES ----------
 
 add_subdirectory(lib)
@@ -133,6 +130,8 @@ set(SHADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/shadow.vert
 )
 
+target_sources(SoundPlayground PRIVATE ${SHADERS})
+
 foreach(SHADER ${SHADERS})
   add_custom_command(
     OUTPUT ${SHADER}.spv
@@ -142,6 +141,9 @@ foreach(SHADER ${SHADERS})
   )
   target_sources(SoundPlayground PRIVATE ${SHADER}.spv)
 endforeach()
+
+get_property("TARGET_SOURCE_FILES" TARGET SoundPlayground PROPERTY SOURCES)
+source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${TARGET_SOURCE_FILES})
 
 # ---------- COPY RESOURCES ----------
 
