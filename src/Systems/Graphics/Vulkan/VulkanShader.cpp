@@ -1,6 +1,7 @@
 #include "VulkanShader.h"
 #include <stdexcept>
 #include <fstream>
+#include <filesystem>
 
 VulkanShader::VulkanShader(VkDevice device, const std::string& filename) :
 	filename(filename),
