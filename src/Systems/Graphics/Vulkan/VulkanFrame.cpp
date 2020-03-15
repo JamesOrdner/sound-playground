@@ -1,6 +1,8 @@
 #include "VulkanFrame.h"
 #include "VulkanDevice.h"
+#include "VulkanScene.h"
 #include "VulkanMaterial.h"
+#include "VulkanShadow.h"
 #include "VulkanModel.h"
 #include "VulkanMesh.h"
 #include <stdexcept>
@@ -248,13 +250,44 @@ void VulkanFrame::updateProjectionMatrix(const mat::mat4& projectionMatrix) cons
 	std::copy_n(&transposed, 1, reinterpret_cast<mat::mat4*>(constantsUniformBufferData));
 }
 
-void VulkanFrame::beginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea)
+void VulkanFrame::renderShadowPass(const VulkanScene* scene, VulkanShadow* shadow)
+{
+	VkClearValue clearValue{
+		.depthStencil = { 1.f, 0 }
+	};
+	
+	VkRenderPassBeginInfo renderPassBeginInfo{
+		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+		.renderPass = shadow->renderPass,
+		.framebuffer = shadow->framebuffer,
+		.renderArea = shadow->renderArea,
+		.clearValueCount = 1,
+		.pClearValues = &clearValue
+	};
+	
+	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow->pipeline);
+	
+	VkDescriptorSet shadowDescriptorSet = descriptorSets["shadow"];
+	for (const auto& model : scene->models) {
+		const VulkanMesh* mesh = model->getMesh();
+		uint32_t dynamicOffset = model->modelID * static_cast<uint32_t>(uniformBufferAlignment);
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh->vertexBuffer.buffer, &mesh->vertexDataOffset);
+		vkCmdBindIndexBuffer(commandBuffer, mesh->vertexBuffer.buffer, mesh->indexBufferOffset, VK_INDEX_TYPE_UINT16);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow->pipelineLayout, 0, 1, &shadowDescriptorSet, 1, &dynamicOffset);
+		vkCmdDrawIndexed(commandBuffer, mesh->indexBuffer.size(), 1, 0, 0, 0);
+	}
+	
+	vkCmdEndRenderPass(commandBuffer);
+}
+
+void VulkanFrame::renderMainPass(const VulkanScene* scene, VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea)
 {
 	VkClearValue clearValues[] = {
 		{.color = {.float32 = { 0.0f, 0.0f, 0.0f, 1.0f }}},
 		{.depthStencil = { 1.f, 0 }}
 	};
-
+	
 	VkRenderPassBeginInfo renderPassBeginInfo{
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 		.renderPass = renderPass,
@@ -263,32 +296,36 @@ void VulkanFrame::beginRenderPass(VkRenderPass renderPass, VkFramebuffer framebu
 		.clearValueCount = 2,
 		.pClearValues = clearValues
 	};
-
+	
 	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-}
-
-void VulkanFrame::bindMaterial(const VulkanMaterial& material) const
-{
-	material.bind(commandBuffer);
-}
-
-void VulkanFrame::bindMesh(const VulkanMesh& mesh) const
-{
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh.vertexBuffer.buffer, &mesh.vertexDataOffset);
-	vkCmdBindIndexBuffer(commandBuffer, mesh.vertexBuffer.buffer, mesh.indexBufferOffset, VK_INDEX_TYPE_UINT16);
-}
-
-void VulkanFrame::draw(const VulkanModel& model) const
-{
-	const VulkanMaterial* material = model.getMaterial();
-	VkDescriptorSet descriptorSet = descriptorSets.find(material->name)->second;
-	uint32_t dynamicOffset = model.modelID * static_cast<uint32_t>(uniformBufferAlignment);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
-	vkCmdDrawIndexed(commandBuffer, model.getMesh()->indexBuffer.size(), 1, 0, 0, 0);
-}
-
-void VulkanFrame::endRenderPass()
-{
+	
+	const VulkanMaterial* material = nullptr;
+	const VulkanMesh* mesh = nullptr;
+	VkDescriptorSet descriptorSet;
+	for (const auto& model : scene->models) {
+		if (material != model->getMaterial()) {
+			material = model->getMaterial();
+			if (material) {
+				material->bind(commandBuffer);
+				descriptorSet = descriptorSets.find(material->name)->second;
+			}
+		}
+		
+		if (mesh != model->getMesh()) {
+			mesh = model->getMesh();
+			if (mesh) {
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh->vertexBuffer.buffer, &mesh->vertexDataOffset);
+				vkCmdBindIndexBuffer(commandBuffer, mesh->vertexBuffer.buffer, mesh->indexBufferOffset, VK_INDEX_TYPE_UINT16);
+			}
+		}
+		
+		if (!material || !mesh) break;
+		
+		uint32_t dynamicOffset = model->modelID * static_cast<uint32_t>(uniformBufferAlignment);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
+		vkCmdDrawIndexed(commandBuffer, mesh->indexBuffer.size(), 1, 0, 0, 0);
+	}
+	
 	vkCmdEndRenderPass(commandBuffer);
 }
 

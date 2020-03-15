@@ -11,6 +11,8 @@ constexpr VkFormat shadowMapFormat = VK_FORMAT_D16_UNORM;
 VulkanShadow::VulkanShadow(const VulkanDevice* device) :
 	device(device)
 {
+	renderArea = {.extent = { shadowMapDimensions, shadowMapDimensions }};
+	
 	VkImageCreateInfo imageInfo{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.imageType = VK_IMAGE_TYPE_2D,

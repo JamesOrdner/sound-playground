@@ -225,20 +225,18 @@ void VulkanInstance::beginRender()
 	
 	activeFrame = frames[frameIndex++].get();
 	frameIndex %= frames.size();
-
+	
 	activeFrame->beginFrame();
 }
 
 void VulkanInstance::renderScene(VulkanScene* scene)
 {
-	// update uniforms
-	scene->updateUniforms(*activeFrame);
-
-	// render
-	VkRect2D renderArea{ .offset = {}, .extent = swapchain->extent() };
-	activeFrame->beginRenderPass(renderPass, swapchain->framebuffer(activeSwapchainImageIndex), renderArea);
-	scene->render(*activeFrame);
-	activeFrame->endRenderPass();
+	scene->updateUniforms(activeFrame);
+	
+	activeFrame->renderShadowPass(scene, shadow.get());
+	
+	VkRect2D renderArea{.extent = swapchain->extent() };
+	activeFrame->renderMainPass(scene, renderPass, swapchain->framebuffer(activeSwapchainImageIndex), renderArea);
 }
 
 void VulkanInstance::endRenderAndPresent()

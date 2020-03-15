@@ -10,8 +10,13 @@ public:
 	
 	~VulkanShadow();
 	
+	VkRect2D renderArea;
+	
+	VkRenderPass renderPass;
+	VkFramebuffer framebuffer;
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout;
+	VkPipeline pipeline;
 	
 private:
 	
@@ -20,7 +25,4 @@ private:
 	VulkanImage image;
 	VkImageView imageView;
 	VkSampler sampler;
-	VkRenderPass renderPass;
-	VkFramebuffer framebuffer;
-	VkPipeline pipeline;
 };

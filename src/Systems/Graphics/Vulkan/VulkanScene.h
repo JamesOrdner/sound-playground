@@ -27,20 +27,17 @@ public:
 	
 	/// Update uniform buffers of all models in the scene.
 	/// Called prior to beginning the render pass.
-	void updateUniforms(const class VulkanFrame& frame) const;
+	void updateUniforms(const class VulkanFrame* frame) const;
 	
-	/// Draw all models in the scene. Called after beginning the render pass.
-	void render(const class VulkanFrame& frame) const;
+	/// Models are sorted first by material, and then by mesh, for fast render iteration.
+	/// Models without a registered mesh or material are stored at the end of the vector.
+	std::vector<std::unique_ptr<class VulkanModel>> models;
 	
 private:
 	
 	class VulkanInstance* const vulkanInstance;
 	
 	mat::mat4 viewMatrix, projMatrix;
-	
-	/// Models are sorted first by material, and then by mesh, for fast render iteration.
-	/// Models without a registered mesh or material are stored at the end of the vector.
-	std::vector<std::unique_ptr<class VulkanModel>> models;
 	
 	void sortModels();
 	

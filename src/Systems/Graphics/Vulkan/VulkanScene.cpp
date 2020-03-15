@@ -79,34 +79,14 @@ void VulkanScene::setProjMatrix(const mat::mat4& matrix)
 	projMatrix = matrix;
 }
 
-void VulkanScene::updateUniforms(const VulkanFrame& frame) const
+void VulkanScene::updateUniforms(const VulkanFrame* frame) const
 {
 	for (const auto& model : models) {
-		frame.updateModelTransform(*model, viewMatrix);
+		frame->updateModelTransform(*model, viewMatrix);
 	}
 	
-	frame.flushModelTransformUpdates();
+	frame->flushModelTransformUpdates();
 	
 	// TODO: Update only once
-	frame.updateProjectionMatrix(projMatrix);
-}
-
-void VulkanScene::render(const VulkanFrame& frame) const
-{
-	VulkanMaterial* material = nullptr;
-	VulkanMesh* mesh = nullptr;
-	for (const auto& model : models) {
-		if (material != model->getMaterial()) {
-			material = model->getMaterial();
-			if (material) frame.bindMaterial(*material);
-		}
-		
-		if (mesh != model->getMesh()) {
-			mesh = model->getMesh();
-			if (mesh) frame.bindMesh(*mesh);
-		}
-		
-		if (!material || !mesh) break;
-		frame.draw(*model);
-	}
+	frame->updateProjectionMatrix(projMatrix);
 }
