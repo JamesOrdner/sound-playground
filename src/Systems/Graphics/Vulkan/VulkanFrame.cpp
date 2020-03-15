@@ -9,6 +9,11 @@
 
 constexpr size_t maxModelCount = 128;
 
+struct MainUBO {
+	mat::mat4 modelViewMatrix;
+	mat::mat4 shadowMatrix;
+};
+
 VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) :
 	device(device)
 {
@@ -63,7 +68,7 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
 	
 	VkPhysicalDeviceLimits limits = device->physicalDeviceProperties().limits;
     size_t minUboAlignment = limits.minUniformBufferOffsetAlignment;
-	uniformBufferAlignment = sizeof(mat::mat4);
+	uniformBufferAlignment = sizeof(MainUBO);
     if (minUboAlignment > 0) {
         uniformBufferAlignment = (uniformBufferAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
     }
@@ -243,15 +248,20 @@ void VulkanFrame::beginFrame()
 void VulkanFrame::updateModelTransform(const VulkanModel& model, const mat::mat4& viewMatrix) const
 {
 	uint32_t offset = model.modelID * static_cast<uint32_t>(uniformBufferAlignment);
+	char* dest;
 	
-	mat::mat4 modelView = mat::t(viewMatrix * model.transform);
-	char* dest = static_cast<char*>(modelTransformUniformBufferData) + offset;
-	std::copy_n(&modelView, 1, reinterpret_cast<mat::mat4*>(dest));
-	
+	// shadow
 	mat::mat4 lightView = mat::lookAt(mat::vec3{ 0.3f, 1.f, 0.1f }, mat::vec3());
-	mat::mat4 lightViewProj = mat::ortho(-20, 20, -20, 20, -20, 20) * lightView;
+	mat::mat4 lightMVP = mat::t(mat::ortho(-6, 6, -6, 6, -10, 10) * lightView * model.transform);
 	dest = static_cast<char*>(modelShadowUniformBufferData) + offset;
-	std::copy_n(&lightViewProj, 1, reinterpret_cast<mat::mat4*>(dest));
+	std::copy_n(&lightMVP, 1, reinterpret_cast<mat::mat4*>(dest));
+	
+	// main
+	MainUBO mainUBO;
+	mainUBO.modelViewMatrix = mat::t(viewMatrix * model.transform);
+	mainUBO.shadowMatrix = lightMVP;
+	dest = static_cast<char*>(modelTransformUniformBufferData) + offset;
+	std::copy_n(&mainUBO, 1, reinterpret_cast<MainUBO*>(dest));
 }
 
 void VulkanFrame::flushModelTransformUpdates() const
