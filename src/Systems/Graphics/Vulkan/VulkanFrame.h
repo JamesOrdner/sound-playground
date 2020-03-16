@@ -64,7 +64,4 @@ private:
 	
 	/// Maps material names to their corresponding descriptor set
 	std::map<std::string, VkDescriptorSet> descriptorSets;
-	
-	void initDescriptorPool();
-	void initUniformBuffer(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
 };

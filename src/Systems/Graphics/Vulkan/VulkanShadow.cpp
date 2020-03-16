@@ -87,8 +87,8 @@ VulkanShadow::VulkanShadow(const VulkanDevice* device) :
 		.pDepthStencilAttachment = &attachmentReference
 	};
 	
-	std::array<VkSubpassDependency, 2> dependencies = {
-		VkSubpassDependency{
+	std::array<VkSubpassDependency, 2> dependencies{
+		VkSubpassDependency{ // Optional?
 			.srcSubpass = VK_SUBPASS_EXTERNAL,
 			.dstSubpass = 0,
 			.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
