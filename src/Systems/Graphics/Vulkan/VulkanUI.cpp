@@ -2,26 +2,80 @@
 #include "VulkanDevice.h"
 #include "VulkanShader.h"
 #include <stdexcept>
+#include <array>
+
+VulkanUI::VulkanUI(const class VulkanDevice* device, VkRenderPass renderPass) :
+	device(device)
+{
+	initDescriptors();
+	initPipeline(renderPass);
+	
+	// TODO: TEMP
+	objects.emplace_back(new VulkanUIObject{
+		.position = mat::vec2{ -0.5f, -0.5f },
+		.bounds = mat::vec2{ 0.5f, 0.5f },
+		.uv_position = mat::vec2{ 0.f, 0.f },
+		.uv_bounds = mat::vec2{ 1.f, 1.f },
+		.texture = nullptr
+	});
+}
 
 VulkanUI::~VulkanUI()
 {
+	if (vertexBuffer.buffer) device->allocator().destroyBuffer(vertexBuffer);
 	vkDestroyPipeline(device->vkDevice(), pipeline, nullptr);
 	vkDestroyPipelineLayout(device->vkDevice(), pipelineLayout, nullptr);
+	vkDestroyDescriptorSetLayout(device->vkDevice(), descriptorSetLayout, nullptr);
 }
 
 void VulkanUI::initDescriptors()
 {
+	VkDescriptorSetLayoutBinding descriptorSetLayoutBinding{
+		0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT
+	};
 	
+	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.bindingCount = 1,
+		.pBindings = &descriptorSetLayoutBinding
+	};
+	
+	if (vkCreateDescriptorSetLayout(device->vkDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create Vulkan descriptor set layout!");
+	}
 }
 
 void VulkanUI::initPipeline(VkRenderPass renderPass)
 {
 	VulkanShader shader(device->vkDevice(), "ui");
 	
+	VkVertexInputBindingDescription vertexInputBinding{
+        .binding = 0,
+        .stride = static_cast<uint32_t>(2 * sizeof(mat::vec2)),
+        .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+    };
+	
+	std::array<VkVertexInputAttributeDescription, 2> vertexInputAttributes{
+		VkVertexInputAttributeDescription{ // position
+			.location = 0,
+			.binding = 0,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = 0
+		},
+		VkVertexInputAttributeDescription{ // uv
+			.location = 1,
+			.binding = 0,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = static_cast<uint32_t>(sizeof(mat::vec2))
+		}
+    };
+	
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-		.vertexBindingDescriptionCount = 0,
-		.vertexAttributeDescriptionCount = 0
+		.vertexBindingDescriptionCount = 1,
+		.pVertexBindingDescriptions = &vertexInputBinding,
+		.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributes.size()),
+		.pVertexAttributeDescriptions = vertexInputAttributes.data()
 	};
 	
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{
@@ -112,4 +166,47 @@ void VulkanUI::initPipeline(VkRenderPass renderPass)
 	if (vkCreateGraphicsPipelines(device->vkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Vulkan UI pipeline!");
 	}
+}
+
+void VulkanUI::update()
+{
+	if (vertexBuffer.buffer) device->allocator().destroyBuffer(vertexBuffer);
+	
+	// create raw buffer
+	std::vector<mat::vec2> buffer;
+	buffer.reserve(objects.size() * 12); // 6 verts * 2 attr per object
+	for (const auto& object : objects) {
+		buffer.push_back(object->position);
+		buffer.push_back(object->uv_position);
+		buffer.push_back(object->position + object->bounds);
+		buffer.push_back(object->uv_position + object->uv_bounds);
+		buffer.push_back(mat::vec2{ object->position.x + object->bounds.x, object->bounds.y });
+		buffer.push_back(mat::vec2{ object->uv_position.x + object->uv_bounds.x, object->uv_bounds.y });
+		
+		buffer.push_back(object->position);
+		buffer.push_back(object->uv_position);
+		buffer.push_back(mat::vec2{ object->position.x, object->position.y + object->bounds.y });
+		buffer.push_back(mat::vec2{ object->uv_position.x, object->uv_position.y + object->uv_bounds.y });
+		buffer.push_back(object->position + object->bounds);
+		buffer.push_back(object->uv_position + object->uv_bounds);
+	}
+	
+	// allocate and copy data
+	
+	VkBufferCreateInfo bufferInfo{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size = static_cast<uint32_t>(buffer.size() * sizeof(mat::vec2)),
+		.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+	};
+	
+	VmaAllocationCreateInfo allocInfo{
+		.usage = VMA_MEMORY_USAGE_CPU_TO_GPU,
+		.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+	};
+	
+	vertexBuffer = device->allocator().createBuffer(bufferInfo, allocInfo);
+	
+	void* data;
+	device->allocator().map(vertexBuffer, &data);
+	std::copy(buffer.cbegin(), buffer.cend(), static_cast<mat::vec2*>(data));
 }

@@ -22,6 +22,8 @@ target_sources(SoundPlayground
     VulkanShadow.h
     VulkanSwapchain.cpp
     VulkanSwapchain.h
+    VulkanTexture.cpp
+    VulkanTexture.h
     VulkanUI.cpp
     VulkanUI.h
 )

@@ -56,7 +56,8 @@ void GraphicsSystem::execute(float deltaTime)
 SystemSceneInterface* GraphicsSystem::createSystemScene(const class UScene* uscene)
 {
 	auto* vulkanScene = vulkan->createScene();
-	return graphicsScenes.emplace_back(std::make_unique<GraphicsScene>(this, uscene, vulkanScene)).get();
+	auto* vulkanUI = vulkan->createUI();
+	return graphicsScenes.emplace_back(std::make_unique<GraphicsScene>(this, uscene, vulkanScene, vulkanUI)).get();
 }
 
 SystemSceneInterface* GraphicsSystem::findSystemScene(const UScene* uscene)

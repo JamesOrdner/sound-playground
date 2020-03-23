@@ -58,6 +58,7 @@ private:
 	VkSemaphore activeFrameAcquireSemaphore;
 	
 	std::vector<std::unique_ptr<class VulkanScene>> scenes;
+	std::vector<std::unique_ptr<class VulkanUI>> uis;
 	
 	/// Maps mesh filepaths to the corresponding mesh objects
 	std::map<std::string, std::unique_ptr<class VulkanMesh>> meshes;
