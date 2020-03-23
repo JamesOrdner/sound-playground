@@ -4,11 +4,11 @@
 #include <stdexcept>
 #include <array>
 
-VulkanUI::VulkanUI(const class VulkanDevice* device, VkRenderPass renderPass) :
+VulkanUI::VulkanUI(const class VulkanDevice* device, VkRenderPass renderPass, const VkExtent2D& swapchainExtent) :
 	device(device)
 {
 	initDescriptors();
-	initPipeline(renderPass);
+	initPipeline(renderPass, swapchainExtent);
 	
 	// TODO: TEMP
 	objects.emplace_back(new VulkanUIObject{
@@ -36,8 +36,8 @@ void VulkanUI::initDescriptors()
 	
 	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = 1,
-		.pBindings = &descriptorSetLayoutBinding
+		.bindingCount = 0,
+		// .pBindings = &descriptorSetLayoutBinding
 	};
 	
 	if (vkCreateDescriptorSetLayout(device->vkDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
@@ -45,7 +45,7 @@ void VulkanUI::initDescriptors()
 	}
 }
 
-void VulkanUI::initPipeline(VkRenderPass renderPass)
+void VulkanUI::initPipeline(VkRenderPass renderPass, const VkExtent2D& swapchainExtent)
 {
 	VulkanShader shader(device->vkDevice(), "ui");
 	
@@ -83,10 +83,26 @@ void VulkanUI::initPipeline(VkRenderPass renderPass)
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
 	};
 	
+	VkViewport viewport{
+		.x = 0.0f,
+		.y = 0.0f,
+		.width = static_cast<float>(swapchainExtent.width),
+		.height = static_cast<float>(swapchainExtent.height),
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f
+	};
+	
+	VkRect2D scissor{
+		.offset = { 0, 0 },
+		.extent = swapchainExtent
+	};
+	
 	VkPipelineViewportStateCreateInfo viewportInfo{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
 		.viewportCount = 1,
-		.scissorCount = 1
+		.pViewports = &viewport,
+		.scissorCount = 1,
+		.pScissors = &scissor
 	};
 	
 	VkPipelineRasterizationStateCreateInfo rasterizationInfo{
@@ -125,17 +141,6 @@ void VulkanUI::initPipeline(VkRenderPass renderPass)
 		.pAttachments = &colorBlendAttachment
 	};
 	
-	VkDynamicState dynamicStates[] = {
-		VK_DYNAMIC_STATE_VIEWPORT,
-		VK_DYNAMIC_STATE_SCISSOR
-	};
-	
-	VkPipelineDynamicStateCreateInfo dynamicInfo{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-		.dynamicStateCount = 2,
-		.pDynamicStates = dynamicStates
-	};
-	
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 		.setLayoutCount = 1,
@@ -157,7 +162,6 @@ void VulkanUI::initPipeline(VkRenderPass renderPass)
 		.pMultisampleState = &multisampleInfo,
 		.pDepthStencilState = &depthStencilInfo,
 		.pColorBlendState = &colorBlendInfo,
-		.pDynamicState = &dynamicInfo,
 		.layout = pipelineLayout,
 		.renderPass = renderPass,
 		.subpass = 0
@@ -170,7 +174,7 @@ void VulkanUI::initPipeline(VkRenderPass renderPass)
 
 void VulkanUI::update()
 {
-	if (vertexBuffer.buffer) device->allocator().destroyBuffer(vertexBuffer);
+	if (vertexBuffer.buffer) return; // TODO: TEMP
 	
 	// create raw buffer
 	std::vector<mat::vec2> buffer;
@@ -180,8 +184,8 @@ void VulkanUI::update()
 		buffer.push_back(object->uv_position);
 		buffer.push_back(object->position + object->bounds);
 		buffer.push_back(object->uv_position + object->uv_bounds);
-		buffer.push_back(mat::vec2{ object->position.x + object->bounds.x, object->bounds.y });
-		buffer.push_back(mat::vec2{ object->uv_position.x + object->uv_bounds.x, object->uv_bounds.y });
+		buffer.push_back(mat::vec2{ object->position.x + object->bounds.x, object->position.y });
+		buffer.push_back(mat::vec2{ object->uv_position.x + object->uv_bounds.x, object->uv_position.y });
 		
 		buffer.push_back(object->position);
 		buffer.push_back(object->uv_position);
@@ -190,8 +194,6 @@ void VulkanUI::update()
 		buffer.push_back(object->position + object->bounds);
 		buffer.push_back(object->uv_position + object->uv_bounds);
 	}
-	
-	// allocate and copy data
 	
 	VkBufferCreateInfo bufferInfo{
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -209,4 +211,5 @@ void VulkanUI::update()
 	void* data;
 	device->allocator().map(vertexBuffer, &data);
 	std::copy(buffer.cbegin(), buffer.cend(), static_cast<mat::vec2*>(data));
+	device->allocator().unmap(vertexBuffer);
 }

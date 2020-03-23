@@ -1,6 +1,7 @@
 #include "VulkanFrame.h"
 #include "VulkanDevice.h"
 #include "VulkanScene.h"
+#include "VulkanUI.h"
 #include "VulkanMaterial.h"
 #include "VulkanShadow.h"
 #include "VulkanModel.h"
@@ -275,6 +276,40 @@ void VulkanFrame::updateProjectionMatrix(const mat::mat4& projectionMatrix) cons
 	std::copy_n(&transposed, 1, reinterpret_cast<mat::mat4*>(constantsUniformBufferData));
 }
 
+void VulkanFrame::render(
+	const VulkanScene* scene,
+	const VulkanUI* ui,
+	VulkanShadow* shadow,
+	VkRenderPass sceneRenderPass,
+	VkFramebuffer framebuffer,
+	const VkRect2D& renderArea)
+{
+	renderShadowPass(scene, shadow);
+	
+	// render scene and UI
+	
+	VkClearValue clearValues[] = {
+		{.color = {.float32 = { 0.0f, 0.0f, 0.0f, 1.0f }}},
+		{.depthStencil = { 1.f, 0 }}
+	};
+	
+	VkRenderPassBeginInfo renderPassBeginInfo{
+		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+		.renderPass = sceneRenderPass,
+		.framebuffer = framebuffer,
+		.renderArea = renderArea,
+		.clearValueCount = 2,
+		.pClearValues = clearValues
+	};
+	
+	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	
+	renderScene(scene);
+	if (ui) renderUI(ui);
+	
+	vkCmdEndRenderPass(commandBuffer);
+}
+
 void VulkanFrame::renderShadowPass(const VulkanScene* scene, VulkanShadow* shadow)
 {
 	VkClearValue clearValue{
@@ -294,10 +329,11 @@ void VulkanFrame::renderShadowPass(const VulkanScene* scene, VulkanShadow* shado
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow->pipeline);
 	
 	VkDescriptorSet shadowDescriptorSet = descriptorSets["shadow"];
+	VkDeviceSize offsets[] = { 0 };
 	for (const auto& model : scene->models) {
 		const VulkanMesh* mesh = model->getMesh();
 		uint32_t dynamicOffset = model->modelID * static_cast<uint32_t>(uniformBufferAlignment);
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh->vertexBuffer.buffer, &mesh->vertexDataOffset);
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh->vertexBuffer.buffer, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, mesh->vertexBuffer.buffer, mesh->indexBufferOffset, VK_INDEX_TYPE_UINT16);
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow->pipelineLayout, 0, 1, &shadowDescriptorSet, 1, &dynamicOffset);
 		vkCmdDrawIndexed(commandBuffer, mesh->indexBuffer.size(), 1, 0, 0, 0);
@@ -306,27 +342,12 @@ void VulkanFrame::renderShadowPass(const VulkanScene* scene, VulkanShadow* shado
 	vkCmdEndRenderPass(commandBuffer);
 }
 
-void VulkanFrame::renderMainPass(const VulkanScene* scene, VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea)
+void VulkanFrame::renderScene(const VulkanScene* scene)
 {
-	VkClearValue clearValues[] = {
-		{.color = {.float32 = { 0.0f, 0.0f, 0.0f, 1.0f }}},
-		{.depthStencil = { 1.f, 0 }}
-	};
-	
-	VkRenderPassBeginInfo renderPassBeginInfo{
-		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-		.renderPass = renderPass,
-		.framebuffer = framebuffer,
-		.renderArea = renderArea,
-		.clearValueCount = 2,
-		.pClearValues = clearValues
-	};
-	
-	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-	
 	const VulkanMaterial* material = nullptr;
 	const VulkanMesh* mesh = nullptr;
 	VkDescriptorSet descriptorSet;
+	VkDeviceSize offsets[] = { 0 };
 	for (const auto& model : scene->models) {
 		if (material != model->getMaterial()) {
 			material = model->getMaterial();
@@ -339,7 +360,7 @@ void VulkanFrame::renderMainPass(const VulkanScene* scene, VkRenderPass renderPa
 		if (mesh != model->getMesh()) {
 			mesh = model->getMesh();
 			if (mesh) {
-				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh->vertexBuffer.buffer, &mesh->vertexDataOffset);
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh->vertexBuffer.buffer, offsets);
 				vkCmdBindIndexBuffer(commandBuffer, mesh->vertexBuffer.buffer, mesh->indexBufferOffset, VK_INDEX_TYPE_UINT16);
 			}
 		}
@@ -350,8 +371,14 @@ void VulkanFrame::renderMainPass(const VulkanScene* scene, VkRenderPass renderPa
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
 		vkCmdDrawIndexed(commandBuffer, mesh->indexBuffer.size(), 1, 0, 0, 0);
 	}
-	
-	vkCmdEndRenderPass(commandBuffer);
+}
+
+void VulkanFrame::renderUI(const VulkanUI* ui)
+{
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ui->pipeline);
+	VkDeviceSize offsets[] = { 0 };
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &ui->vertexBuffer.buffer, offsets);
+	vkCmdDraw(commandBuffer, ui->objects.size() * 6, 1, 0, 0);
 }
 
 VkSemaphore VulkanFrame::endFrame(VkSemaphore acquireSemaphore)

@@ -31,11 +31,8 @@ public:
 	/// Begin rendering a frame
 	void beginRender();
 
-	/// During active rendering, render a scene to the framebuffer
-	void renderScene(class VulkanScene* scene);
-	
-	/// During active rendering, render a UI to the framebuffer
-	void renderUI(class VulkanUI* ui);
+	/// During active rendering, render a scene and (optionally) a UI to the framebuffer
+	void draw(class VulkanScene* scene, class VulkanUI* ui = nullptr);
 
 	/// End frame rendering and present to the swapchain
 	void endRenderAndPresent();

@@ -19,7 +19,7 @@ class VulkanUI
 {
 public:
 	
-	VulkanUI(const class VulkanDevice* device, VkRenderPass renderPass);
+	VulkanUI(const class VulkanDevice* device, VkRenderPass renderPass, const VkExtent2D& swapchainExtent);
 	
 	~VulkanUI();
 	
@@ -30,17 +30,17 @@ public:
 	/// Objects are sorted by draw order, from back to front
 	std::vector<std::unique_ptr<VulkanUIObject>> objects;
 	
+	VkPipeline pipeline;
+	VkPipelineLayout pipelineLayout;
+	
+	VulkanBuffer vertexBuffer;
+	
 private:
 	
 	const class VulkanDevice* const device;
 	
-	VulkanBuffer vertexBuffer;
-	
 	VkDescriptorSetLayout descriptorSetLayout;
 	
-	VkPipelineLayout pipelineLayout;
-	VkPipeline pipeline;
-	
 	void initDescriptors();
-	void initPipeline(VkRenderPass renderPass);
+	void initPipeline(VkRenderPass renderPass, const VkExtent2D& swapchainExtent);
 };

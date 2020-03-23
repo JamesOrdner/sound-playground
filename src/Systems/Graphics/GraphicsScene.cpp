@@ -74,6 +74,5 @@ void GraphicsScene::drawScene(VulkanInstance* vulkan)
 		invViewProjMatrix = mat::inverse(vulkanScene->getProjMatrix() * viewMatrix);
 	}
 	
-	vulkan->renderScene(vulkanScene);
-	vulkan->renderUI(vulkanUI);
+	vulkan->draw(vulkanScene, vulkanUI);
 }

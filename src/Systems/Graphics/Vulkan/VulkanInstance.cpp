@@ -202,7 +202,7 @@ void VulkanInstance::destroyScene(VulkanScene* scene)
 
 VulkanUI* VulkanInstance::createUI()
 {
-	return uis.emplace_back(std::make_unique<VulkanUI>(device.get(), renderPass)).get();
+	return uis.emplace_back(std::make_unique<VulkanUI>(device.get(), renderPass, swapchain->extent())).get();
 }
 
 void VulkanInstance::destroyUI(VulkanUI* ui)
@@ -246,22 +246,13 @@ void VulkanInstance::beginRender()
 	activeFrame->beginFrame();
 }
 
-void VulkanInstance::renderScene(VulkanScene* scene)
+void VulkanInstance::draw(VulkanScene* scene, VulkanUI* ui)
 {
 	scene->updateUniforms(activeFrame);
-	
-	activeFrame->renderShadowPass(scene, shadow.get());
+	if (ui) ui->update();
 	
 	VkRect2D renderArea{.extent = swapchain->extent() };
-	activeFrame->renderMainPass(scene, renderPass, swapchain->framebuffer(activeSwapchainImageIndex), renderArea);
-}
-
-void VulkanInstance::renderUI(VulkanUI* ui)
-{
-	ui->update();
-	
-//	VkRect2D renderArea{.extent = swapchain->extent() };
-//	activeFrame->renderMainPass(scene, renderPass, swapchain->framebuffer(activeSwapchainImageIndex), renderArea);
+	activeFrame->render(scene, ui, shadow.get(), renderPass, swapchain->framebuffer(activeSwapchainImageIndex), renderArea);
 }
 
 void VulkanInstance::endRenderAndPresent()

@@ -29,9 +29,15 @@ public:
 	
 	void updateProjectionMatrix(const mat::mat4& projectionMatrix) const;
 	
-	void renderShadowPass(const class VulkanScene* scene, class VulkanShadow* shadow);
-	
-	void renderMainPass(const class VulkanScene* scene, VkRenderPass renderPass, VkFramebuffer framebuffer, const VkRect2D& renderArea);
+	/// Render a full scene, with (optional) UI. Pass nullptr to `ui` if rendering without UI.
+	void render(
+		const class VulkanScene* scene,
+		const class VulkanUI* ui,
+		class VulkanShadow* shadow,
+		VkRenderPass sceneRenderPass,
+		VkFramebuffer framebuffer,
+		const VkRect2D& renderArea
+	);
 	
 	/// End recording commands and submit to the graphics queue. Returns the
 	/// semaphore which will be signaled when the command buffer finishes execution.
@@ -67,4 +73,10 @@ private:
 	
 	void initDescriptorPool();
 	void initUniformBuffer(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
+	
+	void renderShadowPass(const class VulkanScene* scene, class VulkanShadow* shadow);
+	
+	void renderScene(const class VulkanScene* scene);
+	
+	void renderUI(const class VulkanUI* ui);
 };

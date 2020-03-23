@@ -20,7 +20,6 @@ public:
 	
 	std::vector<float> vertexData;
 	std::vector<uint16_t> indexBuffer;
-	VkDeviceSize vertexDataOffset;
 	VkDeviceSize indexBufferOffset;
 	
 	VulkanBuffer vertexBuffer;
