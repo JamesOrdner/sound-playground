@@ -23,17 +23,11 @@ public:
 	
 	~VulkanUI();
 	
-	void update();
-	
-	void draw(VkCommandBuffer cmd);
-	
 	/// Objects are sorted by draw order, from back to front
 	std::vector<std::unique_ptr<VulkanUIObject>> objects;
 	
 	VkPipeline pipeline;
 	VkPipelineLayout pipelineLayout;
-	
-	VulkanBuffer vertexBuffer;
 	
 private:
 	

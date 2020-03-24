@@ -24,7 +24,14 @@ class VulkanFrame
 	};
 	
 	struct UIData {
+		VulkanBuffer vertexBuffer;
+		void* bufferData;
 		
+		VkDeviceSize bufferCapacity; // Buffer byte size. Grows lazily, never shrinks
+		
+		void init();
+		void growCapacity(const VulkanAllocator& allocator, VkDeviceSize newCapacity);
+		void deinit(const VulkanAllocator& allocator);
 	};
 	
 public:
@@ -36,8 +43,14 @@ public:
 	void registerScene(const class VulkanScene* scene);
 	void unregisterScene(const class VulkanScene* scene);
 	
+	void registerUI(const class VulkanUI* ui);
+	void unregisterUI(const class VulkanUI* ui);
+	
 	/// Update all per-frame data for the scene
 	void updateSceneData(const class VulkanScene* scene);
+	
+	/// Update all per-frame data for the ui
+	void updateUIData(const class VulkanUI* ui);
 	
 	/// Called when descriptor set layouts are changed, i.e. when a new materal is added
 	void updateDescriptorSets(const std::vector<class VulkanMaterial*>& materials, const class VulkanShadow* shadow);
@@ -75,8 +88,11 @@ private:
 	
 	uint32_t uboAlignment;
 	
-	/// Maps scenes to their per-frame data
+	/// Maps scene pointers to the corresponding per-frame data
 	std::map<const class VulkanScene*, SceneData> sceneData;
+	
+	/// Maps ui pointers to the corresponding per-frame data
+	std::map<const class VulkanUI*, UIData> uiData;
 	
 	/// Maps material names to their corresponding descriptor set
 	std::map<std::string, VkDescriptorSet> descriptorSets;

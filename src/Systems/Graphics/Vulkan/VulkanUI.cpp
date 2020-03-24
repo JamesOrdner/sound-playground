@@ -22,7 +22,6 @@ VulkanUI::VulkanUI(const class VulkanDevice* device, VkRenderPass renderPass, co
 
 VulkanUI::~VulkanUI()
 {
-	if (vertexBuffer.buffer) device->allocator().destroyBuffer(vertexBuffer);
 	vkDestroyPipeline(device->vkDevice(), pipeline, nullptr);
 	vkDestroyPipelineLayout(device->vkDevice(), pipelineLayout, nullptr);
 	vkDestroyDescriptorSetLayout(device->vkDevice(), descriptorSetLayout, nullptr);
@@ -170,46 +169,4 @@ void VulkanUI::initPipeline(VkRenderPass renderPass, const VkExtent2D& swapchain
 	if (vkCreateGraphicsPipelines(device->vkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Vulkan UI pipeline!");
 	}
-}
-
-void VulkanUI::update()
-{
-	if (vertexBuffer.buffer) return; // TODO: TEMP
-	
-	// create raw buffer
-	std::vector<mat::vec2> buffer;
-	buffer.reserve(objects.size() * 12); // 6 verts * 2 attr per object
-	for (const auto& object : objects) {
-		buffer.push_back(object->position);
-		buffer.push_back(object->uv_position);
-		buffer.push_back(object->position + object->bounds);
-		buffer.push_back(object->uv_position + object->uv_bounds);
-		buffer.push_back(mat::vec2{ object->position.x + object->bounds.x, object->position.y });
-		buffer.push_back(mat::vec2{ object->uv_position.x + object->uv_bounds.x, object->uv_position.y });
-		
-		buffer.push_back(object->position);
-		buffer.push_back(object->uv_position);
-		buffer.push_back(mat::vec2{ object->position.x, object->position.y + object->bounds.y });
-		buffer.push_back(mat::vec2{ object->uv_position.x, object->uv_position.y + object->uv_bounds.y });
-		buffer.push_back(object->position + object->bounds);
-		buffer.push_back(object->uv_position + object->uv_bounds);
-	}
-	
-	VkBufferCreateInfo bufferInfo{
-		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.size = static_cast<uint32_t>(buffer.size() * sizeof(mat::vec2)),
-		.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-	};
-	
-	VmaAllocationCreateInfo allocInfo{
-		.usage = VMA_MEMORY_USAGE_CPU_TO_GPU,
-		.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-	};
-	
-	vertexBuffer = device->allocator().createBuffer(bufferInfo, allocInfo);
-	
-	void* data;
-	device->allocator().map(vertexBuffer, &data);
-	std::copy(buffer.cbegin(), buffer.cend(), static_cast<mat::vec2*>(data));
-	device->allocator().unmap(vertexBuffer);
 }

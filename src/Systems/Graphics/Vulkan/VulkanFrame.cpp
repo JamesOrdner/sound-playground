@@ -86,6 +86,7 @@ VulkanFrame::~VulkanFrame()
 	vkDestroyFence(device->vkDevice(), completeFence, nullptr);
 	
 	for (auto& pair : sceneData) pair.second.deinit(device->allocator());
+	for (auto& pair : uiData)    pair.second.deinit(device->allocator());
 }
 
 void VulkanFrame::registerScene(const VulkanScene* scene)
@@ -144,6 +145,33 @@ void VulkanFrame::SceneData::deinit(const VulkanAllocator& allocator)
 	allocator.destroyBuffer(modelTransforms);
 }
 
+void VulkanFrame::registerUI(const VulkanUI* ui)
+{
+	UIData& data = uiData[ui];
+	data.init();
+}
+
+void VulkanFrame::unregisterUI(const VulkanUI* ui)
+{
+	uiData[ui].deinit(device->allocator());
+	uiData.erase(ui);
+}
+
+void VulkanFrame::UIData::init()
+{
+	vertexBuffer.buffer = VK_NULL_HANDLE;
+	bufferData = nullptr;
+	bufferCapacity = 0;
+}
+
+void VulkanFrame::UIData::deinit(const VulkanAllocator& allocator)
+{
+	if (vertexBuffer.buffer) {
+		allocator.unmap(vertexBuffer);
+		allocator.destroyBuffer(vertexBuffer);
+	}
+}
+
 void VulkanFrame::updateSceneData(const VulkanScene* scene)
 {
 	SceneData& data = sceneData[scene];
@@ -171,6 +199,57 @@ void VulkanFrame::updateSceneData(const VulkanScene* scene)
 	
 	device->allocator().flush(data.modelTransforms);
 	device->allocator().flush(data.modelShadowTransforms);
+}
+
+void VulkanFrame::updateUIData(const VulkanUI* ui)
+{
+	std::vector<mat::vec2> buffer;
+	buffer.reserve(ui->objects.size() * 12); // 6 verts * 2 attr per object
+	
+	for (const auto& object : ui->objects) {
+		buffer.push_back(object->position);
+		buffer.push_back(object->uv_position);
+		buffer.push_back(object->position + object->bounds);
+		buffer.push_back(object->uv_position + object->uv_bounds);
+		buffer.push_back(mat::vec2{ object->position.x + object->bounds.x, object->position.y });
+		buffer.push_back(mat::vec2{ object->uv_position.x + object->uv_bounds.x, object->uv_position.y });
+		
+		buffer.push_back(object->position);
+		buffer.push_back(object->uv_position);
+		buffer.push_back(mat::vec2{ object->position.x, object->position.y + object->bounds.y });
+		buffer.push_back(mat::vec2{ object->uv_position.x, object->uv_position.y + object->uv_bounds.y });
+		buffer.push_back(object->position + object->bounds);
+		buffer.push_back(object->uv_position + object->uv_bounds);
+	}
+	
+	UIData& data = uiData[ui];
+	
+	VkDeviceSize requiredSize = buffer.size() * sizeof(mat::vec2);
+	if (data.bufferCapacity < requiredSize) {
+		data.growCapacity(device->allocator(), requiredSize);
+	}
+	
+	std::copy(buffer.cbegin(), buffer.cend(), static_cast<mat::vec2*>(data.bufferData));
+}
+
+void VulkanFrame::UIData::growCapacity(const VulkanAllocator& allocator, VkDeviceSize newCapacity)
+{
+	deinit(allocator);
+	
+	VkBufferCreateInfo bufferInfo{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size = newCapacity,
+		.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+	};
+	
+	VmaAllocationCreateInfo allocInfo{
+		.usage = VMA_MEMORY_USAGE_CPU_TO_GPU,
+		.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+	};
+	
+	vertexBuffer = allocator.createBuffer(bufferInfo, allocInfo);
+	allocator.map(vertexBuffer, &bufferData);
+	bufferCapacity = newCapacity;
 }
 
 void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& materials, const VulkanShadow* shadow)
@@ -397,9 +476,10 @@ void VulkanFrame::renderScene(const VulkanScene* scene)
 
 void VulkanFrame::renderUI(const VulkanUI* ui)
 {
+	const UIData& data = uiData[ui];
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ui->pipeline);
 	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &ui->vertexBuffer.buffer, offsets);
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &data.vertexBuffer.buffer, offsets);
 	vkCmdDraw(commandBuffer, ui->objects.size() * 6, 1, 0, 0);
 }
 
