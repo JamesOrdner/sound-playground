@@ -18,6 +18,8 @@ struct MainUBO {
 VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) :
 	device(device)
 {
+	// Command buffer
+	
 	VkCommandBufferAllocateInfo commandBufferInfo{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 		.commandPool = commandPool,
@@ -28,6 +30,8 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
 	if (vkAllocateCommandBuffers(device->vkDevice(), &commandBufferInfo, &commandBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to allocate Vulkan command buffers!");
 	}
+	
+	// Synchronization
 	
 	VkFenceCreateInfo fenceInfo{
 		.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
@@ -56,7 +60,7 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
 	
 	VkDescriptorPoolCreateInfo descriptorPoolInfo{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.maxSets = 2, // one material + shadow pipeline
+		.maxSets = 2, // (one material + shadow pipeline) * one scene
 		.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size()),
 		.pPoolSizes = descriptorPoolSizes.data()
 	};
@@ -65,22 +69,42 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
 		throw std::runtime_error("Failed to create Vulkan descriptor pool!");
 	}
 	
-	// UBO alignment
+	// Dynamic UBO alignment
 	
 	VkPhysicalDeviceLimits limits = device->physicalDeviceProperties().limits;
     size_t minUboAlignment = limits.minUniformBufferOffsetAlignment;
-	uniformBufferAlignment = sizeof(MainUBO);
+	uboAlignment = sizeof(MainUBO);
     if (minUboAlignment > 0) {
-        uniformBufferAlignment = (uniformBufferAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
+        uboAlignment = (uboAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
     }
+}
+
+VulkanFrame::~VulkanFrame()
+{
+	vkDestroyDescriptorPool(device->vkDevice(), descriptorPool, nullptr);
+	vkDestroySemaphore(device->vkDevice(), completeSemaphore, nullptr);
+	vkDestroyFence(device->vkDevice(), completeFence, nullptr);
 	
-	// Uniform buffers
-	
-	VkDeviceSize bufferSize = maxModelCount * uniformBufferAlignment;
-	
+	for (auto& pair : sceneData) pair.second.deinit(device->allocator());
+}
+
+void VulkanFrame::registerScene(const VulkanScene* scene)
+{
+	SceneData& data = sceneData[scene];
+	data.init(device->allocator(), maxModelCount * uboAlignment);
+}
+
+void VulkanFrame::unregisterScene(const VulkanScene* scene)
+{
+	sceneData[scene].deinit(device->allocator());
+	sceneData.erase(scene);
+}
+
+void VulkanFrame::SceneData::init(const VulkanAllocator& allocator, VkDeviceSize transformsBufferSize)
+{
 	VkBufferCreateInfo bufferInfo{
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size = bufferSize,
+        .size = transformsBufferSize,
         .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
     };
 	
@@ -89,13 +113,12 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
         .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
     };
 	
-	modelTransformUniformBuffer = device->allocator().createBuffer(bufferInfo, bufferAllocInfo);
-	device->allocator().map(modelTransformUniformBuffer, &modelTransformUniformBufferData);
+	modelTransforms = allocator.createBuffer(bufferInfo, bufferAllocInfo);
+	allocator.map(modelTransforms, &modelTransformsData);
 	
-	modelShadowUniformBuffer = device->allocator().createBuffer(bufferInfo, bufferAllocInfo);
-	device->allocator().map(modelShadowUniformBuffer, &modelShadowUniformBufferData);
+	modelShadowTransforms = allocator.createBuffer(bufferInfo, bufferAllocInfo);
+	allocator.map(modelShadowTransforms, &modelShadowTransformsData);
 	
-	// constants (projection) uniform buffer
 	VkBufferCreateInfo constantsBufferInfo{
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .size = static_cast<uint32_t>(sizeof(mat::mat4)),
@@ -107,27 +130,56 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
         .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     };
 	
-	constantsUniformBuffer = device->allocator().createBuffer(constantsBufferInfo, constantsBufferAllocInfo);
-	device->allocator().map(constantsUniformBuffer, &constantsUniformBufferData);
+	constants = allocator.createBuffer(constantsBufferInfo, constantsBufferAllocInfo);
+	allocator.map(constants, &constantsData);
 }
 
-VulkanFrame::~VulkanFrame()
+void VulkanFrame::SceneData::deinit(const VulkanAllocator& allocator)
 {
-	vkDestroyDescriptorPool(device->vkDevice(), descriptorPool, nullptr);
-	vkDestroySemaphore(device->vkDevice(), completeSemaphore, nullptr);
-	vkDestroyFence(device->vkDevice(), completeFence, nullptr);
-	device->allocator().unmap(constantsUniformBuffer);
-	device->allocator().unmap(modelShadowUniformBuffer);
-	device->allocator().unmap(modelTransformUniformBuffer);
-	device->allocator().destroyBuffer(constantsUniformBuffer);
-	device->allocator().destroyBuffer(modelShadowUniformBuffer);
-	device->allocator().destroyBuffer(modelTransformUniformBuffer);
+	allocator.unmap(constants);
+	allocator.unmap(modelShadowTransforms);
+	allocator.unmap(modelTransforms);
+	allocator.destroyBuffer(constants);
+	allocator.destroyBuffer(modelShadowTransforms);
+	allocator.destroyBuffer(modelTransforms);
+}
+
+void VulkanFrame::updateSceneData(const VulkanScene* scene)
+{
+	SceneData& data = sceneData[scene];
+	
+	for (const auto& model : scene->models) {
+		uint32_t offset = model->modelID * static_cast<uint32_t>(uboAlignment);
+		char* dest;
+		
+		// shadow
+		mat::mat4 lightView = mat::lookAt(mat::vec3{ 0.3f, 1.f, 0.1f }, mat::vec3());
+		mat::mat4 lightMVP = mat::t(mat::ortho(-6, 6, -6, 6, -10, 10) * lightView * model->transform);
+		dest = static_cast<char*>(data.modelShadowTransformsData) + offset;
+		std::copy_n(&lightMVP, 1, reinterpret_cast<mat::mat4*>(dest));
+		
+		// main
+		MainUBO mainUBO;
+		mainUBO.modelViewMatrix = mat::t(scene->getViewMatrix() * model->transform);
+		mainUBO.shadowMatrix = lightMVP;
+		dest = static_cast<char*>(data.modelTransformsData) + offset;
+		std::copy_n(&mainUBO, 1, reinterpret_cast<MainUBO*>(dest));
+	}
+	
+	mat::mat4 transposed = mat::t(scene->getProjMatrix());
+	std::copy_n(&transposed, 1, reinterpret_cast<mat::mat4*>(data.constantsData));
+	
+	device->allocator().flush(data.modelTransforms);
+	device->allocator().flush(data.modelShadowTransforms);
 }
 
 void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& materials, const VulkanShadow* shadow)
 {
 	vkResetDescriptorPool(device->vkDevice(), descriptorPool, 0);
 	descriptorSets.clear();
+	
+	// TODO: we're assuming only one scene
+	SceneData& data = sceneData.begin()->second;
 	
 	for (const auto* material : materials) {
 		VkDescriptorSetAllocateInfo descriptorSetAllocInfo{
@@ -145,9 +197,9 @@ void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& mater
 		descriptorSets[material->name] = descriptorSet;
 		
 		VkDescriptorBufferInfo modelTransformDescriptorBufferInfo{
-			.buffer = modelTransformUniformBuffer.buffer,
+			.buffer = data.modelTransforms.buffer,
 			.offset = 0,
-			.range = uniformBufferAlignment
+			.range = uboAlignment
 		};
 		
 		VkWriteDescriptorSet modelTransformDescriptorWrite{
@@ -160,7 +212,7 @@ void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& mater
 		};
 		
 		VkDescriptorBufferInfo constantsDescriptorBufferInfo{
-			.buffer = constantsUniformBuffer.buffer,
+			.buffer = data.constants.buffer,
 			.offset = 0,
 			.range = sizeof(mat::mat4)
 		};
@@ -215,9 +267,9 @@ void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& mater
 	descriptorSets["shadow"] = descriptorSet;
 	
 	VkDescriptorBufferInfo descriptorBufferInfo{
-		.buffer = modelShadowUniformBuffer.buffer,
+		.buffer = data.modelShadowTransforms.buffer,
 		.offset = 0,
-		.range = uniformBufferAlignment
+		.range = uboAlignment
 	};
 	
 	VkWriteDescriptorSet descriptorWrite{
@@ -244,36 +296,6 @@ void VulkanFrame::beginFrame()
 	};
 	
 	vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
-}
-
-void VulkanFrame::updateModelTransform(const VulkanModel& model, const mat::mat4& viewMatrix) const
-{
-	uint32_t offset = model.modelID * static_cast<uint32_t>(uniformBufferAlignment);
-	char* dest;
-	
-	// shadow
-	mat::mat4 lightView = mat::lookAt(mat::vec3{ 0.3f, 1.f, 0.1f }, mat::vec3());
-	mat::mat4 lightMVP = mat::t(mat::ortho(-6, 6, -6, 6, -10, 10) * lightView * model.transform);
-	dest = static_cast<char*>(modelShadowUniformBufferData) + offset;
-	std::copy_n(&lightMVP, 1, reinterpret_cast<mat::mat4*>(dest));
-	
-	// main
-	MainUBO mainUBO;
-	mainUBO.modelViewMatrix = mat::t(viewMatrix * model.transform);
-	mainUBO.shadowMatrix = lightMVP;
-	dest = static_cast<char*>(modelTransformUniformBufferData) + offset;
-	std::copy_n(&mainUBO, 1, reinterpret_cast<MainUBO*>(dest));
-}
-
-void VulkanFrame::flushModelTransformUpdates() const
-{
-	device->allocator().flush(modelTransformUniformBuffer);
-}
-
-void VulkanFrame::updateProjectionMatrix(const mat::mat4& projectionMatrix) const
-{
-	mat::mat4 transposed = mat::t(projectionMatrix);
-	std::copy_n(&transposed, 1, reinterpret_cast<mat::mat4*>(constantsUniformBufferData));
 }
 
 void VulkanFrame::render(
@@ -332,7 +354,7 @@ void VulkanFrame::renderShadowPass(const VulkanScene* scene, VulkanShadow* shado
 	VkDeviceSize offsets[] = { 0 };
 	for (const auto& model : scene->models) {
 		const VulkanMesh* mesh = model->getMesh();
-		uint32_t dynamicOffset = model->modelID * static_cast<uint32_t>(uniformBufferAlignment);
+		uint32_t dynamicOffset = model->modelID * static_cast<uint32_t>(uboAlignment);
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh->vertexBuffer.buffer, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, mesh->vertexBuffer.buffer, mesh->indexBufferOffset, VK_INDEX_TYPE_UINT16);
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow->pipelineLayout, 0, 1, &shadowDescriptorSet, 1, &dynamicOffset);
@@ -367,7 +389,7 @@ void VulkanFrame::renderScene(const VulkanScene* scene)
 		
 		if (!material || !mesh) break;
 		
-		uint32_t dynamicOffset = model->modelID * static_cast<uint32_t>(uniformBufferAlignment);
+		uint32_t dynamicOffset = model->modelID * static_cast<uint32_t>(uboAlignment);
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
 		vkCmdDrawIndexed(commandBuffer, mesh->indexBuffer.size(), 1, 0, 0, 0);
 	}

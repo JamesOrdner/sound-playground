@@ -187,13 +187,16 @@ void VulkanInstance::initCommandPool()
 
 VulkanScene* VulkanInstance::createScene()
 {
-	return scenes.emplace_back(std::make_unique<VulkanScene>(this)).get();
+	auto* scene = scenes.emplace_back(std::make_unique<VulkanScene>(this)).get();
+	for (auto& frame : frames) frame->registerScene(scene);
+	return scene;
 }
 
 void VulkanInstance::destroyScene(VulkanScene* scene)
 {
 	for (auto it = scenes.cbegin(); it != scenes.cend(); it++) {
 		if (it->get() == scene) {
+			for (auto& frame : frames) frame->unregisterScene(scene);
 			scenes.erase(it);
 			break;
 		}
@@ -248,7 +251,7 @@ void VulkanInstance::beginRender()
 
 void VulkanInstance::draw(VulkanScene* scene, VulkanUI* ui)
 {
-	scene->updateUniforms(activeFrame);
+	activeFrame->updateSceneData(scene);
 	if (ui) ui->update();
 	
 	VkRect2D renderArea{.extent = swapchain->extent() };
