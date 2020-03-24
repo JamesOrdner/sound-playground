@@ -241,7 +241,8 @@ VulkanShadow::VulkanShadow(const VulkanDevice* device) :
 		.pMultisampleState = &multisampleInfo,
 		.pDepthStencilState = &depthStencilInfo,
 		.layout = pipelineLayout,
-		.renderPass = renderPass
+		.renderPass = renderPass,
+		.subpass = 0
 	};
 	
 	if (vkCreateGraphicsPipelines(device->vkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {

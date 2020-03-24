@@ -128,6 +128,8 @@ set(SHADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/main.vert
   ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/main.frag
   ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/shadow.vert
+  ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/ui.vert
+  ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/ui.frag
 )
 
 target_sources(SoundPlayground PRIVATE ${SHADERS})

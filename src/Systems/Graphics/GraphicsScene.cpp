@@ -5,12 +5,14 @@
 #include "UIGraphicsObject.h"
 #include "Vulkan/VulkanInstance.h"
 #include "Vulkan/VulkanScene.h"
+#include "Vulkan/VulkanUI.h"
 #include <algorithm>
 
-GraphicsScene::GraphicsScene(const SystemInterface* system, const UScene* uscene, VulkanScene* vulkanScene) :
+GraphicsScene::GraphicsScene(const SystemInterface* system, const UScene* uscene, VulkanScene* vulkanScene, VulkanUI* vulkanUI) :
 	SystemSceneInterface(system, uscene),
 	activeCamera(nullptr),
-	vulkanScene(vulkanScene)
+	vulkanScene(vulkanScene),
+	vulkanUI(vulkanUI)
 {
 }
 
@@ -72,6 +74,5 @@ void GraphicsScene::drawScene(VulkanInstance* vulkan)
 		invViewProjMatrix = mat::inverse(vulkanScene->getProjMatrix() * viewMatrix);
 	}
 	
-	vulkan->renderScene(vulkanScene);
-	// for (auto* uiObject : uiObjects) render->drawUIElement(uiObject->uiData);
+	vulkan->draw(vulkanScene, vulkanUI);
 }

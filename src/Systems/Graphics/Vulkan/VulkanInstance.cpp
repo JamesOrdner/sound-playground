@@ -3,6 +3,7 @@
 #include "VulkanSwapchain.h"
 #include "VulkanFrame.h"
 #include "VulkanScene.h"
+#include "VulkanUI.h"
 #include "VulkanMaterial.h"
 #include "VulkanMesh.h"
 #include "VulkanShadow.h"
@@ -45,6 +46,7 @@ VulkanInstance::~VulkanInstance()
 	vkDeviceWaitIdle(device->vkDevice());
 	
 	shadow.reset();
+	uis.clear();
 	scenes.clear();
 	materials.clear();
 	meshes.clear();
@@ -185,14 +187,32 @@ void VulkanInstance::initCommandPool()
 
 VulkanScene* VulkanInstance::createScene()
 {
-	return scenes.emplace_back(std::make_unique<VulkanScene>(this)).get();
+	auto* scene = scenes.emplace_back(std::make_unique<VulkanScene>(this)).get();
+	for (auto& frame : frames) frame->registerScene(scene);
+	return scene;
 }
 
 void VulkanInstance::destroyScene(VulkanScene* scene)
 {
 	for (auto it = scenes.cbegin(); it != scenes.cend(); it++) {
 		if (it->get() == scene) {
+			for (auto& frame : frames) frame->unregisterScene(scene);
 			scenes.erase(it);
+			break;
+		}
+	}
+}
+
+VulkanUI* VulkanInstance::createUI()
+{
+	return uis.emplace_back(std::make_unique<VulkanUI>(device.get(), renderPass, swapchain->extent())).get();
+}
+
+void VulkanInstance::destroyUI(VulkanUI* ui)
+{
+	for (auto it = uis.cbegin(); it != uis.cend(); it++) {
+		if (it->get() == ui) {
+			uis.erase(it);
 			break;
 		}
 	}
@@ -229,14 +249,13 @@ void VulkanInstance::beginRender()
 	activeFrame->beginFrame();
 }
 
-void VulkanInstance::renderScene(VulkanScene* scene)
+void VulkanInstance::draw(VulkanScene* scene, VulkanUI* ui)
 {
-	scene->updateUniforms(activeFrame);
-	
-	activeFrame->renderShadowPass(scene, shadow.get());
+	activeFrame->updateSceneData(scene);
+	if (ui) ui->update();
 	
 	VkRect2D renderArea{.extent = swapchain->extent() };
-	activeFrame->renderMainPass(scene, renderPass, swapchain->framebuffer(activeSwapchainImageIndex), renderArea);
+	activeFrame->render(scene, ui, shadow.get(), renderPass, swapchain->framebuffer(activeSwapchainImageIndex), renderArea);
 }
 
 void VulkanInstance::endRenderAndPresent()

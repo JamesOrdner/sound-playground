@@ -39,7 +39,6 @@ VulkanMesh::VulkanMesh(const VulkanDevice* device, const std::string& filepath) 
 	gltfPreprocess(gltfDocument);
     gltfProcess(gltfDocument);
 	
-	vertexDataOffset = 0;
 	indexBufferOffset = vertexData.size() * sizeof(float);
 	
 	VkDeviceSize requiredMemory = indexBufferOffset + indexBuffer.size() * sizeof(indexBuffer[0]);
@@ -58,7 +57,7 @@ VulkanMesh::VulkanMesh(const VulkanDevice* device, const std::string& filepath) 
 	device->allocator().map(vertexBuffer, &data);
 	{
 		char* dataPtr = reinterpret_cast<char*>(data);
-		float* vertexDataDest = reinterpret_cast<float*>(dataPtr + vertexDataOffset);
+		float* vertexDataDest = reinterpret_cast<float*>(dataPtr);
 		uint16_t* indexBufferDest = reinterpret_cast<uint16_t*>(dataPtr + indexBufferOffset);
 		std::copy(vertexData.cbegin(), vertexData.cend(), vertexDataDest);
 		std::copy(indexBuffer.cbegin(), indexBuffer.cend(), indexBufferDest);
