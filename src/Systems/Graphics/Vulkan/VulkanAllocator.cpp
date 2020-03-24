@@ -101,7 +101,22 @@ void VulkanAllocator::unmap(const VulkanBuffer& buffer) const
     vmaUnmapMemory(allocator, buffer.allocation);
 }
 
+void VulkanAllocator::map(const VulkanImage& image, void** data) const
+{
+    vmaMapMemory(allocator, image.allocation, data);
+}
+
+void VulkanAllocator::unmap(const VulkanImage& image) const
+{
+    vmaUnmapMemory(allocator, image.allocation);
+}
+
 void VulkanAllocator::flush(const VulkanBuffer& buffer, VkDeviceSize offset, VkDeviceSize size) const
 {
 	vmaFlushAllocation(allocator, buffer.allocation, offset, size);
+}
+
+void VulkanAllocator::flush(const VulkanImage& image, VkDeviceSize offset, VkDeviceSize size) const
+{
+	vmaFlushAllocation(allocator, image.allocation, offset, size);
 }

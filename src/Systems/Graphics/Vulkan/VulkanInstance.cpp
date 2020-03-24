@@ -10,6 +10,8 @@
 #include <SDL_vulkan.h>
 #include <stdexcept>
 
+#include "VulkanTexture.h"
+
 const std::vector<const char*> validationLayers{
 #ifndef NDEBUG
 	"VK_LAYER_KHRONOS_validation"
@@ -39,6 +41,9 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 	}
 	
 	shadow = std::make_unique<VulkanShadow>(device.get());
+	
+	// TEMP
+	VulkanTexture(device.get(), "res/textures/ui.bmp");
 }
 
 VulkanInstance::~VulkanInstance()
