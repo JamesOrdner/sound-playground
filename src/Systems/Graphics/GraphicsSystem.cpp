@@ -48,9 +48,9 @@ void GraphicsSystem::deinit()
 
 void GraphicsSystem::execute(float deltaTime)
 {
-	vulkan->beginRender();
-	for (const auto& scene : graphicsScenes) scene->drawScene(vulkan.get());
-	vulkan->endRenderAndPresent();
+	vulkan->beginFrame();
+	for (const auto& scene : graphicsScenes) scene->draw(vulkan.get());
+	vulkan->endFrameAndPresent();
 }
 
 SystemSceneInterface* GraphicsSystem::createSystemScene(const class UScene* uscene)

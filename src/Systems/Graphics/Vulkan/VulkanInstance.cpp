@@ -242,7 +242,7 @@ VulkanMaterial* VulkanInstance::sharedMaterial(const std::string& name)
 	return materials[name].get();
 }
 
-void VulkanInstance::beginRender()
+void VulkanInstance::beginFrame()
 {
 	activeFrameAcquireSemaphore = swapchain->acquireNextImage(activeSwapchainImageIndex);
 	
@@ -261,7 +261,7 @@ void VulkanInstance::draw(VulkanScene* scene, VulkanUI* ui)
 	activeFrame->render(scene, ui, shadow.get(), renderPass, swapchain->framebuffer(activeSwapchainImageIndex), renderArea);
 }
 
-void VulkanInstance::endRenderAndPresent()
+void VulkanInstance::endFrameAndPresent()
 {
 	// end command buffer recording and present
 	VkSemaphore waitSemaphore = activeFrame->endFrame(activeFrameAcquireSemaphore);

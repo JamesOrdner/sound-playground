@@ -64,7 +64,7 @@ void GraphicsScene::deleteSystemObject(const UObject* uobject)
 	}
 }
 
-void GraphicsScene::drawScene(VulkanInstance* vulkan)
+void GraphicsScene::draw(VulkanInstance* vulkan)
 {
 	if (activeCamera) {
 		const auto& pos = activeCamera->cameraPosition();

@@ -29,13 +29,13 @@ public:
 	class VulkanMaterial* sharedMaterial(const std::string& name);
 
 	/// Begin rendering a frame
-	void beginRender();
+	void beginFrame();
 
-	/// During active rendering, render a scene and (optionally) a UI to the framebuffer
+	/// During frame rendering, render a scene and (optionally) a UI to the framebuffer
 	void draw(class VulkanScene* scene, class VulkanUI* ui = nullptr);
 
 	/// End frame rendering and present to the swapchain
-	void endRenderAndPresent();
+	void endFrameAndPresent();
 	
 private:
 	

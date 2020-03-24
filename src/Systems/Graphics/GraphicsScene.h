@@ -18,7 +18,7 @@ public:
 
 	void deleteSystemObject(const class UObject* uobject) override;
 
-	void drawScene(class VulkanInstance* vulkan);
+	void draw(class VulkanInstance* vulkan);
 
 	class CameraGraphicsObject* activeCamera;
 
