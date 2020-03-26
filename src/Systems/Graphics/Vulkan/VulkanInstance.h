@@ -46,6 +46,8 @@ private:
 	std::unique_ptr<class VulkanDevice> device;
 	std::unique_ptr<class VulkanSwapchain> swapchain;
 	
+	std::unique_ptr<class VulkanPipelineLayouts> pipelineLayouts;
+	
 	VkCommandPool commandPool;
 	std::array<std::unique_ptr<class VulkanFrame>, 2> frames;
 	uint32_t frameIndex;

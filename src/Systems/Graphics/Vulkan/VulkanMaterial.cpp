@@ -1,11 +1,13 @@
 #include "VulkanMaterial.h"
 #include "VulkanDevice.h"
+#include "VulkanPipelineLayout.h"
 #include "VulkanShader.h"
 #include "VulkanMesh.h"
 #include <stdexcept>
 
-VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const std::string& name, const VkExtent2D& swapchainExtent, VkRenderPass renderPass) :
+VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const std::string& name, const VulkanPipelineLayout& layout, const VkExtent2D& swapchainExtent, VkRenderPass renderPass) :
 	name(name),
+	layout(layout),
 	device(device)
 {
 	VulkanShader shader(device->vkDevice(), name.c_str());
@@ -82,32 +84,6 @@ VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const std::string& na
 		.pAttachments = &colorBlendAttachment
 	};
 	
-	std::array<VkDescriptorSetLayoutBinding, 3> descriptorSetLayoutBindings = {
-		VkDescriptorSetLayoutBinding{ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1, VK_SHADER_STAGE_VERTEX_BIT },
-		VkDescriptorSetLayoutBinding{ 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT },
-		VkDescriptorSetLayoutBinding{ 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
-	};
-	
-	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings.size()),
-		.pBindings = descriptorSetLayoutBindings.data()
-	};
-	
-	if (vkCreateDescriptorSetLayout(device->vkDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to create Vulkan descriptor set layout!");
-	}
-	
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = 1,
-		.pSetLayouts = &descriptorSetLayout
-	};
-	
-	if (vkCreatePipelineLayout(device->vkDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to create Vulkan pipeline layout!");
-	}
-	
 	VkGraphicsPipelineCreateInfo pipelineInfo{
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		.stageCount = static_cast<uint32_t>(shader.stages.size()),
@@ -119,7 +95,7 @@ VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const std::string& na
 		.pMultisampleState = &multisampleInfo,
 		.pDepthStencilState = &depthStencilInfo,
 		.pColorBlendState = &colorBlendInfo,
-		.layout = pipelineLayout,
+		.layout = layout.pipelineLayout,
 		.renderPass = renderPass,
 		.subpass = 0
 	};
@@ -132,8 +108,6 @@ VulkanMaterial::VulkanMaterial(const VulkanDevice* device, const std::string& na
 VulkanMaterial::~VulkanMaterial()
 {
 	vkDestroyPipeline(device->vkDevice(), pipeline, nullptr);
-	vkDestroyPipelineLayout(device->vkDevice(), pipelineLayout, nullptr);
-	vkDestroyDescriptorSetLayout(device->vkDevice(), descriptorSetLayout, nullptr);
 }
 
 void VulkanMaterial::bind(VkCommandBuffer cmd) const

@@ -4,6 +4,7 @@
 #include "VulkanFrame.h"
 #include "VulkanScene.h"
 #include "VulkanUI.h"
+#include "VulkanPipelineLayout.h"
 #include "VulkanMaterial.h"
 #include "VulkanMesh.h"
 #include "VulkanShadow.h"
@@ -40,6 +41,8 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 		frame = std::make_unique<VulkanFrame>(device.get(), commandPool);
 	}
 	
+	pipelineLayouts = std::make_unique<VulkanPipelineLayouts>(device->vkDevice());
+	
 	shadow = std::make_unique<VulkanShadow>(device.get());
 	
 	// TEMP
@@ -55,6 +58,8 @@ VulkanInstance::~VulkanInstance()
 	scenes.clear();
 	materials.clear();
 	meshes.clear();
+	
+	pipelineLayouts.reset();
 	
 	for (auto& frame : frames) frame.reset();
 	vkDestroyCommandPool(device->vkDevice(), commandPool, nullptr);
@@ -237,7 +242,7 @@ VulkanMesh* VulkanInstance::sharedMesh(const std::string& filepath)
 VulkanMaterial* VulkanInstance::sharedMaterial(const std::string& name)
 {
 	if (materials.find(name) == materials.end()) {
-		materials[name] = std::make_unique<VulkanMaterial>(device.get(), name, swapchain->extent(), renderPass);
+		materials[name] = std::make_unique<VulkanMaterial>(device.get(), name, pipelineLayouts->getObjectLayout(), swapchain->extent(), renderPass);
 		
 		std::vector<VulkanMaterial*> materialPointers;
 		materialPointers.reserve(materials.size());

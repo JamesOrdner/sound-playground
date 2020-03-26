@@ -1,5 +1,6 @@
 #include "VulkanFrame.h"
 #include "VulkanDevice.h"
+#include "VulkanPipelineLayout.h"
 #include "VulkanScene.h"
 #include "VulkanUI.h"
 #include "VulkanMaterial.h"
@@ -264,8 +265,8 @@ void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& mater
 		VkDescriptorSetAllocateInfo descriptorSetAllocInfo{
 			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 			.descriptorPool = descriptorPool,
-			.descriptorSetCount = 1,
-			.pSetLayouts = &material->descriptorSetLayout
+			.descriptorSetCount = static_cast<uint32_t>(material->layout.descriptorSetLayouts.size()),
+			.pSetLayouts = material->layout.descriptorSetLayouts.data()
 		};
 		
 		VkDescriptorSet descriptorSet;
@@ -469,7 +470,7 @@ void VulkanFrame::renderScene(const VulkanScene* scene)
 		if (!material || !mesh) break;
 		
 		uint32_t dynamicOffset = model->modelID * static_cast<uint32_t>(uboAlignment);
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->layout.pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
 		vkCmdDrawIndexed(commandBuffer, mesh->indexBuffer.size(), 1, 0, 0, 0);
 	}
 }

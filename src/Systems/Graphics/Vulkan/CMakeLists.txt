@@ -14,6 +14,8 @@ target_sources(SoundPlayground
     VulkanMesh.h
     VulkanModel.cpp
     VulkanModel.h
+    VulkanPipelineLayout.cpp
+    VulkanPipelineLayout.h
     VulkanScene.cpp
     VulkanScene.h
     VulkanShader.cpp
