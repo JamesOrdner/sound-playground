@@ -120,28 +120,12 @@ void VulkanFrame::SceneData::init(const VulkanAllocator& allocator, VkDeviceSize
 	
 	modelShadowTransforms = allocator.createBuffer(bufferInfo, bufferAllocInfo);
 	allocator.map(modelShadowTransforms, &modelShadowTransformsData);
-	
-	VkBufferCreateInfo constantsBufferInfo{
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size = static_cast<uint32_t>(sizeof(mat::mat4)),
-        .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
-    };
-	
-    VmaAllocationCreateInfo constantsBufferAllocInfo{
-        .usage = VMA_MEMORY_USAGE_CPU_TO_GPU,
-        .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-    };
-	
-	constants = allocator.createBuffer(constantsBufferInfo, constantsBufferAllocInfo);
-	allocator.map(constants, &constantsData);
 }
 
 void VulkanFrame::SceneData::deinit(const VulkanAllocator& allocator)
 {
-	allocator.unmap(constants);
 	allocator.unmap(modelShadowTransforms);
 	allocator.unmap(modelTransforms);
-	allocator.destroyBuffer(constants);
 	allocator.destroyBuffer(modelShadowTransforms);
 	allocator.destroyBuffer(modelTransforms);
 }
@@ -194,9 +178,6 @@ void VulkanFrame::updateSceneData(const VulkanScene* scene)
 		dest = static_cast<char*>(data.modelTransformsData) + offset;
 		std::copy_n(&mainUBO, 1, reinterpret_cast<MainUBO*>(dest));
 	}
-	
-	mat::mat4 transposed = mat::t(scene->getProjMatrix());
-	std::copy_n(&transposed, 1, reinterpret_cast<mat::mat4*>(data.constantsData));
 	
 	device->allocator().flush(data.modelTransforms);
 	device->allocator().flush(data.modelShadowTransforms);
@@ -291,21 +272,6 @@ void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& mater
 			.pBufferInfo = &modelTransformDescriptorBufferInfo
 		};
 		
-		VkDescriptorBufferInfo constantsDescriptorBufferInfo{
-			.buffer = data.constants.buffer,
-			.offset = 0,
-			.range = sizeof(mat::mat4)
-		};
-		
-		VkWriteDescriptorSet constantsDescriptorWrite{
-			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-			.dstSet = descriptorSet,
-			.dstBinding = 1,
-			.descriptorCount = 1,
-			.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			.pBufferInfo = &constantsDescriptorBufferInfo
-		};
-		
 		VkDescriptorImageInfo shadowSamplerDescriptorImageInfo{
 			.sampler = shadow->sampler,
 			.imageView = shadow->imageView,
@@ -321,9 +287,8 @@ void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& mater
 			.pImageInfo = &shadowSamplerDescriptorImageInfo
 		};
 		
-		std::array<VkWriteDescriptorSet, 3> writeDescriptorSets{
+		std::array<VkWriteDescriptorSet, 2> writeDescriptorSets{
 			modelTransformDescriptorWrite,
-			constantsDescriptorWrite,
 			shadowSamplerDescriptorWrite
 		};
 		
@@ -454,6 +419,8 @@ void VulkanFrame::renderScene(const VulkanScene* scene)
 		if (material != model->getMaterial()) {
 			material = model->getMaterial();
 			if (material) {
+				mat::mat4 pushData = mat::t(scene->getProjMatrix());
+				vkCmdPushConstants(commandBuffer, material->layout.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(mat::mat4), &pushData);
 				material->bind(commandBuffer);
 				descriptorSet = descriptorSets.find(material->name)->second;
 			}

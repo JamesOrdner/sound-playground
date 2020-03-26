@@ -1,11 +1,11 @@
 #version 450
 
-layout(binding = 0) uniform Dynamics {
+layout(set = 0, binding = 0) uniform Transforms {
     mat4 modelViewMatrix;
 	mat4 shadowMatrix;
 };
 
-layout(binding = 1) uniform Constants {
+layout(push_constant) uniform Constants {
     mat4 projectionMatrix;
 };
 

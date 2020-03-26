@@ -1,11 +1,12 @@
 #include "VulkanPipelineLayout.h"
+#include "../../../Util/Matrix.h"
 
 VulkanPipelineLayouts::VulkanPipelineLayouts(const VkDevice device) :
 	device(device)
 {
 	// setup descriptor set layouts
 	
-	auto& objectDescriptorSetLayout = descriptorSetLayouts.emplace_back();
+	auto& transformsDescriptorSetLayout = descriptorSetLayouts.emplace_back();
 	{
 		std::array<VkDescriptorSetLayoutBinding, 3> bindings{
 			VkDescriptorSetLayoutBinding{ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1, VK_SHADER_STAGE_VERTEX_BIT },
@@ -19,7 +20,7 @@ VulkanPipelineLayouts::VulkanPipelineLayouts(const VkDevice device) :
 			.pBindings = bindings.data()
 		};
 		
-		if (vkCreateDescriptorSetLayout(device, &descriptorLayoutInfo, nullptr, &objectDescriptorSetLayout) != VK_SUCCESS) {
+		if (vkCreateDescriptorSetLayout(device, &descriptorLayoutInfo, nullptr, &transformsDescriptorSetLayout) != VK_SUCCESS) {
 			throw std::runtime_error("Failed to create Vulkan descriptor set layout!");
 		}
 	}
@@ -28,12 +29,20 @@ VulkanPipelineLayouts::VulkanPipelineLayouts(const VkDevice device) :
 	
 	// objectLayout
 	{
-		objectLayout.descriptorSetLayouts = { objectDescriptorSetLayout };
+		objectLayout.descriptorSetLayouts = { transformsDescriptorSetLayout };
+		
+		VkPushConstantRange pushConstantRange{
+			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+			.offset = 0,
+			.size = static_cast<uint32_t>(sizeof(mat::mat4))
+		};
 		
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 			.setLayoutCount = static_cast<uint32_t>(objectLayout.descriptorSetLayouts.size()),
-			.pSetLayouts = objectLayout.descriptorSetLayouts.data()
+			.pSetLayouts = objectLayout.descriptorSetLayouts.data(),
+			.pushConstantRangeCount = 1,
+			.pPushConstantRanges = &pushConstantRange
 		};
 		
 		if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &objectLayout.pipelineLayout) != VK_SUCCESS) {

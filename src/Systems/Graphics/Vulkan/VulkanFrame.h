@@ -16,9 +16,6 @@ class VulkanFrame
 		VulkanBuffer modelShadowTransforms;
 		void* modelShadowTransformsData;
 		
-		VulkanBuffer constants;
-		void* constantsData;
-		
 		void init(const VulkanAllocator& allocator, VkDeviceSize transformsBufferSize);
 		void deinit(const VulkanAllocator& allocator);
 	};
