@@ -18,7 +18,7 @@ struct MainUBO {
 VulkanFrame::VulkanFrame(const VulkanDevice* device, const VulkanPipelineLayouts& layouts, const VulkanShadow& shadow, VkCommandPool commandPool) :
 	device(device)
 {
-	// Command buffer
+	// frame command buffer
 	
 	VkCommandBufferAllocateInfo commandBufferInfo{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -31,7 +31,7 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, const VulkanPipelineLayouts
 		throw std::runtime_error("Failed to allocate Vulkan command buffers!");
 	}
 	
-	// Synchronization
+	// synchronization
 	
 	VkFenceCreateInfo fenceInfo{
 		.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
@@ -50,7 +50,7 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, const VulkanPipelineLayouts
 		throw std::runtime_error("Failed to create Vulkan frame semaphore!");
 	}
 	
-	// DescriptorPool
+	// descriptor pool for per-frame descriptors
 	
 	// TODO: get from VulkanPipelineLayouts?
 	std::array<VkDescriptorPoolSize, 3> descriptorPoolSizes{
@@ -70,7 +70,7 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, const VulkanPipelineLayouts
 		throw std::runtime_error("Failed to create Vulkan descriptor pool!");
 	}
 	
-	// Dynamic UBO alignment
+	// dynamic UBO alignment
 	
 	VkPhysicalDeviceLimits limits = device->physicalDeviceProperties().limits;
     size_t minUboAlignment = limits.minUniformBufferOffsetAlignment;
@@ -78,6 +78,8 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, const VulkanPipelineLayouts
     if (minUboAlignment > 0) {
         uboAlignment = (uboAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
     }
+	
+	// init descriptor sets and write static descriptors
 	
 	initDescriptorSets(layouts, shadow);
 }
@@ -195,12 +197,6 @@ void VulkanFrame::registerScene(const VulkanScene* scene)
 	vkUpdateDescriptorSets(device->vkDevice(), writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
 }
 
-void VulkanFrame::unregisterScene(const VulkanScene* scene)
-{
-	sceneData[scene].deinit(device->allocator());
-	sceneData.erase(scene);
-}
-
 void VulkanFrame::SceneData::init(const VulkanAllocator& allocator, VkDeviceSize transformsBufferSize)
 {
 	VkBufferCreateInfo bufferInfo{
@@ -221,6 +217,12 @@ void VulkanFrame::SceneData::init(const VulkanAllocator& allocator, VkDeviceSize
 	allocator.map(modelShadowTransforms, &modelShadowTransformsData);
 }
 
+void VulkanFrame::unregisterScene(const VulkanScene* scene)
+{
+	sceneData[scene].deinit(device->allocator());
+	sceneData.erase(scene);
+}
+
 void VulkanFrame::SceneData::deinit(const VulkanAllocator& allocator)
 {
 	allocator.unmap(modelShadowTransforms);
@@ -235,17 +237,17 @@ void VulkanFrame::registerUI(const VulkanUI* ui)
 	data.init();
 }
 
-void VulkanFrame::unregisterUI(const VulkanUI* ui)
-{
-	uiData[ui].deinit(device->allocator());
-	uiData.erase(ui);
-}
-
 void VulkanFrame::UIData::init()
 {
 	vertexBuffer.buffer = VK_NULL_HANDLE;
 	bufferData = nullptr;
 	bufferCapacity = 0;
+}
+
+void VulkanFrame::unregisterUI(const VulkanUI* ui)
+{
+	uiData[ui].deinit(device->allocator());
+	uiData.erase(ui);
 }
 
 void VulkanFrame::UIData::deinit(const VulkanAllocator& allocator)
