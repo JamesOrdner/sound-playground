@@ -12,7 +12,7 @@ VulkanTexture::VulkanTexture(const VulkanDevice* device, VkDescriptorSetLayout d
 	}
 	
 	assert(surface->format->BytesPerPixel == 4);
-	VkFormat format = surface->format->Amask ? VK_FORMAT_R32G32B32A32_UINT : VK_FORMAT_R32G32B32_UINT;
+	VkFormat format = surface->format->Amask ? VK_FORMAT_R8G8B8A8_UINT : VK_FORMAT_R8G8B8_UINT;
 	
 	VkImageCreateInfo imageInfo{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,

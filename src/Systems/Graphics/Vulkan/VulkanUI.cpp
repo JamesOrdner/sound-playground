@@ -9,15 +9,6 @@ VulkanUI::VulkanUI(const class VulkanDevice* device, VkRenderPass renderPass, co
 {
 	initDescriptors();
 	initPipeline(renderPass, swapchainExtent);
-	
-	// TODO: TEMP
-	objects.emplace_back(new VulkanUIObject{
-		.position = mat::vec2{ -0.5f, -0.5f },
-		.bounds = mat::vec2{ 0.5f, 0.5f },
-		.uv_position = mat::vec2{ 0.f, 0.f },
-		.uv_bounds = mat::vec2{ 1.f, 1.f },
-		.texture = nullptr
-	});
 }
 
 VulkanUI::~VulkanUI()
@@ -35,8 +26,8 @@ void VulkanUI::initDescriptors()
 	
 	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = 0,
-		// .pBindings = &descriptorSetLayoutBinding
+		.bindingCount = 1,
+		.pBindings = &descriptorSetLayoutBinding
 	};
 	
 	if (vkCreateDescriptorSetLayout(device->vkDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {

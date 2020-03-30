@@ -58,9 +58,6 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 	if (vkCreateDescriptorPool(device->vkDevice(), &textureDescriptorPoolInfo, nullptr, &textureDescriptorPool) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Vulkan texture descriptor pool!");
 	}
-	
-	// TEMP
-	VulkanTexture(device.get(), pipelineLayouts->getObjectLayout().descriptorSetLayouts[0], textureDescriptorPool, "res/textures/ui.bmp");
 }
 
 VulkanInstance::~VulkanInstance()
@@ -234,6 +231,18 @@ VulkanUI* VulkanInstance::createUI()
 {
 	auto* ui = uis.emplace_back(std::make_unique<VulkanUI>(device.get(), renderPass, swapchain->extent())).get();
 	for (auto& frame : frames) frame->registerUI(ui);
+	
+	// TODO: TEMP
+	auto* texture = new VulkanTexture(device.get(), pipelineLayouts->getObjectLayout().descriptorSetLayouts[0], textureDescriptorPool, "res/textures/ui.bmp");
+	
+	ui->objects.emplace_back(new VulkanUIObject{
+		.position = mat::vec2{ -0.5f, -0.5f },
+		.bounds = mat::vec2{ 0.5f, 0.5f },
+		.uv_position = mat::vec2{ 0.f, 0.f },
+		.uv_bounds = mat::vec2{ 1.f, 1.f },
+		.texture = texture
+	});
+	
 	return ui;
 }
 
@@ -242,6 +251,7 @@ void VulkanInstance::destroyUI(VulkanUI* ui)
 	for (auto it = uis.cbegin(); it != uis.cend(); it++) {
 		if (it->get() == ui) {
 			for (auto& frame : frames) frame->unregisterUI(ui);
+			for (auto& obj : ui->objects) delete obj->texture; // TODO: TEMP
 			uis.erase(it);
 			break;
 		}
