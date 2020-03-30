@@ -2,6 +2,7 @@
 #include "VulkanDevice.h"
 #include <SDL_surface.h>
 #include <stdexcept>
+#include <cassert>
 
 VulkanTexture::VulkanTexture(const VulkanDevice* device, VkDescriptorSetLayout descriptorLayout, VkDescriptorPool descriptorPool, const std::string& filepath) :
 	device(device)
