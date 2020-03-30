@@ -1,6 +1,5 @@
 #include "VulkanFrame.h"
 #include "VulkanDevice.h"
-#include "VulkanPipelineLayout.h"
 #include "VulkanScene.h"
 #include "VulkanUI.h"
 #include "VulkanMaterial.h"
@@ -16,7 +15,7 @@ struct MainUBO {
 	mat::mat4 shadowMatrix;
 };
 
-VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) :
+VulkanFrame::VulkanFrame(const VulkanDevice* device, const VulkanPipelineLayouts& layouts, const VulkanShadow& shadow, VkCommandPool commandPool) :
 	device(device)
 {
 	// Command buffer
@@ -53,6 +52,7 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
 	
 	// DescriptorPool
 	
+	// TODO: get from VulkanPipelineLayouts?
 	std::array<VkDescriptorPoolSize, 3> descriptorPoolSizes{
 		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 2 },
 		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
@@ -61,7 +61,7 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
 	
 	VkDescriptorPoolCreateInfo descriptorPoolInfo{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.maxSets = 2, // (one material + shadow pipeline) * one scene
+		.maxSets = 3, // TODO: get from VulkanPipelineLayouts
 		.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size()),
 		.pPoolSizes = descriptorPoolSizes.data()
 	};
@@ -78,6 +78,8 @@ VulkanFrame::VulkanFrame(const VulkanDevice* device, VkCommandPool commandPool) 
     if (minUboAlignment > 0) {
         uboAlignment = (uboAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
     }
+	
+	initDescriptorSets(layouts, shadow);
 }
 
 VulkanFrame::~VulkanFrame()
@@ -90,10 +92,107 @@ VulkanFrame::~VulkanFrame()
 	for (auto& pair : uiData)    pair.second.deinit(device->allocator());
 }
 
+void VulkanFrame::initDescriptorSets(const VulkanPipelineLayouts& layouts, const VulkanShadow& shadow)
+{
+	// object shader descriptor sets
+	{
+		const auto& objectLayout = layouts.getObjectLayout();
+		
+		VkDescriptorSetAllocateInfo descriptorSetAllocInfo{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+			.descriptorPool = descriptorPool,
+			.descriptorSetCount = static_cast<uint32_t>(objectLayout.descriptorSetLayouts.size()),
+			.pSetLayouts = objectLayout.descriptorSetLayouts.data()
+		};
+		
+		std::vector<VkDescriptorSet> newDescriptorSets(objectLayout.descriptorSetLayouts.size());
+		if (vkAllocateDescriptorSets(device->vkDevice(), &descriptorSetAllocInfo, newDescriptorSets.data()) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate descriptor sets!");
+		}
+		
+		descriptorSets[VulkanDescriptorSetType::ShadowSampler] = newDescriptorSets[0];
+		descriptorSets[VulkanDescriptorSetType::ModelTransform] = newDescriptorSets[1];
+	}
+	
+	// shadow map shader descriptor set
+	{
+		VkDescriptorSetAllocateInfo descriptorSetAllocInfo{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+			.descriptorPool = descriptorPool,
+			.descriptorSetCount = 1,
+			.pSetLayouts = &shadow.descriptorSetLayout
+		};
+		
+		VkDescriptorSet descriptorSet;
+		if (vkAllocateDescriptorSets(device->vkDevice(), &descriptorSetAllocInfo, &descriptorSet) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate descriptor sets!");
+		}
+		
+		descriptorSets[VulkanDescriptorSetType::ShadowTransform] = descriptorSet;
+	}
+	
+	// write non-scene-dependent descriptor sets
+	
+	VkDescriptorImageInfo shadowSamplerDescriptorImageInfo{
+		.sampler = shadow.sampler,
+		.imageView = shadow.imageView,
+		.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+	};
+	
+	VkWriteDescriptorSet shadowSamplerDescriptorWrite{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet = descriptorSets[VulkanDescriptorSetType::ShadowSampler],
+		.dstBinding = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		.pImageInfo = &shadowSamplerDescriptorImageInfo
+	};
+	
+	vkUpdateDescriptorSets(device->vkDevice(), 1, &shadowSamplerDescriptorWrite, 0, nullptr);
+}
+
 void VulkanFrame::registerScene(const VulkanScene* scene)
 {
 	SceneData& data = sceneData[scene];
 	data.init(device->allocator(), maxModelCount * uboAlignment);
+	
+	VkDescriptorBufferInfo modelTransformBufferInfo{
+		.buffer = data.modelTransforms.buffer,
+		.offset = 0,
+		.range = uboAlignment
+	};
+	
+	VkWriteDescriptorSet modelTransformDescriptorWrite{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet = descriptorSets[VulkanDescriptorSetType::ModelTransform],
+		.dstBinding = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+		.pBufferInfo = &modelTransformBufferInfo
+	};
+	
+	VkDescriptorBufferInfo shadowTransformBufferInfo{
+		.buffer = data.modelShadowTransforms.buffer,
+		.offset = 0,
+		.range = uboAlignment
+	};
+	
+	VkWriteDescriptorSet shadowTransformDescriptorWrite{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet = descriptorSets[VulkanDescriptorSetType::ShadowTransform],
+		.dstBinding = 0,
+		.dstArrayElement = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+		.pBufferInfo = &shadowTransformBufferInfo
+	};
+	
+	std::array<VkWriteDescriptorSet, 2> writeDescriptorSets{
+		modelTransformDescriptorWrite,
+		shadowTransformDescriptorWrite
+	};
+	
+	vkUpdateDescriptorSets(device->vkDevice(), writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
 }
 
 void VulkanFrame::unregisterScene(const VulkanScene* scene)
@@ -234,102 +333,6 @@ void VulkanFrame::UIData::growCapacity(const VulkanAllocator& allocator, VkDevic
 	bufferCapacity = newCapacity;
 }
 
-void VulkanFrame::updateDescriptorSets(const std::vector<VulkanMaterial*>& materials, const VulkanShadow* shadow)
-{
-	vkResetDescriptorPool(device->vkDevice(), descriptorPool, 0);
-	descriptorSets.clear();
-	
-	// TODO: we're assuming only one scene
-	SceneData& data = sceneData.begin()->second;
-	
-	for (const auto* material : materials) {
-		VkDescriptorSetAllocateInfo descriptorSetAllocInfo{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-			.descriptorPool = descriptorPool,
-			.descriptorSetCount = static_cast<uint32_t>(material->layout.descriptorSetLayouts.size()),
-			.pSetLayouts = material->layout.descriptorSetLayouts.data()
-		};
-		
-		VkDescriptorSet descriptorSet;
-		if (vkAllocateDescriptorSets(device->vkDevice(), &descriptorSetAllocInfo, &descriptorSet) != VK_SUCCESS) {
-			throw std::runtime_error("failed to allocate descriptor sets!");
-		}
-		
-		descriptorSets[material->name] = descriptorSet;
-		
-		VkDescriptorBufferInfo modelTransformDescriptorBufferInfo{
-			.buffer = data.modelTransforms.buffer,
-			.offset = 0,
-			.range = uboAlignment
-		};
-		
-		VkWriteDescriptorSet modelTransformDescriptorWrite{
-			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-			.dstSet = descriptorSet,
-			.dstBinding = 0,
-			.descriptorCount = 1,
-			.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-			.pBufferInfo = &modelTransformDescriptorBufferInfo
-		};
-		
-		VkDescriptorImageInfo shadowSamplerDescriptorImageInfo{
-			.sampler = shadow->sampler,
-			.imageView = shadow->imageView,
-			.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-		};
-		
-		VkWriteDescriptorSet shadowSamplerDescriptorWrite{
-			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-			.dstSet = descriptorSet,
-			.dstBinding = 2,
-			.descriptorCount = 1,
-			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-			.pImageInfo = &shadowSamplerDescriptorImageInfo
-		};
-		
-		std::array<VkWriteDescriptorSet, 2> writeDescriptorSets{
-			modelTransformDescriptorWrite,
-			shadowSamplerDescriptorWrite
-		};
-		
-		vkUpdateDescriptorSets(device->vkDevice(), writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
-	}
-	
-	// shadow
-	
-	VkDescriptorSetAllocateInfo descriptorSetAllocInfo{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-		.descriptorPool = descriptorPool,
-		.descriptorSetCount = 1,
-		.pSetLayouts = &shadow->descriptorSetLayout
-	};
-	
-	VkDescriptorSet descriptorSet;
-	if (vkAllocateDescriptorSets(device->vkDevice(), &descriptorSetAllocInfo, &descriptorSet) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate descriptor sets!");
-	}
-	
-	descriptorSets["shadow"] = descriptorSet;
-	
-	VkDescriptorBufferInfo descriptorBufferInfo{
-		.buffer = data.modelShadowTransforms.buffer,
-		.offset = 0,
-		.range = uboAlignment
-	};
-	
-	VkWriteDescriptorSet descriptorWrite{
-		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstSet = descriptorSet,
-		.dstBinding = 0,
-		.dstArrayElement = 0,
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-		.pBufferInfo = &descriptorBufferInfo
-	};
-	
-	vkUpdateDescriptorSets(device->vkDevice(), 1, &descriptorWrite, 0, nullptr);
-}
-
 void VulkanFrame::beginFrame()
 {
 	vkWaitForFences(device->vkDevice(), 1, &completeFence, VK_TRUE, UINT64_MAX);
@@ -395,14 +398,14 @@ void VulkanFrame::renderShadowPass(const VulkanScene* scene, VulkanShadow* shado
 	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow->pipeline);
 	
-	VkDescriptorSet shadowDescriptorSet = descriptorSets["shadow"];
+	VkDescriptorSet shadowTransform = descriptorSets[VulkanDescriptorSetType::ShadowTransform];
 	VkDeviceSize offsets[] = { 0 };
 	for (const auto& model : scene->models) {
 		const VulkanMesh* mesh = model->getMesh();
 		uint32_t dynamicOffset = model->modelID * static_cast<uint32_t>(uboAlignment);
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh->vertexBuffer.buffer, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, mesh->vertexBuffer.buffer, mesh->indexBufferOffset, VK_INDEX_TYPE_UINT16);
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow->pipelineLayout, 0, 1, &shadowDescriptorSet, 1, &dynamicOffset);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow->pipelineLayout, 0, 1, &shadowTransform, 1, &dynamicOffset);
 		vkCmdDrawIndexed(commandBuffer, mesh->indexBuffer.size(), 1, 0, 0, 0);
 	}
 	
@@ -411,10 +414,12 @@ void VulkanFrame::renderShadowPass(const VulkanScene* scene, VulkanShadow* shado
 
 void VulkanFrame::renderScene(const VulkanScene* scene)
 {
+	VkDescriptorSet shadowSampler = descriptorSets[VulkanDescriptorSetType::ShadowSampler];
+	VkDescriptorSet modelTransform = descriptorSets[VulkanDescriptorSetType::ModelTransform];
+	VkDeviceSize offsets[] = { 0 };
+	
 	const VulkanMaterial* material = nullptr;
 	const VulkanMesh* mesh = nullptr;
-	VkDescriptorSet descriptorSet;
-	VkDeviceSize offsets[] = { 0 };
 	for (const auto& model : scene->models) {
 		if (material != model->getMaterial()) {
 			material = model->getMaterial();
@@ -422,7 +427,7 @@ void VulkanFrame::renderScene(const VulkanScene* scene)
 				mat::mat4 pushData = mat::t(scene->getProjMatrix());
 				vkCmdPushConstants(commandBuffer, material->layout.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(mat::mat4), &pushData);
 				material->bind(commandBuffer);
-				descriptorSet = descriptorSets.find(material->name)->second;
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->layout.pipelineLayout, 0, 1, &shadowSampler, 0, nullptr);
 			}
 		}
 		
@@ -437,7 +442,7 @@ void VulkanFrame::renderScene(const VulkanScene* scene)
 		if (!material || !mesh) break;
 		
 		uint32_t dynamicOffset = model->modelID * static_cast<uint32_t>(uboAlignment);
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->layout.pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->layout.pipelineLayout, 1, 1, &modelTransform, 1, &dynamicOffset);
 		vkCmdDrawIndexed(commandBuffer, mesh->indexBuffer.size(), 1, 0, 0, 0);
 	}
 }

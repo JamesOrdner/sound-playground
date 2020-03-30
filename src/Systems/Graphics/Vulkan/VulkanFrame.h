@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VulkanAllocator.h"
+#include "VulkanPipelineLayout.h"
 #include "../../../Util/Matrix.h"
 #include <vulkan/vulkan.h>
 #include <string>
@@ -33,7 +34,7 @@ class VulkanFrame
 	
 public:
 	
-	VulkanFrame(const class VulkanDevice* device, VkCommandPool commandPool);
+	VulkanFrame(const class VulkanDevice* device, const VulkanPipelineLayouts& layouts, const class VulkanShadow& shadow, VkCommandPool commandPool);
 	
 	~VulkanFrame();
 	
@@ -48,9 +49,6 @@ public:
 	
 	/// Update all per-frame data for the ui
 	void updateUIData(const class VulkanUI* ui);
-	
-	/// Called when descriptor set layouts are changed, i.e. when a new materal is added
-	void updateDescriptorSets(const std::vector<class VulkanMaterial*>& materials, const class VulkanShadow* shadow);
 	
 	/// Begin recording commands for this frame
 	void beginFrame();
@@ -91,8 +89,10 @@ private:
 	/// Maps ui pointers to the corresponding per-frame data
 	std::map<const class VulkanUI*, UIData> uiData;
 	
-	/// Maps material names to their corresponding descriptor set
-	std::map<std::string, VkDescriptorSet> descriptorSets;
+	/// All per-frame descriptor sets, indexed by enum
+	std::map<VulkanDescriptorSetType, VkDescriptorSet> descriptorSets;
+	
+	void initDescriptorSets(const VulkanPipelineLayouts& layouts, const class VulkanShadow& shadow);
 	
 	void renderShadowPass(const class VulkanScene* scene, class VulkanShadow* shadow);
 	void renderScene(const class VulkanScene* scene);

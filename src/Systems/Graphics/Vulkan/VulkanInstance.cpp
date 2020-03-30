@@ -37,13 +37,12 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 	swapchain->initFramebuffers(renderPass);
 	initCommandPool();
 	
-	for (auto& frame : frames) {
-		frame = std::make_unique<VulkanFrame>(device.get(), commandPool);
-	}
-	
 	pipelineLayouts = std::make_unique<VulkanPipelineLayouts>(device->vkDevice());
-	
 	shadow = std::make_unique<VulkanShadow>(device.get());
+	
+	for (auto& frame : frames) {
+		frame = std::make_unique<VulkanFrame>(device.get(), *pipelineLayouts, *shadow, commandPool);
+	}
 	
 	// TEMP
 	VulkanTexture(device.get(), "res/textures/ui.bmp");
@@ -53,15 +52,16 @@ VulkanInstance::~VulkanInstance()
 {
 	vkDeviceWaitIdle(device->vkDevice());
 	
-	shadow.reset();
 	uis.clear();
 	scenes.clear();
 	materials.clear();
 	meshes.clear();
 	
+	for (auto& frame : frames) frame.reset();
+	
+	shadow.reset();
 	pipelineLayouts.reset();
 	
-	for (auto& frame : frames) frame.reset();
 	vkDestroyCommandPool(device->vkDevice(), commandPool, nullptr);
 	swapchain.reset();
 	vkDestroyRenderPass(device->vkDevice(), renderPass, nullptr);
@@ -243,11 +243,6 @@ VulkanMaterial* VulkanInstance::sharedMaterial(const std::string& name)
 {
 	if (materials.find(name) == materials.end()) {
 		materials[name] = std::make_unique<VulkanMaterial>(device.get(), name, pipelineLayouts->getObjectLayout(), swapchain->extent(), renderPass);
-		
-		std::vector<VulkanMaterial*> materialPointers;
-		materialPointers.reserve(materials.size());
-		for (const auto& material : materials) materialPointers.push_back(material.second.get());
-		for (auto& frame : frames) frame->updateDescriptorSets(materialPointers, shadow.get());
 	}
 	return materials[name].get();
 }

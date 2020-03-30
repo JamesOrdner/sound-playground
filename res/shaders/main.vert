@@ -1,12 +1,12 @@
 #version 450
 
-layout(set = 0, binding = 0) uniform Transforms {
-    mat4 modelViewMatrix;
-	mat4 shadowMatrix;
-};
-
 layout(push_constant) uniform Constants {
     mat4 projectionMatrix;
+};
+
+layout(set = 1, binding = 0) uniform Transforms {
+    mat4 modelViewMatrix;
+	mat4 shadowMatrix;
 };
 
 layout(location = 0) in vec3 position;

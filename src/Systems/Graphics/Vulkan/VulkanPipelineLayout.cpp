@@ -6,12 +6,11 @@ VulkanPipelineLayouts::VulkanPipelineLayouts(const VkDevice device) :
 {
 	// setup descriptor set layouts
 	
-	auto& transformsDescriptorSetLayout = descriptorSetLayouts.emplace_back();
+	VkDescriptorSetLayout transformsDescriptorSetLayout;
 	{
-		std::array<VkDescriptorSetLayoutBinding, 3> bindings{
+		std::array<VkDescriptorSetLayoutBinding, 2> bindings{
 			VkDescriptorSetLayoutBinding{ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1, VK_SHADER_STAGE_VERTEX_BIT },
-			VkDescriptorSetLayoutBinding{ 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT },
-			VkDescriptorSetLayoutBinding{ 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
+			VkDescriptorSetLayoutBinding{ 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT }
 		};
 		
 		VkDescriptorSetLayoutCreateInfo descriptorLayoutInfo{
@@ -23,13 +22,37 @@ VulkanPipelineLayouts::VulkanPipelineLayouts(const VkDevice device) :
 		if (vkCreateDescriptorSetLayout(device, &descriptorLayoutInfo, nullptr, &transformsDescriptorSetLayout) != VK_SUCCESS) {
 			throw std::runtime_error("Failed to create Vulkan descriptor set layout!");
 		}
+		
+		descriptorSetLayouts.push_back(transformsDescriptorSetLayout);
+	}
+	
+	VkDescriptorSetLayout combinedSamplerDescriptorSetLayout;
+	{
+		VkDescriptorSetLayoutBinding binding{
+			0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT
+		};
+
+		VkDescriptorSetLayoutCreateInfo descriptorLayoutInfo{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.bindingCount = 1,
+			.pBindings = &binding
+		};
+
+		if (vkCreateDescriptorSetLayout(device, &descriptorLayoutInfo, nullptr, &combinedSamplerDescriptorSetLayout) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to create Vulkan descriptor set layout!");
+		}
+		
+		descriptorSetLayouts.push_back(combinedSamplerDescriptorSetLayout);
 	}
 	
 	// set up pipelines from descriptor set layouts
 	
 	// objectLayout
 	{
-		objectLayout.descriptorSetLayouts = { transformsDescriptorSetLayout };
+		objectLayout.descriptorSetLayouts = {
+			combinedSamplerDescriptorSetLayout,
+			transformsDescriptorSetLayout
+		};
 		
 		VkPushConstantRange pushConstantRange{
 			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,

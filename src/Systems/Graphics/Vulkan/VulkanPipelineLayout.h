@@ -4,6 +4,13 @@
 #include <vector>
 #include <array>
 
+enum class VulkanDescriptorSetType
+{
+	ModelTransform,
+	ShadowSampler,
+	ShadowTransform
+};
+
 struct VulkanPipelineLayout
 {
 	/// All descriptor set layouts used by the pipeline layout
