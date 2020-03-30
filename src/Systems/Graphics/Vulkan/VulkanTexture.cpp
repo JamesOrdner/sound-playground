@@ -3,7 +3,7 @@
 #include <SDL_surface.h>
 #include <stdexcept>
 
-VulkanTexture::VulkanTexture(const VulkanDevice* device, const std::string& filepath) :
+VulkanTexture::VulkanTexture(const VulkanDevice* device, VkDescriptorSetLayout descriptorLayout, VkDescriptorPool descriptorPool, const std::string& filepath) :
 	device(device)
 {
 	SDL_Surface* surface = SDL_LoadBMP(filepath.c_str());
@@ -72,6 +72,36 @@ VulkanTexture::VulkanTexture(const VulkanDevice* device, const std::string& file
 	if (vkCreateSampler(device->vkDevice(), &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Vulkan sampler for " + filepath);
 	}
+	
+	// descriptor set
+	
+	VkDescriptorSetAllocateInfo descriptorSetAllocInfo{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+		.descriptorPool = descriptorPool,
+		.descriptorSetCount = 1,
+		.pSetLayouts = &descriptorLayout
+	};
+	
+	if (vkAllocateDescriptorSets(device->vkDevice(), &descriptorSetAllocInfo, &descriptorSet) != VK_SUCCESS) {
+		throw std::runtime_error("failed to allocate descriptor sets!");
+	}
+	
+	VkDescriptorImageInfo descriptorImageInfo{
+		.sampler = sampler,
+		.imageView = imageView,
+		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
+	
+	VkWriteDescriptorSet descriptorWrite{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet = descriptorSet,
+		.dstBinding = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		.pImageInfo = &descriptorImageInfo
+	};
+	
+	vkUpdateDescriptorSets(device->vkDevice(), 1, &descriptorWrite, 0, nullptr);
 }
 
 VulkanTexture::~VulkanTexture()

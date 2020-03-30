@@ -65,6 +65,11 @@ private:
 	/// Maps material names to the corresponding material objects
 	std::map<std::string, std::unique_ptr<class VulkanMaterial>> materials;
 	
+	/// Maps texture names to the corresponding texture objects
+	std::map<std::string, std::unique_ptr<class VulkanTexture>> textures;
+	
+	VkDescriptorPool textureDescriptorPool;
+	
 	std::unique_ptr<class VulkanShadow> shadow;
 	
 	void initInstance(SDL_Window* window);

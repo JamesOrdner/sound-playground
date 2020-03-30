@@ -44,8 +44,23 @@ VulkanInstance::VulkanInstance(SDL_Window* window) :
 		frame = std::make_unique<VulkanFrame>(device.get(), *pipelineLayouts, *shadow, commandPool);
 	}
 	
+	// texture system
+	
+	VkDescriptorPoolSize texturePoolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 };
+	
+	VkDescriptorPoolCreateInfo textureDescriptorPoolInfo{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.maxSets = 1, // This is the loaded texture count limit
+		.poolSizeCount = 1,
+		.pPoolSizes = &texturePoolSize
+	};
+	
+	if (vkCreateDescriptorPool(device->vkDevice(), &textureDescriptorPoolInfo, nullptr, &textureDescriptorPool) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create Vulkan texture descriptor pool!");
+	}
+	
 	// TEMP
-	VulkanTexture(device.get(), "res/textures/ui.bmp");
+	VulkanTexture(device.get(), pipelineLayouts->getObjectLayout().descriptorSetLayouts[0], textureDescriptorPool, "res/textures/ui.bmp");
 }
 
 VulkanInstance::~VulkanInstance()
@@ -54,6 +69,7 @@ VulkanInstance::~VulkanInstance()
 	
 	uis.clear();
 	scenes.clear();
+	textures.clear();
 	materials.clear();
 	meshes.clear();
 	
@@ -62,6 +78,7 @@ VulkanInstance::~VulkanInstance()
 	shadow.reset();
 	pipelineLayouts.reset();
 	
+	vkDestroyDescriptorPool(device->vkDevice(), textureDescriptorPool, nullptr);
 	vkDestroyCommandPool(device->vkDevice(), commandPool, nullptr);
 	swapchain.reset();
 	vkDestroyRenderPass(device->vkDevice(), renderPass, nullptr);

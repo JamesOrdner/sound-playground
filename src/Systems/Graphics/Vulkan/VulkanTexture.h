@@ -7,16 +7,17 @@ class VulkanTexture
 {
 public:
 		
-	VulkanTexture(const class VulkanDevice* device, const std::string& filepath);
+	VulkanTexture(const class VulkanDevice* device, VkDescriptorSetLayout descriptorLayout, VkDescriptorPool descriptorPool, const std::string& filepath);
 	
 	~VulkanTexture();
 	
-	VkImageView imageView;
-	VkSampler sampler;
+	VkDescriptorSet descriptorSet;
 	
 private:
 	
 	const class VulkanDevice* const device;
 	
 	VulkanImage image;
+	VkImageView imageView;
+	VkSampler sampler;
 };
