@@ -42,27 +42,15 @@ VulkanMesh::VulkanMesh(const VulkanDevice* device, const std::string& filepath) 
 	indexBufferOffset = vertexData.size() * sizeof(float);
 	
 	VkDeviceSize requiredMemory = indexBufferOffset + indexBuffer.size() * sizeof(indexBuffer[0]);
-	VkBufferCreateInfo vertexBufferInfo{
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size = requiredMemory,
-        .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-    };
-    VmaAllocationCreateInfo bufferAllocInfo{
-        .usage = VMA_MEMORY_USAGE_CPU_TO_GPU,
-        .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-    };
-	vertexBuffer = device->allocator().createBuffer(vertexBufferInfo, bufferAllocInfo);
 	
-	void* data;
-	device->allocator().map(vertexBuffer, &data);
-	{
-		char* dataPtr = reinterpret_cast<char*>(data);
-		float* vertexDataDest = reinterpret_cast<float*>(dataPtr);
-		uint16_t* indexBufferDest = reinterpret_cast<uint16_t*>(dataPtr + indexBufferOffset);
-		std::copy(vertexData.cbegin(), vertexData.cend(), vertexDataDest);
-		std::copy(indexBuffer.cbegin(), indexBuffer.cend(), indexBufferDest);
-	}
-	device->allocator().unmap(vertexBuffer);
+	std::vector<uint8_t> data(requiredMemory);
+	float* vertexDataDest = reinterpret_cast<float*>(data.data());
+	uint16_t* indexBufferDest = reinterpret_cast<uint16_t*>(data.data() + indexBufferOffset);
+	std::copy(vertexData.cbegin(), vertexData.cend(), vertexDataDest);
+	std::copy(indexBuffer.cbegin(), indexBuffer.cend(), indexBufferDest);
+	
+	VkBufferUsageFlags usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+	vertexBuffer = device->transferToDevice(data.data(), requiredMemory, usage);
 }
 
 VulkanMesh::~VulkanMesh()

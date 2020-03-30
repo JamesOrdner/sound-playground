@@ -95,10 +95,22 @@ VulkanDevice::VulkanDevice(VkInstance instance, VkSurfaceKHR surface, const std:
 	vkGetDeviceQueue(device, vulkanQueues.present.familyIndex, 0, &vulkanQueues.present.queue);
 	
 	vulkanAllocator = std::make_unique<VulkanAllocator>(device, physicalDevice);
+	
+	// transfer command pool
+	
+	VkCommandPoolCreateInfo commandPoolInfo{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+		.queueFamilyIndex = vulkanQueues.graphics.familyIndex
+	};
+
+	if (vkCreateCommandPool(device, &commandPoolInfo, nullptr, &transferPool) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create Vulkan transfer command pool!");
+	}
 }
 
 VulkanDevice::~VulkanDevice()
 {
+	vkDestroyCommandPool(device, transferPool, nullptr);
 	vulkanAllocator.reset();
 	vkDestroyDevice(device, nullptr);
 }
@@ -203,4 +215,73 @@ VkFormat VulkanDevice::firstSupportedFormat(const std::vector<VkFormat>& formats
 	}
 
 	return VK_FORMAT_UNDEFINED;
+}
+
+VulkanBuffer VulkanDevice::transferToDevice(void* data, VkDeviceSize size, VkBufferUsageFlags usage) const
+{
+	VkBufferCreateInfo transferBufferInfo{
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = size,
+        .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+    };
+	
+    VmaAllocationCreateInfo transferBufferAllocInfo{
+        .usage = VMA_MEMORY_USAGE_CPU_TO_GPU,
+        .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    };
+	
+	VulkanBuffer transferBuffer = vulkanAllocator->createBuffer(transferBufferInfo, transferBufferAllocInfo);
+	
+	void* mapped;
+	vulkanAllocator->map(transferBuffer, &mapped);
+	std::memcpy(mapped, data, size);
+	vulkanAllocator->unmap(transferBuffer);
+	
+	VkBufferCreateInfo deviceBufferInfo{
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = size,
+        .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage
+    };
+	
+    VmaAllocationCreateInfo deviceBufferAllocInfo{
+        .usage = VMA_MEMORY_USAGE_GPU_ONLY
+    };
+	
+	VulkanBuffer deviceBuffer = vulkanAllocator->createBuffer(deviceBufferInfo, deviceBufferAllocInfo);
+	
+	VkCommandBufferAllocateInfo allocInfo{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+		.commandPool = transferPool,
+		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		.commandBufferCount = 1
+	};
+	
+	VkCommandBufferBeginInfo beginInfo{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+	};
+	
+	VkCommandBuffer cmd;
+	vkAllocateCommandBuffers(device, &allocInfo, &cmd);
+	vkBeginCommandBuffer(cmd, &beginInfo);
+	
+	VkBufferCopy copyRegion{.size = size };
+	vkCmdCopyBuffer(cmd, transferBuffer.buffer, deviceBuffer.buffer, 1, &copyRegion);
+	
+	vkEndCommandBuffer(cmd);
+
+	VkSubmitInfo submitInfo{
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &cmd
+	};
+
+	vkQueueSubmit(vulkanQueues.graphics.queue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(vulkanQueues.graphics.queue);
+
+	vkFreeCommandBuffers(device, transferPool, 1, &cmd);
+	
+	vulkanAllocator->destroyBuffer(transferBuffer);
+	
+	return deviceBuffer;
 }

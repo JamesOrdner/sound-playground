@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include "VulkanAllocator.h"
 #include <vector>
 #include <memory>
 
@@ -23,7 +23,7 @@ public:
 	~VulkanDevice();
 	
 	inline VkDevice vkDevice() const { return device; }
-	inline class VulkanAllocator& allocator() const { return *vulkanAllocator; }
+	inline VulkanAllocator& allocator() const { return *vulkanAllocator; }
 	inline const VulkanQueues& queues() const { return vulkanQueues; }
 	
 	VkPhysicalDeviceProperties physicalDeviceProperties() const;
@@ -41,13 +41,18 @@ public:
 	/// Returns VK_FORMAT_UNDEFINED if none of the requested formats are supported.
 	VkFormat firstSupportedFormat(const std::vector<VkFormat>& formats, VkImageTiling tiling, VkFormatFeatureFlags features) const;
 	
+	/// Transfer buffer data to device-local memory, returning the device buffer
+	VulkanBuffer transferToDevice(void* data, VkDeviceSize size, VkBufferUsageFlags usage) const;
+	
 private:
 
 	VkDevice device;
 	VkPhysicalDevice physicalDevice;
 	VulkanQueues vulkanQueues;
 	
-	std::unique_ptr<class VulkanAllocator> vulkanAllocator;
+	std::unique_ptr<VulkanAllocator> vulkanAllocator;
+	
+	VkCommandPool transferPool;
 
 	/// Returns the most suitable physical device, or VK_NULL_HANDLE if none found
 	VkPhysicalDevice optimalPhysicalDevice(VkInstance instance, VkSurfaceKHR surface);
