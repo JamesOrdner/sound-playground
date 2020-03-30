@@ -44,6 +44,9 @@ public:
 	/// Transfer buffer data to device-local memory, returning the device buffer
 	VulkanBuffer transferToDevice(void* data, VkDeviceSize size, VkBufferUsageFlags usage) const;
 	
+	/// Transfer image data to device-local memory, returning the device buffer
+	VulkanImage transferToDevice(void* data, VkDeviceSize size, VkImageCreateInfo& imageInfo, const VkImageSubresourceRange& subresourceRange) const;
+	
 private:
 
 	VkDevice device;

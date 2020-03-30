@@ -456,7 +456,7 @@ void VulkanFrame::renderUI(const VulkanUI* ui)
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ui->pipeline);
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &data.vertexBuffer.buffer, offsets);
-	// vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ui->pipelineLayout, 0, 1, &ui->objects[0]->texture->descriptorSet, 0, nullptr);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ui->pipelineLayout, 0, 1, &ui->objects[0]->texture->descriptorSet, 0, nullptr);
 	vkCmdDraw(commandBuffer, ui->objects.size() * 6, 1, 0, 0);
 }
 

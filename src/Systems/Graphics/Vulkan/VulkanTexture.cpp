@@ -14,6 +14,7 @@ VulkanTexture::VulkanTexture(const VulkanDevice* device, VkDescriptorSetLayout d
 	
 	assert(surface->format->BytesPerPixel == 4);
 	VkFormat format = surface->format->Amask ? VK_FORMAT_R8G8B8A8_UINT : VK_FORMAT_R8G8B8_UINT;
+	VkDeviceSize size = surface->w * surface->h * surface->format->BytesPerPixel;
 	
 	VkImageCreateInfo imageInfo{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -28,19 +29,8 @@ VulkanTexture::VulkanTexture(const VulkanDevice* device, VkDescriptorSetLayout d
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
 	};
 	
-	image = device->allocator().createImage(imageInfo, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-	
-	void* data;
-	device->allocator().map(image, &data);
-	std::memcpy(data, surface->pixels, surface->w * surface->h * surface->format->BytesPerPixel);
-	device->allocator().unmap(image);
-	// device->allocator().flush(image);
-	
-	SDL_FreeSurface(surface);
-	
 	VkImageViewCreateInfo imageViewInfo{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-		.image = image.image,
 		.viewType = VK_IMAGE_VIEW_TYPE_2D,
 		.format = format,
 		.subresourceRange = {
@@ -51,6 +41,12 @@ VulkanTexture::VulkanTexture(const VulkanDevice* device, VkDescriptorSetLayout d
 			.layerCount = 1
 		}
 	};
+	
+	image = device->transferToDevice(surface->pixels, size, imageInfo, imageViewInfo.subresourceRange);
+	
+	SDL_FreeSurface(surface);
+	
+	imageViewInfo.image = image.image;
 	
 	if (vkCreateImageView(device->vkDevice(), &imageViewInfo, nullptr, &imageView) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Vulkan ImageView for " + filepath);

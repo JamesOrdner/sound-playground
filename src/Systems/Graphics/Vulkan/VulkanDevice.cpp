@@ -249,21 +249,21 @@ VulkanBuffer VulkanDevice::transferToDevice(void* data, VkDeviceSize size, VkBuf
 	
 	VulkanBuffer deviceBuffer = vulkanAllocator->createBuffer(deviceBufferInfo, deviceBufferAllocInfo);
 	
-	VkCommandBufferAllocateInfo allocInfo{
+	VkCommandBufferAllocateInfo cmdAllocInfo{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 		.commandPool = transferPool,
 		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 		.commandBufferCount = 1
 	};
 	
-	VkCommandBufferBeginInfo beginInfo{
+	VkCommandBufferBeginInfo cmdBeginInfo{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
 	};
 	
 	VkCommandBuffer cmd;
-	vkAllocateCommandBuffers(device, &allocInfo, &cmd);
-	vkBeginCommandBuffer(cmd, &beginInfo);
+	vkAllocateCommandBuffers(device, &cmdAllocInfo, &cmd);
+	vkBeginCommandBuffer(cmd, &cmdBeginInfo);
 	
 	VkBufferCopy copyRegion{.size = size };
 	vkCmdCopyBuffer(cmd, transferBuffer.buffer, deviceBuffer.buffer, 1, &copyRegion);
@@ -284,4 +284,128 @@ VulkanBuffer VulkanDevice::transferToDevice(void* data, VkDeviceSize size, VkBuf
 	vulkanAllocator->destroyBuffer(transferBuffer);
 	
 	return deviceBuffer;
+}
+
+VulkanImage VulkanDevice::transferToDevice(void* data, VkDeviceSize size, VkImageCreateInfo& imageInfo, const VkImageSubresourceRange& subresourceRange) const
+{
+	VkBufferCreateInfo transferBufferInfo{
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = size,
+        .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+    };
+	
+    VmaAllocationCreateInfo transferBufferAllocInfo{
+        .usage = VMA_MEMORY_USAGE_CPU_TO_GPU,
+        .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    };
+	
+	VulkanBuffer transferBuffer = vulkanAllocator->createBuffer(transferBufferInfo, transferBufferAllocInfo);
+	
+	void* mapped;
+	vulkanAllocator->map(transferBuffer, &mapped);
+	std::memcpy(mapped, data, size);
+	vulkanAllocator->unmap(transferBuffer);
+	
+	imageInfo.usage = imageInfo.usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	
+	VulkanImage image = vulkanAllocator->createImage(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	
+	VkCommandBufferAllocateInfo cmdAllocInfo{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+		.commandPool = transferPool,
+		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		.commandBufferCount = 1
+	};
+	
+	VkCommandBufferBeginInfo cmdBeginInfo{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+	};
+	
+	VkCommandBuffer cmd;
+	vkAllocateCommandBuffers(device, &cmdAllocInfo, &cmd);
+	vkBeginCommandBuffer(cmd, &cmdBeginInfo);
+	
+	// transition image to transfer target
+	
+	VkImageMemoryBarrier imageBarrier{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+		.srcAccessMask = 0,
+		.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+		.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+		.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.image = image.image,
+		.subresourceRange = subresourceRange
+	};
+	
+	vkCmdPipelineBarrier(
+		cmd,
+		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+		0,
+		0, nullptr,
+		0, nullptr,
+		1, &imageBarrier
+	);
+	
+	// copy transfer buffer to device
+	
+	std::vector<VkBufferImageCopy> copyRegions;
+	for (uint32_t i = 0; i < subresourceRange.levelCount; i++) {
+		copyRegions.push_back(VkBufferImageCopy{
+			.imageSubresource = {
+			   .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			   .mipLevel = i,
+			   .baseArrayLayer = 0,
+			   .layerCount = 1
+			},
+			.imageExtent = {
+				.width = imageInfo.extent.width >> i,
+				.height = imageInfo.extent.height >> i,
+				.depth = 1
+			}
+		});
+	}
+	
+	vkCmdCopyBufferToImage(
+		cmd,
+		transferBuffer.buffer, image.image,
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		static_cast<uint32_t>(copyRegions.size()),
+		copyRegions.data()
+	);
+	
+	// transition image to shader read
+	
+	imageBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	imageBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+	imageBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	imageBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	
+	vkCmdPipelineBarrier(
+		cmd,
+		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		0,
+		0, nullptr,
+		0, nullptr,
+		1, &imageBarrier);
+	
+	vkEndCommandBuffer(cmd);
+
+	VkSubmitInfo submitInfo{
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &cmd
+	};
+
+	vkQueueSubmit(vulkanQueues.graphics.queue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(vulkanQueues.graphics.queue);
+
+	vkFreeCommandBuffers(device, transferPool, 1, &cmd);
+	
+	vulkanAllocator->destroyBuffer(transferBuffer);
+	
+	return image;
 }
