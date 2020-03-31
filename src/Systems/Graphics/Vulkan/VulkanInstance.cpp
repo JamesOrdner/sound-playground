@@ -233,15 +233,19 @@ VulkanUI* VulkanInstance::createUI()
 	for (auto& frame : frames) frame->registerUI(ui);
 	
 	// TODO: TEMP
-	auto* texture = new VulkanTexture(device.get(), pipelineLayouts->getObjectLayout().descriptorSetLayouts[0], textureDescriptorPool, "res/textures/ui.bmp");
+	
+	auto texName = "res/textures/ui.bmp";
+	auto tex = std::make_unique<VulkanTexture>(device.get(), pipelineLayouts->getObjectLayout().descriptorSetLayouts[0], textureDescriptorPool, texName);
 	
 	ui->objects.emplace_back(new VulkanUIObject{
 		.position = mat::vec2{ -0.5f, -0.5f },
 		.bounds = mat::vec2{ 0.5f, 0.5f },
 		.uv_position = mat::vec2{ 0.f, 0.f },
 		.uv_bounds = mat::vec2{ 1.f, 1.f },
-		.texture = texture
+		.texture = tex.get()
 	});
+	
+	textures[texName] = std::move(tex);
 	
 	return ui;
 }
@@ -251,7 +255,6 @@ void VulkanInstance::destroyUI(VulkanUI* ui)
 	for (auto it = uis.cbegin(); it != uis.cend(); it++) {
 		if (it->get() == ui) {
 			for (auto& frame : frames) frame->unregisterUI(ui);
-			for (auto& obj : ui->objects) delete obj->texture; // TODO: TEMP
 			uis.erase(it);
 			break;
 		}
