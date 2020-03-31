@@ -1,8 +1,19 @@
 #include "VulkanUI.h"
 #include "VulkanDevice.h"
 #include "VulkanShader.h"
+#include <algorithm>
 #include <stdexcept>
 #include <array>
+
+VulkanUIObject::VulkanUIObject() :
+	position{},
+	bounds{},
+	uv_position{},
+	uv_bounds{},
+	texture(nullptr),
+	drawOrder(0)
+{
+}
 
 VulkanUI::VulkanUI(const class VulkanDevice* device, VkRenderPass renderPass, const VkExtent2D& swapchainExtent) :
 	device(device)
@@ -160,4 +171,30 @@ void VulkanUI::initPipeline(VkRenderPass renderPass, const VkExtent2D& swapchain
 	if (vkCreateGraphicsPipelines(device->vkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Vulkan UI pipeline!");
 	}
+}
+
+VulkanUIObject* VulkanUI::createUIObject()
+{
+	return objects.emplace_back(std::make_unique<VulkanUIObject>()).get();
+}
+
+void VulkanUI::deleteUIObject(VulkanUIObject* object)
+{
+	for (auto it = objects.cbegin(); it != objects.cend(); it++) {
+		if (it->get() == object) {
+			objects.erase(it);
+			break;
+		}
+	}
+}
+
+void VulkanUI::sortDrawOrder()
+{
+	std::sort(
+		objects.begin(),
+		objects.end(),
+		[](const std::unique_ptr<VulkanUIObject>& l, const std::unique_ptr<VulkanUIObject>& r) {
+			return l->drawOrder < r->drawOrder;
+		}
+	);
 }

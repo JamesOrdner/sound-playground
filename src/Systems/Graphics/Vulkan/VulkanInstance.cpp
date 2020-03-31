@@ -231,22 +231,6 @@ VulkanUI* VulkanInstance::createUI()
 {
 	auto* ui = uis.emplace_back(std::make_unique<VulkanUI>(device.get(), renderPass, swapchain->extent())).get();
 	for (auto& frame : frames) frame->registerUI(ui);
-	
-	// TODO: TEMP
-	
-	auto texName = "res/textures/ui.bmp";
-	auto tex = std::make_unique<VulkanTexture>(device.get(), pipelineLayouts->getObjectLayout().descriptorSetLayouts[0], textureDescriptorPool, texName);
-	
-	ui->objects.emplace_back(new VulkanUIObject{
-		.position = mat::vec2{ -0.5f, -0.5f },
-		.bounds = mat::vec2{ 0.5f, 0.5f },
-		.uv_position = mat::vec2{ 0.f, 0.f },
-		.uv_bounds = mat::vec2{ 1.f, 1.f },
-		.texture = tex.get()
-	});
-	
-	textures[texName] = std::move(tex);
-	
 	return ui;
 }
 

@@ -6,7 +6,6 @@
 #include "Vulkan/VulkanInstance.h"
 #include "Vulkan/VulkanScene.h"
 #include "Vulkan/VulkanUI.h"
-#include <algorithm>
 
 GraphicsScene::GraphicsScene(const SystemInterface* system, const UScene* uscene, VulkanScene* vulkanScene, VulkanUI* vulkanUI) :
 	SystemSceneInterface(system, uscene),
@@ -35,15 +34,13 @@ SystemObjectInterface* GraphicsScene::addSystemObject(SystemObjectInterface* obj
 	}
 	else if (auto* uiObject = dynamic_cast<UIGraphicsObject*>(object)) {
 		uiObjects.push_back(uiObject);
+		uiObject->vulkanObject = vulkanUI->createUIObject();
+		uiObject->dataUpdated();
 		registerCallback(
 			uiObject,
 			EventType::UIDrawOrderUpdated,
 			[this](const EventData& data, bool bEventFromParent) {
-				std::sort(
-					uiObjects.begin(),
-					uiObjects.end(),
-					[](UIGraphicsObject* l, UIGraphicsObject* r) { return l->uiData.drawOrder < r->uiData.drawOrder; }
-				);
+				vulkanUI->sortDrawOrder();
 			}
 		);
 	}
@@ -57,6 +54,8 @@ void GraphicsScene::deleteSystemObject(const UObject* uobject)
 		if (graphicsObject->uobject == uobject) {
 			if (auto* meshObject = dynamic_cast<MeshGraphicsObject*>(graphicsObject.get())) {
 				vulkanScene->removeModel(meshObject->model);
+			} else if (auto* uiObject = dynamic_cast<UIGraphicsObject*>(graphicsObject.get())) {
+				vulkanUI->deleteUIObject(uiObject->vulkanObject);
 			}
 			graphicsObjects.remove(graphicsObject);
 			break;

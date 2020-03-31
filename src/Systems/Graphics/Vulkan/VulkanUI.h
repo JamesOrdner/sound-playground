@@ -13,6 +13,11 @@ struct VulkanUIObject
 	mat::vec2 uv_position;
 	mat::vec2 uv_bounds;
 	class VulkanTexture* texture;
+	
+	// draws from low to high
+	uint32_t drawOrder;
+	
+	VulkanUIObject();
 };
 
 class VulkanUI
@@ -23,11 +28,18 @@ public:
 	
 	~VulkanUI();
 	
-	/// Objects are sorted by draw order, from back to front
-	std::vector<std::unique_ptr<VulkanUIObject>> objects;
+	VulkanUIObject* createUIObject();
+	
+	void deleteUIObject(VulkanUIObject* object);
+	
+	/// Sort VulkanUIObjects' draw order. Never performed automatically.
+	void sortDrawOrder();
 	
 	VkPipeline pipeline;
 	VkPipelineLayout pipelineLayout;
+	
+	/// Objects are sorted by draw order, from back to front
+	std::vector<std::unique_ptr<VulkanUIObject>> objects;
 	
 private:
 	
