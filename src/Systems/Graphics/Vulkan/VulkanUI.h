@@ -1,36 +1,20 @@
 #pragma once
 
 #include "VulkanAllocator.h"
-#include "../../../Util/Matrix.h"
 #include <vector>
 #include <memory>
-
-struct VulkanUIObject
-{
-	// all in NDC
-	mat::vec2 position;
-	mat::vec2 bounds;
-	mat::vec2 uv_position;
-	mat::vec2 uv_bounds;
-	class VulkanTexture* texture;
-	
-	// draws from low to high
-	uint32_t drawOrder;
-	
-	VulkanUIObject();
-};
 
 class VulkanUI
 {
 public:
 	
-	VulkanUI(const class VulkanDevice* device, VkRenderPass renderPass, const VkExtent2D& swapchainExtent);
+	VulkanUI(class VulkanInstance* instance, const class VulkanDevice* device, VkRenderPass renderPass, const VkExtent2D& swapchainExtent);
 	
 	~VulkanUI();
 	
-	VulkanUIObject* createUIObject();
+	class VulkanUIObject* createUIObject();
 	
-	void deleteUIObject(VulkanUIObject* object);
+	void deleteUIObject(class VulkanUIObject* object);
 	
 	/// Sort VulkanUIObjects' draw order. Never performed automatically.
 	void sortDrawOrder();
@@ -39,9 +23,11 @@ public:
 	VkPipelineLayout pipelineLayout;
 	
 	/// Objects are sorted by draw order, from back to front
-	std::vector<std::unique_ptr<VulkanUIObject>> objects;
+	std::vector<std::unique_ptr<class VulkanUIObject>> objects;
 	
 private:
+	
+	class VulkanInstance* const instance;
 	
 	const class VulkanDevice* const device;
 	

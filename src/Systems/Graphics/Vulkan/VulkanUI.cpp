@@ -1,21 +1,14 @@
 #include "VulkanUI.h"
+#include "VulkanInstance.h"
 #include "VulkanDevice.h"
 #include "VulkanShader.h"
+#include "VulkanUIObject.h"
 #include <algorithm>
 #include <stdexcept>
 #include <array>
 
-VulkanUIObject::VulkanUIObject() :
-	position{},
-	bounds{},
-	uv_position{},
-	uv_bounds{},
-	texture(nullptr),
-	drawOrder(0)
-{
-}
-
-VulkanUI::VulkanUI(const class VulkanDevice* device, VkRenderPass renderPass, const VkExtent2D& swapchainExtent) :
+VulkanUI::VulkanUI(VulkanInstance* instance, const VulkanDevice* device, VkRenderPass renderPass, const VkExtent2D& swapchainExtent) :
+	instance(instance),
 	device(device)
 {
 	initDescriptors();
@@ -175,7 +168,7 @@ void VulkanUI::initPipeline(VkRenderPass renderPass, const VkExtent2D& swapchain
 
 VulkanUIObject* VulkanUI::createUIObject()
 {
-	return objects.emplace_back(std::make_unique<VulkanUIObject>()).get();
+	return objects.emplace_back(std::make_unique<VulkanUIObject>(instance)).get();
 }
 
 void VulkanUI::deleteUIObject(VulkanUIObject* object)

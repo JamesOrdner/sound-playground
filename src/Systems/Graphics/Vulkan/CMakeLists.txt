@@ -28,4 +28,6 @@ target_sources(SoundPlayground
     VulkanTexture.h
     VulkanUI.cpp
     VulkanUI.h
+    VulkanUIObject.cpp
+    VulkanUIObject.h
 )

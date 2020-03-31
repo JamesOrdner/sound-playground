@@ -3,6 +3,7 @@
 #include "VulkanScene.h"
 #include "VulkanTexture.h"
 #include "VulkanUI.h"
+#include "VulkanUIObject.h"
 #include "VulkanMaterial.h"
 #include "VulkanShadow.h"
 #include "VulkanModel.h"
@@ -452,14 +453,21 @@ void VulkanFrame::renderScene(const VulkanScene* scene)
 
 void VulkanFrame::renderUI(const VulkanUI* ui)
 {
-	// if (!ui->objects[0]->texture) return; // TODO: temp
-	
 	const UIData& data = uiData[ui];
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ui->pipeline);
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &data.vertexBuffer.buffer, offsets);
-	// vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ui->pipelineLayout, 0, 1, &ui->objects[0]->texture->descriptorSet, 0, nullptr);
-	vkCmdDraw(commandBuffer, ui->objects.size() * 6, 1, 0, 0);
+	
+	VulkanTexture* boundTexture = nullptr;
+	for (size_t i = 0; i < ui->objects.size(); i++) {
+		if (VulkanTexture* objectTexture = ui->objects[i]->getTexture()) {
+			if (boundTexture != objectTexture) {
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ui->pipelineLayout, 0, 1, &objectTexture->descriptorSet, 0, nullptr);
+				boundTexture = objectTexture;
+			}
+			vkCmdDraw(commandBuffer, 6, 1, i * 6, 0);
+		}
+	}
 }
 
 VkSemaphore VulkanFrame::endFrame(VkSemaphore acquireSemaphore)

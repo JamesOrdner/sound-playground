@@ -1,7 +1,10 @@
 #include "UIGraphicsObject.h"
 #include "GraphicsScene.h"
+#include "../SystemInterface.h"
+#include "../../Managers/AssetManagerInterface.h"
 #include "../../Engine/UObject.h"
 #include "Vulkan/VulkanUI.h"
+#include "Vulkan/VulkanUIObject.h"
 
 UIGraphicsObject::UIGraphicsObject(const SystemSceneInterface* scene, const UObject* uobject) :
 	GraphicsObject(scene, uobject),
@@ -39,6 +42,7 @@ UIGraphicsObject::UIGraphicsObject(const SystemSceneInterface* scene, const UObj
 		EventType::UITextureAssetUpdated,
 		[this](const EventData& data, bool bEventFromParent) {
 			uiData.textureAsset = std::get<AssetID>(data);
+			dataUpdated();
 		}
 	);
 
@@ -61,24 +65,18 @@ UIGraphicsObject::UIGraphicsObject(const SystemSceneInterface* scene, const UObj
 	);
 }
 
-// TODO: TEMP
-constexpr mat::vec2 resolution{ 1280.f, 720.f };
-
 void UIGraphicsObject::dataUpdated()
 {
 	if (!vulkanObject) return;
 	
 	// TODO: TEMP
-	if (uiData.bounds.y > 700) {
-		vulkanObject->bounds = mat::vec2(0.f);
-		return;
-	}
+	constexpr mat::vec2 resolution{ 1280.f, 720.f };
 	
 	vulkanObject->position = uiData.position / resolution * 2.f - 1.f;
 	vulkanObject->bounds = uiData.bounds / resolution * 2.f;
 	
-	vulkanObject->uv_position = uiData.texturePosition / resolution;
-	vulkanObject->uv_bounds = uiData.textureBounds / resolution;
+	vulkanObject->uv_position = uiData.texturePosition / 1024.f;
+	vulkanObject->uv_bounds = uiData.textureBounds / 1024.f;
 	
 	// flip y axis
 	vulkanObject->position.y = vulkanObject->position.y * -1.f - vulkanObject->bounds.y;
@@ -87,4 +85,11 @@ void UIGraphicsObject::dataUpdated()
 		vulkanObject->drawOrder = uiData.drawOrder;
 		eventImmediate(EventType::UIDrawOrderUpdated, uiData.drawOrder); // notify GraphicsScene
 	}
+	
+//	AssetDescriptor descriptor;
+//	if (scene->system->assetManager->descriptor(uiData.textureAsset, descriptor) && !descriptor.uiImagePath.empty()) {
+//		vulkanObject->setTexture(descriptor.uiImagePath);
+//	}
+	
+	vulkanObject->setTexture("res/textures/ui.bmp");
 }

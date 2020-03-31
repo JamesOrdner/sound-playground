@@ -12,8 +12,18 @@ VulkanTexture::VulkanTexture(const VulkanDevice* device, VkDescriptorSetLayout d
 		throw std::runtime_error("Failed to load image: " + filepath);
 	}
 	
-	assert(surface->format->BytesPerPixel == 4);
-	VkFormat format = surface->format->Amask ? VK_FORMAT_R8G8B8A8_UINT : VK_FORMAT_R8G8B8_UINT;
+	assert(SDL_ISPIXELFORMAT_PACKED(surface->format->format));
+	assert(SDL_PIXELLAYOUT(surface->format->format) == SDL_PACKEDLAYOUT_8888);
+	
+	VkFormat format;
+	switch (SDL_PIXELORDER(surface->format->format)) {
+	case SDL_PACKEDORDER_ARGB:
+		format = VK_FORMAT_R8G8B8A8_UNORM;
+		break;
+	default:
+		throw std::runtime_error("Unsupported image format: " + filepath);
+	}
+	
 	VkDeviceSize size = surface->w * surface->h * surface->format->BytesPerPixel;
 	
 	VkImageCreateInfo imageInfo{

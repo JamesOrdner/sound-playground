@@ -22,11 +22,14 @@ public:
 	class VulkanUI* createUI();
 	void destroyUI(class VulkanUI* ui);
 	
-	/// Return a shared pointer to the specified mesh, creating the mesh if not yet loaded
+	/// Returns a pointer to the specified mesh, creating the mesh if not yet loaded
 	class VulkanMesh* sharedMesh(const std::string& filepath);
 	
-	/// Return a shared pointer to the specified material, creating the material if not yet loaded
+	/// Returns a pointer to the specified material, creating the material if not yet loaded
 	class VulkanMaterial* sharedMaterial(const std::string& name);
+	
+	/// Returns a pointer to the specified texture, creating the texture if not yet loaded
+	class VulkanTexture* sharedTexture(const std::string& filepath);
 
 	/// Begin rendering a frame
 	void beginFrame();
@@ -65,7 +68,7 @@ private:
 	/// Maps material names to the corresponding material objects
 	std::map<std::string, std::unique_ptr<class VulkanMaterial>> materials;
 	
-	/// Maps texture names to the corresponding texture objects
+	/// Maps texture filepaths to the corresponding texture objects
 	std::map<std::string, std::unique_ptr<class VulkanTexture>> textures;
 	
 	VkDescriptorPool textureDescriptorPool;

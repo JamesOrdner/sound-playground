@@ -15,5 +15,5 @@ public:
 	
 	UIObjectData uiData;
 	
-	struct VulkanUIObject* vulkanObject;
+	class VulkanUIObject* vulkanObject;
 };

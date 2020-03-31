@@ -229,7 +229,7 @@ void VulkanInstance::destroyScene(VulkanScene* scene)
 
 VulkanUI* VulkanInstance::createUI()
 {
-	auto* ui = uis.emplace_back(std::make_unique<VulkanUI>(device.get(), renderPass, swapchain->extent())).get();
+	auto* ui = uis.emplace_back(std::make_unique<VulkanUI>(this, device.get(), renderPass, swapchain->extent())).get();
 	for (auto& frame : frames) frame->registerUI(ui);
 	return ui;
 }
@@ -259,6 +259,14 @@ VulkanMaterial* VulkanInstance::sharedMaterial(const std::string& name)
 		materials[name] = std::make_unique<VulkanMaterial>(device.get(), name, pipelineLayouts->getObjectLayout(), swapchain->extent(), renderPass);
 	}
 	return materials[name].get();
+}
+
+VulkanTexture* VulkanInstance::sharedTexture(const std::string& filepath)
+{
+	if (textures.find(filepath) == textures.end()) {
+		textures[filepath] = std::make_unique<VulkanTexture>(device.get(), pipelineLayouts->getObjectLayout().descriptorSetLayouts[0], textureDescriptorPool, filepath);
+	}
+	return textures[filepath].get();
 }
 
 void VulkanInstance::beginFrame()
