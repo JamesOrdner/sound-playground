@@ -18,6 +18,7 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 			(bEventFromParent ? parentPosition : position) = std::get<mat::vec3>(data);
 			this->uobject->childEventImmediate(EventType::PositionUpdated, position + parentPosition);
 			bDirtyTransform = true;
+			
 			// TODO: TEMP
 			model->transform = transformMatrix();
 		}
@@ -49,6 +50,9 @@ MeshGraphicsObject::MeshGraphicsObject(const SystemSceneInterface* scene, const 
 		[this](const EventData& data, bool bEventFromParent) {
 			bSelected = std::get<bool>(data);
 			bDirtySelection = true;
+		
+			// TODO: TEMP
+			model->bSelected = bSelected;
 		}
 	);
 }
@@ -60,7 +64,7 @@ MeshGraphicsObject::~MeshGraphicsObject()
 void MeshGraphicsObject::setMesh(std::string filepath)
 {
 	model->setMesh(filepath);
-	model->setMaterial("main"); // TEMP
+	model->setMaterial("main");
 }
 
 const mat::mat4& MeshGraphicsObject::transformMatrix()

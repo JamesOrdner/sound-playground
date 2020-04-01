@@ -20,6 +20,8 @@ public:
 	
 	mat::mat4 transform;
 	
+	bool bSelected;
+	
 private:
 	
 	class VulkanScene* const scene;

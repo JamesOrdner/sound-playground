@@ -5,6 +5,7 @@
 VulkanModel::VulkanModel(VulkanScene* scene, uint32_t modelID) :
 	modelID(modelID),
 	transform(mat::mat4::Identity()),
+	bSelected(false),
 	scene(scene),
 	mesh(nullptr),
 	material(nullptr)

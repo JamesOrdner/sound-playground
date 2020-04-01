@@ -8,9 +8,8 @@ VulkanPipelineLayouts::VulkanPipelineLayouts(const VkDevice device) :
 	
 	VkDescriptorSetLayout transformsDescriptorSetLayout;
 	{
-		std::array<VkDescriptorSetLayoutBinding, 2> bindings{
-			VkDescriptorSetLayoutBinding{ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1, VK_SHADER_STAGE_VERTEX_BIT },
-			VkDescriptorSetLayoutBinding{ 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT }
+		std::array<VkDescriptorSetLayoutBinding, 1> bindings{
+			VkDescriptorSetLayoutBinding{ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1, VK_SHADER_STAGE_VERTEX_BIT }
 		};
 		
 		VkDescriptorSetLayoutCreateInfo descriptorLayoutInfo{

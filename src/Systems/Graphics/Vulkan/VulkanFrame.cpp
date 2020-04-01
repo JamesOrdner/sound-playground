@@ -15,6 +15,7 @@ constexpr size_t maxModelCount = 128;
 struct MainUBO {
 	mat::mat4 modelViewMatrix;
 	mat::mat4 shadowMatrix;
+	bool bSelected;
 };
 
 VulkanFrame::VulkanFrame(const VulkanDevice* device, const VulkanPipelineLayouts& layouts, const VulkanShadow& shadow, VkCommandPool commandPool) :
@@ -278,6 +279,7 @@ void VulkanFrame::updateSceneData(const VulkanScene* scene)
 		MainUBO mainUBO;
 		mainUBO.modelViewMatrix = mat::t(scene->getViewMatrix() * model->transform);
 		mainUBO.shadowMatrix = lightMVP;
+		mainUBO.bSelected = model->bSelected;
 		dest = static_cast<char*>(data.modelTransformsData) + offset;
 		std::copy_n(&mainUBO, 1, reinterpret_cast<MainUBO*>(dest));
 	}
