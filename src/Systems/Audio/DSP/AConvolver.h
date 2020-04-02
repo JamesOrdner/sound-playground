@@ -6,7 +6,7 @@
 #include <vector>
 #include <complex>
 
-class AConvolver : public ADSPBase
+class AConvolver final : public ADSPBase
 {
 public:
 

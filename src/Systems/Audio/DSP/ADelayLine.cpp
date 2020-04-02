@@ -8,8 +8,6 @@ constexpr float soundSpeed = 0.0029154518950437f;
 // Maximum distance between two objects (meters)
 constexpr float maximumDistance = 10.f;
 
-constexpr size_t minBufferSize = 16;
-
 ReadWriteBuffer::ReadWriteBuffer() :
 	readPtr(0), 
 	writePtr(0),
@@ -95,9 +93,9 @@ ADelayLine::ADelayLine(AudioComponent* source, AudioComponent* dest) :
 	dest(dest),
 	destData(nullptr),
 	genID(0),
+	bInitialized(false),
 	b{},
-	sampleInterpOffset(0.f),
-	bInitialized(false)
+	sampleInterpOffset(0.f)
 {
 }
 

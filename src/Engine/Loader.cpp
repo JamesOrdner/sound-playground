@@ -138,6 +138,8 @@ UObject* Loader::createObjectFromAsset(const AssetDescriptor& asset, UScene* usc
 		case AudioType::Speaker:
 			audioScene->setAudioComponentForObject<ASpeaker>(aobj);
 			break;
+		default:
+			break;
 		}
 	}
 	return uobject;

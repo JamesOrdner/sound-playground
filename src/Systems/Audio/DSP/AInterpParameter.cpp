@@ -2,8 +2,8 @@
 #include <cmath>
 
 AInterpParameter::AInterpParameter(float initialValue, float interpRate) :
-	current(initialValue),
 	target(initialValue),
+	current(initialValue),
 	rate(interpRate),
 	sampleRate(44100.f) // best guess
 {

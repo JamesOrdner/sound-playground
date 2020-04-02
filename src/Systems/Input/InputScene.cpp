@@ -149,6 +149,8 @@ void InputScene::processUIManagerQueue()
 		case UIObjectModification::Type::TexturePositionUpdated:
 			if (uobject) uobject->event(EventType::UITexturePositionUpdated, modEvent.object->replicatedData.texturePosition);
 			break;
+		default:
+			break;
 		}
 		uiManager->modificationQueue.pop();
 	}
